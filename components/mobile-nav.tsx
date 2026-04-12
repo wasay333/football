@@ -35,8 +35,8 @@ const MobileNav = () => {
           <Image
             src="/foocaps-logo.png"
             alt="Foocaps"
-            width={120}
-            height={34}
+            width={90}
+            height={26}
             style={{ objectFit: "contain" }}
           />
         </div>

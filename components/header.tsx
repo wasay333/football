@@ -43,8 +43,8 @@ const Header = () => {
           <Image
             src="/foocaps-logo.png"
             alt="Foocaps"
-            width={140}
-            height={40}
+            width={100}
+            height={28}
             style={{ objectFit: "contain" }}
             priority
           />
