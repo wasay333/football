@@ -87,7 +87,7 @@ const AboutSection = () => {
         <div ref={imageCardRef} className="about-card about-card--image">
           <Image
             src="/image1.jpeg"
-            alt="Football and Legacy Caps"
+            alt="Football and Foocaps"
             width={480}
             height={360}
             className="about-img"
@@ -99,7 +99,7 @@ const AboutSection = () => {
           <h3>The Pitch. Refined.</h3>
           <p>
             We turn the icons of the game into the icons of your wardrobe. At
-            Legacy Caps, we don&apos;t do half-measures. We go deep,
+            Foocaps, we don&apos;t do half-measures. We go deep,
             player-inspired headwear for the fan who values style as much as a
             last-minute goal.
           </p>

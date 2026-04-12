@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const navLinks = [
@@ -31,7 +32,13 @@ const MobileNav = () => {
 
       <aside className={`mobile-drawer ${open ? "open" : ""}`}>
         <div className="mobile-drawer-logo">
-          Legacy <span>Caps</span>
+          <Image
+            src="/foocaps-logo.png"
+            alt="Foocaps"
+            width={120}
+            height={34}
+            style={{ objectFit: "contain" }}
+          />
         </div>
 
         <nav>

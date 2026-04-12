@@ -8,38 +8,14 @@ import Link from "next/link";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const legends = [
-  {
-    id: "messi",
-    name: "LIONEL MESSI",
-    image: "/messi.jpg",
-    desc: "The magician of Barcelona. A cap inspired by the greatest playmaker the world has ever seen.",
-    productId: "1",
-  },
-  {
-    id: "neymar",
-    name: "NEYMAR JR",
-    image: "/yamal.jpg",
-    desc: "Flair, skill, and showmanship. A cap that captures the essence of Brazilian brilliance.",
-    productId: "2",
-  },
-  {
-    id: "ronaldo",
-    name: "CRISTIANO RONALDO",
-    image: "/ronaldo.jpg",
-    desc: "Relentless ambition and power. A cap forged in the fire of a champion's mentality.",
-    productId: "3",
-  },
-  {
-    id: "mbappe",
-    name: "MBAPPE",
-    image: "/mbappe.jpg",
-    desc: "Speed, youth, and the future of football. A cap designed for the next generation of legends.",
-    productId: "4",
-  },
-];
+export type LegendFootballer = {
+  id: string;
+  name: string;
+  profileImage: string | null;
+  bio: string | null;
+};
 
-const LegendSection = () => {
+const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => {
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -52,7 +28,6 @@ const LegendSection = () => {
     if (!section || !heading || cards.length === 0) return;
 
     const ctx = gsap.context(() => {
-      // Heading
       gsap.fromTo(
         heading,
         { y: 50, opacity: 0 },
@@ -69,7 +44,6 @@ const LegendSection = () => {
         }
       );
 
-      // Cards slide in from left one by one, reverse out right to left on scroll up
       cards.forEach((card, i) => {
         gsap.fromTo(
           card,
@@ -102,9 +76,9 @@ const LegendSection = () => {
 
       <div className="legend-content">
         <div className="legend-cards">
-          {legends.map((legend, i) => (
+          {footballers.map((footballer, i) => (
             <div
-              key={legend.id}
+              key={footballer.id}
               ref={(el) => {
                 cardRefs.current[i] = el;
               }}
@@ -114,8 +88,8 @@ const LegendSection = () => {
                 {/* Front */}
                 <div className="legend-card-front">
                   <Image
-                    src={legend.image}
-                    alt={legend.name}
+                    src={footballer.profileImage ?? "/image2.png"}
+                    alt={footballer.name}
                     fill
                     style={{ objectFit: "cover" }}
                   />
@@ -132,19 +106,21 @@ const LegendSection = () => {
                     />
                   </div>
                   <div className="legend-card-back-bottom">
-                    <h4>{legend.name}</h4>
-                    <p>{legend.desc}</p>
-                    <Link
-                      href={`/product/${legend.productId}`}
-                      className="legend-view-btn"
-                    >
-                      View Product
+                    <h4>{footballer.name}</h4>
+                    <p style={{
+                      overflow: "hidden",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                    }}>{footballer.bio ?? "A legend of the game."}</p>
+                    <Link href="/product" className="legend-view-btn">
+                      View Products
                     </Link>
                   </div>
                 </div>
               </div>
 
-              <p className="legend-card-label">{legend.name}</p>
+              <p className="legend-card-label">{footballer.name}</p>
             </div>
           ))}
         </div>

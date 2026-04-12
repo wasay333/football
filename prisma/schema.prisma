@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum ProductStatus {
+  DRAFT     // not visible to customers
+  ACTIVE    // live on the store
+  ARCHIVED  // hidden but kept for order history
+}
+
+enum OrderStatus {
+  PENDING     // just placed, awaiting confirmation
+  CONFIRMED   // admin confirmed / payment received
+  PROCESSING  // being packed / prepared
+  SHIPPED     // in transit
+  DELIVERED   // received by customer
+  CANCELLED   // cancelled before delivery
+  REFUNDED    // returned and refunded
+}
+
+// ─── Footballer ───────────────────────────────────────────────────────────────
+
+// Exactly 3 photos and 1 video shown on the product page.
+// videoThumbnail is the preview frame displayed before the video plays.
+model Footballer {
+  id             String    @id @default(uuid())
+  name           String
+  position       String?
+  club           String?
+  nationality    String?
+  bio            String?
+  profileImage   String?   // small photo used in admin lists
+  image1         String?   // first photo on product page
+  image2         String?   // second photo
+  image3         String?   // third photo
+  videoUrl       String?   // the one featured video
+  videoThumbnail String?   // preview frame for the video
+  products       Product[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// ─── Catalogue ───────────────────────────────────────────────────────────────
+
+// Optional grouping for caps (e.g. "Snapback", "Fitted", "Limited Edition")
+model Category {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  slug      String    @unique  // URL-safe name: "limited-edition"
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+// Each cap is tied to exactly one footballer.
+// capImage1 is the cover shown in listings; 2 and 3 are the detail gallery.
+// lowStockThreshold: admin gets a warning when stock falls to this number.
+// allowPreorder: when true and stock = 0, customers see "Pre-order" instead of "Out of stock".
+model Product {
+  id                String        @id @default(uuid())
+  name              String
+  slug              String        @unique // URL-safe name: "messi-signature-cap"
+  description       String
+  price             Decimal       @db.Decimal(10, 2)
+  stock             Int           @default(0)
+  lowStockThreshold Int           @default(5)
+  allowPreorder     Boolean       @default(false)
+  status            ProductStatus @default(DRAFT)
+  category          Category?     @relation(fields: [categoryId], references: [id])
+  categoryId        String?
+  footballer        Footballer    @relation(fields: [footballerId], references: [id])
+  footballerId      String
+  sizes             String[]      @default([]) // e.g. ["S/M", "L/XL"] — empty means one-size
+  capImage1         String?       // cover / main image
+  capImage2         String?
+  capImage3         String?
+  orderItems        OrderItem[]
+  reviews           Review[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+// ─── Reviews ─────────────────────────────────────────────────────────────────
+
+model Review {
+  id        String   @id @default(uuid())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  name      String
+  rating    Int      // 1–5
+  body      String
+  createdAt DateTime @default(now())
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+// Guest checkout — no customer account needed.
+// Customer info is stored directly on the order.
+// isPreorder = true means the order was placed when stock was 0.
+model Order {
+  id            String               @id @default(uuid())
+  orderNumber   String               @unique  // human-readable: ORD-20240315-001
+  status        OrderStatus          @default(PENDING)
+  // Customer details
+  customerName  String
+  customerEmail String
+  customerPhone String?
+  // Shipping address
+  address       String
+  city          String
+  postalCode    String
+  country       String
+  // Financials (snapshot at time of order)
+  subtotal      Decimal              @db.Decimal(10, 2)
+  shippingCost  Decimal              @db.Decimal(10, 2) @default(0)
+  total         Decimal              @db.Decimal(10, 2)
+  // Pre-order flag — true when placed with stock = 0
+  isPreorder      Boolean              @default(false)
+  notes           String?
+  paymentIntentId String?              @unique
+  items           OrderItem[]
+  statusHistory OrderStatusHistory[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}
+
+// Snapshot of what was ordered — preserves product name, image, and price
+// even if the product is later edited or archived.
+model OrderItem {
+  id           String   @id @default(uuid())
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId      String
+  product      Product  @relation(fields: [productId], references: [id])
+  productId    String
+  productName  String   // snapshot
+  productImage String   // snapshot (capImage1 at time of order)
+  size         String?  // selected size, if any
+  quantity     Int
+  unitPrice    Decimal  @db.Decimal(10, 2) // snapshot
+  isPreorder   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+// Full audit trail — every time the admin moves an order to a new status,
+// a row is added here. The admin can also leave a note (e.g. tracking number).
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  status    OrderStatus
+  note      String?     // e.g. "Shipped via DHL — tracking: 1Z999AA1"
+  createdAt DateTime    @default(now())
+}

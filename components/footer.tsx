@@ -206,7 +206,7 @@ const Footer = () => {
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; 2026 Legacy Caps. All rights reserved.</p>
+        <p>&copy; 2026 Foocaps. All rights reserved.</p>
       </div>
     </footer>
   );
