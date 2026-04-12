@@ -33,7 +33,7 @@ const MobileNav = () => {
       <aside className={`mobile-drawer ${open ? "open" : ""}`}>
         <div className="mobile-drawer-logo">
           <Image
-            src="/foocaps-logo.svg"
+            src="/foocaps-logo.png"
             alt="Foocaps"
             width={120}
             height={34}
