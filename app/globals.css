@@ -4424,4 +4424,3 @@ main {
   .ap-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
   .ap-stat-value { font-size: 2.2rem; }
 }
-}
