@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
-import { updateOrderStatusAction, type UpdateStatusState } from '../actions'
+import { updateOrderStatusAction, type UpdateStatusState } from '../../actions'
 import type { OrderStatus } from '@prisma/client'
 
 const ALL_STATUSES: OrderStatus[] = [

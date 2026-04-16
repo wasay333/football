@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { prisma } from '@/prisma'
 import { Badge } from '@/components/ui/badge'
+
+export const dynamic = "force-dynamic";
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import {

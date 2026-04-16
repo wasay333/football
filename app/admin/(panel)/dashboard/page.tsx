@@ -1,5 +1,7 @@
 import { Package, ShoppingCart, DollarSign, Users } from 'lucide-react'
 
+export const dynamic = "force-dynamic";
+
 import {
   Card,
   CardContent,

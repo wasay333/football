@@ -1,6 +1,8 @@
 import { prisma } from "@/prisma";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+
+export const dynamic = "force-dynamic";
 import ProductActions from "./_components/product-actions";
 import ReviewList from "./_components/review-list";
 import ReviewForm from "./_components/review-form";

@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { prisma } from '@/prisma'
+
+export const dynamic = "force-dynamic";
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'

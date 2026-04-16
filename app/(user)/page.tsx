@@ -1,5 +1,7 @@
 import { prisma } from "@/prisma";
 import HeroSection from "@/components/hero-section";
+
+export const dynamic = "force-dynamic";
 import AboutSection from "@/components/about-section";
 import CrownSection from "@/components/crown-section";
 import LegendSection from "@/components/legend-section";

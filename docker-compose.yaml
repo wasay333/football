@@ -12,6 +12,11 @@ services:
       - football_data:/var/lib/postgresql/data
     networks:
       - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-football}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
     # In production the CI/CD pipeline pushes a pre-built image to ghcr.io.
@@ -23,7 +28,8 @@ services:
     container_name: football_app
     restart: unless-stopped
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-football}
       JWT_SECRET: ${JWT_SECRET}

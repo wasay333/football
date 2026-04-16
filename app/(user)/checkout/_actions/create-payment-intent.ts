@@ -60,7 +60,7 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
       price: Number(product.price),
       quantity: input.quantity,
       size: input.size ?? null,
-      image: product.capImage1,
+      image: product.capImage1 ?? "",
       isPreorder: product.stock === 0 && product.allowPreorder,
     });
   }
@@ -84,7 +84,7 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
   const shipping = shippingPence / 100;
 
   return {
-    clientSecret: paymentIntent.client_secret,
+    clientSecret: paymentIntent.client_secret ?? "",
     totals: { subtotal, shipping, total: subtotal + shipping },
   };
 }

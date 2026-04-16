@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { prisma } from '@/prisma'
 import { Button } from '@/components/ui/button'
+
+export const dynamic = "force-dynamic";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'

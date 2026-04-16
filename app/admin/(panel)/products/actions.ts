@@ -25,7 +25,7 @@ const ProductSchema = z.object({
     .transform((val) => {
       try { return JSON.parse(val) as string[] } catch { return [] }
     })
-    .pipe(z.array(z.string().min(1)).default([])),
+    .pipe(z.array(z.string().min(1))),
   capImage1: z.string().optional(),
   capImage2: z.string().optional(),
   capImage3: z.string().optional(),

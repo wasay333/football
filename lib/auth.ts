@@ -6,6 +6,7 @@ const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 export interface AdminTokenPayload {
   id: string
   email: string
+  [key: string]: string
 }
 
 export async function signToken(payload: AdminTokenPayload): Promise<string> {
