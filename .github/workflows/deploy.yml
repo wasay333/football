@@ -88,15 +88,19 @@ jobs:
 
             docker compose pull app
 
+            # Ensure postgres is running first
+            docker compose up -d postgres
+            sleep 5
+
+            # Run pending migrations
+            docker compose run --rm -e DATABASE_URL="postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-football}" app ./node_modules/.bin/prisma migrate deploy
+
             # Restart only the app container — postgres and nginx keep running
             docker compose up -d --no-deps app
 
-            # Wait for app to be healthy before running migrations
+            # Wait for app to be healthy
             echo "Waiting for app to start..."
-            sleep 10
-
-            # Run pending migrations (never db push in production)
-            docker compose exec -T app npx prisma migrate deploy
+            sleep 15
 
             # Verify app is responding
             curl -sf http://localhost:3000 > /dev/null || \
