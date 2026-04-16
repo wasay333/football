@@ -93,7 +93,7 @@ jobs:
             sleep 8
 
             # Run pending migrations using the project's prisma version
-            docker compose run --rm app ./node_modules/.bin/prisma migrate deploy
+            docker compose run --rm app node node_modules/prisma/build/index.js migrate deploy
 
             # Start/restart app and nginx
             docker compose up -d --no-deps app
