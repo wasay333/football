@@ -171,7 +171,7 @@ const Footer = () => {
           </div>
 
           <div className="footer-logo">
-            LEGACY <span>CAPS</span>
+            FOO<span>CAPS</span>
           </div>
 
           <div className="footer-contact">

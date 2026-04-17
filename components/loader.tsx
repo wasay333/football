@@ -74,7 +74,7 @@ const Loader = () => {
       <div ref={overlayTopRef} className="loader-curtain loader-curtain--top">
         <div ref={textRef} className="loader-content">
           <div className="loader-logo">
-            <span className="loader-logo-legacy">LEGACY</span>
+            <span className="loader-logo-legacy">FOO</span>
             <span className="loader-logo-caps">CAPS</span>
           </div>
           <div className="loader-progress-track">
