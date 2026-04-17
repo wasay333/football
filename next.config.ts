@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'i.pinimg.com' },
+      { protocol: 'https', hostname: '*.pinimg.com' },
+      { protocol: 'https', hostname: 'pinimg.com' },
+    ],
+  },
 };
 
 export default nextConfig;
