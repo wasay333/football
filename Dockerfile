@@ -48,8 +48,9 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/prisma ./prisma
 
-# Ensure uploads directory exists and is writable
-RUN mkdir -p ./public/assets && chown -R nextjs:nodejs ./public/assets
+# Ensure runtime-writable directories exist for uploads and Next image cache
+RUN mkdir -p ./public/assets ./.next/cache && \
+    chown -R nextjs:nodejs ./public/assets ./.next
 
 USER nextjs
 

@@ -65,17 +65,6 @@ export default function CheckoutForm({ paymentIntentId, totals }: CheckoutFormPr
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/success`,
-        receipt_email: form.email,
-        shipping: {
-          name: form.name,
-          phone: form.phone,
-          address: {
-            line1: form.address,
-            city: form.city,
-            postal_code: form.postalCode,
-            country: form.country,
-          },
-        },
       },
     });
 
