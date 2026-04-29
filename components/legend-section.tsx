@@ -103,7 +103,7 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
                       src={footballer.products[0]?.capImage1 ?? "/image2.png"}
                       alt={`${footballer.name} cap`}
                       fill
-                      style={{ objectFit: "contain" }}
+                      style={{ objectFit: "cover" }}
                     />
                   </div>
                   <div className="legend-card-back-bottom">

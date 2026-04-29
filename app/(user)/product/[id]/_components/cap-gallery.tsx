@@ -36,20 +36,15 @@ export default function CapGallery({
               key={i}
               onClick={() => setActive(i)}
               className="pdp-thumb"
-              style={{
-                borderColor: i === active ? 'var(--color-gold)' : undefined,
-                padding: 0,
-                background: 'none',
-                cursor: 'pointer',
-              }}
+              style={{ borderColor: i === active ? 'var(--color-gold)' : 'transparent' }}
               aria-label={`View image ${i + 1}`}
             >
               <Image
                 src={src}
                 alt={`${name} view ${i + 1}`}
                 fill
-                sizes="100px"
-                style={{ objectFit: 'contain' }}
+                sizes="90px"
+                style={{ objectFit: 'cover' }}
               />
             </button>
           ))}

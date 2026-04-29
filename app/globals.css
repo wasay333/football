@@ -679,17 +679,19 @@ main {
 
 .legend-card-back-top {
   position: relative;
-  flex: 1;
-  background: var(--color-cream);
-  padding: 16px;
+  flex: 0 0 55%;
+  background: #111;
+  overflow: hidden;
 }
 
 .legend-card-back-bottom {
-  padding: 16px 14px;
+  flex: 1;
+  padding: 14px 14px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   background: var(--color-navy);
 }
@@ -1231,12 +1233,15 @@ main {
   position: relative;
   width: 90px;
   height: 90px;
-  background: var(--color-cream-dark);
+  flex-shrink: 0;
+  background: #111;
   border-radius: 12px;
   overflow: hidden;
   border: 2px solid transparent;
+  box-sizing: border-box;
   cursor: pointer;
   transition: border-color 0.2s ease;
+  padding: 0;
 }
 
 .pdp-thumb:hover {
@@ -3857,7 +3862,7 @@ main {
   }
 
   .legend-card-back-top {
-    padding: 8px;
+    flex: 0 0 50%;
   }
 
   .legend-card-back-bottom {
