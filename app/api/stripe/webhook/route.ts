@@ -2,28 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/prisma";
 import Stripe from "stripe";
+import { Resend } from "resend";
+import { buildOrderConfirmationEmail } from "@/lib/email/order-confirmation";
+import { buildLowStockAlertEmail } from "@/lib/email/low-stock-alert";
 import type { TrustedLineItem } from "@/app/(user)/checkout/_actions/create-payment-intent";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+  if (!sig || !webhookSecret) {
+    console.error("Webhook secret or signature missing — set STRIPE_WEBHOOK_SECRET");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+  }
+
   let event: Stripe.Event;
 
-  if (sig && webhookSecret && !webhookSecret.startsWith("whsec_REPLACE")) {
-    try {
-      event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-    } catch (err) {
-      console.error("Webhook signature verification failed:", err);
-      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
-    }
-  } else {
-    try {
-      event = JSON.parse(body) as Stripe.Event;
-    } catch {
-      return NextResponse.json({ error: "Invalid body" }, { status: 400 });
-    }
+  try {
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+  } catch (err) {
+    console.error("Webhook signature verification failed:", err);
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
   switch (event.type) {
@@ -60,6 +62,13 @@ async function handlePaymentSuccess(pi: Stripe.PaymentIntent) {
 
   const shipping = pi.shipping;
 
+  const customerName = shipping?.name ?? "Guest";
+  const customerEmail = pi.receipt_email ?? "";
+  const address = shipping?.address?.line1 ?? "";
+  const city = shipping?.address?.city ?? "";
+  const postalCode = shipping?.address?.postal_code ?? "";
+  const country = shipping?.address?.country ?? "";
+
   await prisma.$transaction(async (tx) => {
     // Decrement stock for each item (skip pre-orders — stock already 0)
     for (const item of items) {
@@ -77,13 +86,13 @@ async function handlePaymentSuccess(pi: Stripe.PaymentIntent) {
         status: "CONFIRMED",
         paymentIntentId: pi.id,
         isPreorder,
-        customerName: shipping?.name ?? "Guest",
-        customerEmail: pi.receipt_email ?? "",
+        customerName,
+        customerEmail,
         customerPhone: shipping?.phone ?? "",
-        address: shipping?.address?.line1 ?? "",
-        city: shipping?.address?.city ?? "",
-        postalCode: shipping?.address?.postal_code ?? "",
-        country: shipping?.address?.country ?? "",
+        address,
+        city,
+        postalCode,
+        country,
         subtotal,
         shippingCost,
         total,
@@ -108,6 +117,53 @@ async function handlePaymentSuccess(pi: Stripe.PaymentIntent) {
       },
     });
   });
+
+  // Check for low stock on non-preorder items and alert admin
+  const nonPreorderIds = items.filter((i) => !i.isPreorder).map((i) => i.productId);
+  if (nonPreorderIds.length) {
+    const updatedProducts = await prisma.product.findMany({
+      where: { id: { in: nonPreorderIds } },
+      select: { name: true, stock: true, lowStockThreshold: true },
+    });
+
+    const lowStockItems = updatedProducts.filter((p) => p.stock <= p.lowStockThreshold);
+
+    if (lowStockItems.length) {
+      resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL ?? "Foocaps <onboarding@resend.dev>",
+        to: "info@foocaps.com",
+        subject: `⚠️ Low Stock Alert — ${lowStockItems.length} product${lowStockItems.length > 1 ? "s" : ""} need restocking`,
+        html: buildLowStockAlertEmail({ items: lowStockItems }),
+      }).catch((err) => console.error("Failed to send low stock alert:", err));
+    }
+  }
+
+  // Send order confirmation email — fire and forget, don't block the webhook response
+  if (customerEmail) {
+    resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL ?? "Foocaps <onboarding@resend.dev>",
+      to: customerEmail,
+      subject: `Order Confirmed — ${orderNumber}`,
+      html: buildOrderConfirmationEmail({
+        orderNumber,
+        customerName,
+        items: items.map((i) => ({
+          productName: i.name,
+          size: i.size,
+          quantity: i.quantity,
+          unitPrice: i.price,
+          isPreorder: i.isPreorder,
+        })),
+        subtotal,
+        shippingCost,
+        total,
+        address,
+        city,
+        postalCode,
+        country,
+      }),
+    }).catch((err) => console.error("Failed to send order confirmation email:", err));
+  }
 }
 
 async function handlePaymentFailed(pi: Stripe.PaymentIntent) {

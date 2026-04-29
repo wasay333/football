@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useCart } from "@/hooks/cart-context";
 import { verifyPayment } from "../_actions/verify-payment";
 
-type PaymentStatus = "loading" | "succeeded" | "failed" | "unknown";
+type PaymentStatus = "loading" | "succeeded" | "processing" | "failed" | "unknown";
 
 export default function SuccessContent() {
   const searchParams = useSearchParams();
@@ -26,9 +26,8 @@ export default function SuccessContent() {
         clearCart();
         setPaymentStatus("succeeded");
       } else if (status === "processing") {
-        // Payment still processing — show as success, webhook will create order
         clearCart();
-        setPaymentStatus("succeeded");
+        setPaymentStatus("processing");
       } else {
         setPaymentStatus("failed");
       }
@@ -56,6 +55,22 @@ export default function SuccessContent() {
           <div className="success-actions">
             <Link href="/checkout" className="success-btn-primary">Try Again</Link>
             <Link href="/cart" className="success-btn-secondary">Back to Cart</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (paymentStatus === "processing") {
+    return (
+      <div className="success-page">
+        <div className="success-card">
+          <h1 className="success-title">Payment Processing</h1>
+          <p className="success-sub">
+            Your payment is being confirmed. We&apos;ll email you once your order is placed — this usually takes a few minutes.
+          </p>
+          <div className="success-actions">
+            <Link href="/" className="success-btn-secondary">Back to Home</Link>
           </div>
         </div>
       </div>
