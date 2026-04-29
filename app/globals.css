@@ -1010,7 +1010,7 @@ main {
   position: relative;
   width: 280px;
   height: 280px;
-  background: var(--color-cream-dark);
+  background: #111;
   border-radius: 16px;
   overflow: hidden;
 }
@@ -2767,7 +2767,7 @@ main {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: var(--color-cream-dark);
+  background: #111;
   overflow: hidden;
 }
 

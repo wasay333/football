@@ -4,6 +4,7 @@ import Image from "next/image";
 
 export const dynamic = "force-dynamic";
 import ProductActions from "./_components/product-actions";
+import CapGallery from "./_components/cap-gallery";
 import ReviewList from "./_components/review-list";
 import ReviewForm from "./_components/review-form";
 
@@ -117,20 +118,11 @@ const SingleProductPage = async ({ params }: Props) => {
 
       {/* ── 6. Purchase section ── */}
       <div className="pdp-purchase">
-        {/* Cap image */}
-        {product.capImage1 && (
-          <div className="pdp-cap-wrap">
-            <div className="pdp-cap-img">
-              <Image
-                src={product.capImage1}
-                alt={product.name}
-                fill
-                sizes="320px"
-                style={{ objectFit: "contain" }}
-              />
-            </div>
-          </div>
-        )}
+        {/* Cap image gallery */}
+        <CapGallery
+          images={([product.capImage1, product.capImage2, product.capImage3].filter(Boolean) as string[])}
+          name={product.name}
+        />
 
         {/* Details */}
         <div className="pdp-details">
@@ -163,24 +155,6 @@ const SingleProductPage = async ({ params }: Props) => {
         </div>
       </div>
 
-      {/* ── 7. Thumbnails ── */}
-      {[product.capImage1, product.capImage2, product.capImage3].some(Boolean) && (
-        <div className="pdp-thumbs-row">
-          {([product.capImage1, product.capImage2, product.capImage3].filter(Boolean) as string[]).map(
-            (src, i) => (
-              <div key={i} className="pdp-thumb">
-                <Image
-                  src={src}
-                  alt={`${product.name} view ${i + 1}`}
-                  fill
-                  sizes="100px"
-                  style={{ objectFit: "contain" }}
-                />
-              </div>
-            )
-          )}
-        </div>
-      )}
 
       {/* ── 8. Reviews ── */}
       <div className="pdp-reviews-outer">
