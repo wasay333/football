@@ -19,7 +19,7 @@ const LandingPage = async () => {
         bio: true,
         products: {
           take: 1,
-          where: { status: "ACTIVE" },
+          where: { capImage1: { not: null } },
           orderBy: { createdAt: "desc" },
           select: { capImage1: true },
         },
