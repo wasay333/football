@@ -76,7 +76,7 @@ const Loader = () => {
         <div ref={textRef} className="loader-content">
           <div className="loader-logo">
             <Image
-              src="/foocapsnewlogo.png"
+              src="/foocaps-logo.png"
               alt="Foocaps"
               width={180}
               height={56}

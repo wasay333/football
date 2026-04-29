@@ -15,7 +15,7 @@ export default function CapGallery({
   if (!images.length) return null
 
   return (
-    <>
+    <div className="pdp-cap-section">
       <div className="pdp-cap-wrap">
         <div className="pdp-cap-img">
           <Image
@@ -43,13 +43,13 @@ export default function CapGallery({
                 src={src}
                 alt={`${name} view ${i + 1}`}
                 fill
-                sizes="90px"
+                sizes="80px"
                 style={{ objectFit: 'cover' }}
               />
             </button>
           ))}
         </div>
       )}
-    </>
+    </div>
   )
 }

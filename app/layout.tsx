@@ -20,8 +20,9 @@ export const metadata: Metadata = {
   },
   description: 'Football-inspired headwear. Crown your game with Foocaps.',
   icons: {
-    icon: '/foocapsfavicon.png',
-    apple: '/foocapsfavicon.png',
+    icon: [{ url: '/foocapsfavicon.png', type: 'image/png' }],
+    apple: [{ url: '/foocapsfavicon.png', type: 'image/png' }],
+    shortcut: '/foocapsfavicon.png',
   },
 }
 

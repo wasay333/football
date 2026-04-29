@@ -1003,14 +1003,21 @@ main {
   padding: 0 48px 60px;
 }
 
-.pdp-cap-wrap {
+.pdp-cap-section {
   flex-shrink: 0;
   width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pdp-cap-wrap {
+  width: 100%;
 }
 
 .pdp-cap-img {
   position: relative;
-  width: 280px;
+  width: 100%;
   height: 280px;
   background: #111;
   border-radius: 16px;
@@ -1226,15 +1233,15 @@ main {
 /* Thumbnails row */
 .pdp-thumbs-row {
   display: flex;
-  gap: 12px;
-  justify-content: center;
-  padding: 0 48px 40px;
+  gap: 10px;
+  justify-content: flex-start;
+  padding: 0;
 }
 
 .pdp-thumb {
   position: relative;
-  width: 90px;
-  height: 90px;
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
   background: #111;
   border-radius: 12px;
@@ -1584,6 +1591,7 @@ main {
 
   .pdp-hero {
     height: 55vh;
+    min-height: 320px;
   }
 
   .pdp-hero-overlay {
@@ -1623,11 +1631,12 @@ main {
     gap: 24px;
   }
 
-  .pdp-cap-wrap { width: 100%; }
-  .pdp-cap-img  { width: 100%; height: 260px; }
+  .pdp-cap-section { width: 100%; }
+  .pdp-cap-img  { height: 260px; }
 
   .pdp-thumbs-row {
-    padding: 0 24px 32px;
+    justify-content: center;
+    padding: 0;
   }
 
   .pdp-reviews-outer {
@@ -1636,14 +1645,25 @@ main {
 }
 
 @media (max-width: 480px) {
+  .pdp-hero         { min-height: 260px; }
   .pdp-product-name { font-size: 1.6rem; letter-spacing: 2px; }
   .pdp-price        { font-size: 1.5rem; }
   .pdp-btns         { flex-direction: column; }
   .pdp-btn          { width: 100%; text-align: center; }
+  .pdp-cap-img      { height: 220px; }
+  .pdp-thumb        { width: 68px; height: 68px; }
   .pdp-diamond      { width: 140px; height: 140px; }
   .pdp-diamond--0   { left: calc(50% - 160px); top: 75px; }
   .pdp-diamond--1   { left: calc(50% - 70px);  top: 45px; }
   .pdp-diamond--2   { left: calc(50% + 20px);  top: 75px; }
+}
+
+@media (max-width: 380px) {
+  .pdp-diamond-gallery { height: 240px; margin-top: -110px; }
+  .pdp-diamond      { width: 110px; height: 110px; }
+  .pdp-diamond--0   { left: calc(50% - 120px); top: 55px; }
+  .pdp-diamond--1   { left: calc(50% - 55px);  top: 30px; }
+  .pdp-diamond--2   { left: calc(50% + 10px);  top: 55px; }
 }
 
 /* ========== CHECKOUT PAGE ========== */
