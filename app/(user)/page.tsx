@@ -12,7 +12,18 @@ const LandingPage = async () => {
     prisma.footballer.findMany({
       take: 4,
       orderBy: { createdAt: "asc" },
-      select: { id: true, name: true, profileImage: true, bio: true },
+      select: {
+        id: true,
+        name: true,
+        profileImage: true,
+        bio: true,
+        products: {
+          take: 1,
+          where: { status: "ACTIVE" },
+          orderBy: { createdAt: "desc" },
+          select: { capImage1: true },
+        },
+      },
     }),
     prisma.product.findMany({
       where: { status: "ACTIVE" },
@@ -23,6 +34,7 @@ const LandingPage = async () => {
         name: true,
         price: true,
         capImage1: true,
+        description: true,
         footballer: { select: { name: true } },
       },
     }),

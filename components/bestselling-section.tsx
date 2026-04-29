@@ -13,6 +13,7 @@ type Product = {
   name: string;
   price: unknown;
   capImage1: string | null;
+  description: string;
   footballer: { name: string } | null;
 };
 
@@ -115,16 +116,17 @@ const BestsellingSection = ({ products }: { products: Product[] }) => {
               ref={(el) => { cardRefs.current[i] = el; }}
               className={`bestselling-card ${i === Math.floor(products.length / 2) ? "bestselling-card--center" : ""}`}
             >
-              {item.footballer && (
-                <div className="bestselling-card-player">{item.footballer.name.toUpperCase()}</div>
-              )}
               <div className="bestselling-card-image">
                 {item.capImage1 && (
-                  <Image src={item.capImage1} alt={item.name} fill style={{ objectFit: "contain" }} />
+                  <Image src={item.capImage1} alt={item.name} fill style={{ objectFit: "cover" }} />
                 )}
               </div>
               <div className="bestselling-card-info">
+                {item.footballer && (
+                  <div className="bestselling-card-player">{item.footballer.name.toUpperCase()}</div>
+                )}
                 <h4>{item.name}</h4>
+                <p className="bestselling-card-desc">{item.description}</p>
                 <div className="bestselling-card-price">${Number(item.price).toFixed(2)}</div>
               </div>
             </div>

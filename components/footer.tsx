@@ -66,18 +66,14 @@ const Footer = () => {
   const footerRef = useRef<HTMLElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
   const centerRef = useRef<HTMLDivElement>(null);
-  const capRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const footer = footerRef.current;
     const left = leftRef.current;
     const center = centerRef.current;
-    const cap = capRef.current;
 
-    if (!footer || !left || !center || !cap) return;
+    if (!footer || !left || !center) return;
 
     const ctx = gsap.context(() => {
-      // Left column slides in from left
       gsap.fromTo(
         left,
         { x: -60, opacity: 0 },
@@ -94,7 +90,6 @@ const Footer = () => {
         }
       );
 
-      // Center nav links stagger in
       const links = center.querySelectorAll(".footer-nav-link");
       gsap.fromTo(
         links,
@@ -112,34 +107,6 @@ const Footer = () => {
           },
         }
       );
-
-      // Cap image floats in from right with rotation
-      gsap.fromTo(
-        cap,
-        { x: 80, opacity: 0, rotation: 15 },
-        {
-          x: 0,
-          opacity: 1,
-          rotation: -5,
-          duration: 1,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: footer,
-            start: "top 85%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-
-      // Subtle continuous tilt on cap
-      gsap.to(cap, {
-        rotation: 5,
-        duration: 3,
-        ease: "sine.inOut",
-        repeat: -1,
-        yoyo: true,
-        delay: 1,
-      });
     }, footerRef);
 
     return () => ctx.revert();
@@ -172,7 +139,7 @@ const Footer = () => {
 
           <div className="footer-logo">
             <Image
-              src="/foocapsnewlogo.png"
+              src="/foocaps-logo.png"
               alt="Foocaps"
               width={160}
               height={50}
@@ -199,16 +166,6 @@ const Footer = () => {
           ))}
         </nav>
 
-        {/* Right Column — Cap Image */}
-        <div ref={capRef} className="footer-cap">
-          <Image
-            src="/image2.png"
-            alt="Legacy Cap"
-            width={220}
-            height={180}
-            style={{ objectFit: "contain" }}
-          />
-        </div>
       </div>
 
       <div className="footer-bottom">

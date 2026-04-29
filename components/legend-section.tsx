@@ -13,6 +13,7 @@ export type LegendFootballer = {
   name: string;
   profileImage: string | null;
   bio: string | null;
+  products: { capImage1: string | null }[];
 };
 
 const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => {
@@ -99,8 +100,8 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
                 <div className="legend-card-back">
                   <div className="legend-card-back-top">
                     <Image
-                      src="/image2.png"
-                      alt="Legacy Cap"
+                      src={footballer.products[0]?.capImage1 ?? "/image2.png"}
+                      alt={`${footballer.name} cap`}
                       fill
                       style={{ objectFit: "contain" }}
                     />
