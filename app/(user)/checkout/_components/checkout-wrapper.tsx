@@ -19,6 +19,7 @@ export type TrustedTotals = {
 export default function CheckoutWrapper() {
   const { items } = useCart();
   const router = useRouter();
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [trustedTotals, setTrustedTotals] = useState<TrustedTotals | null>(null);
   const [error, setError] = useState("");
@@ -35,7 +36,8 @@ export default function CheckoutWrapper() {
     ).then((res) => {
       if (res.error) {
         setError(res.error);
-      } else if (res.clientSecret && res.totals) {
+      } else if (res.paymentIntentId && res.clientSecret && res.totals) {
+        setPaymentIntentId(res.paymentIntentId);
         setClientSecret(res.clientSecret);
         setTrustedTotals(res.totals);
       }
@@ -50,7 +52,7 @@ export default function CheckoutWrapper() {
     );
   }
 
-  if (!clientSecret || !trustedTotals) {
+  if (!paymentIntentId || !clientSecret || !trustedTotals) {
     return (
       <div className="checkout-state">
         <span className="checkout-spinner checkout-spinner--dark" />
@@ -73,7 +75,7 @@ export default function CheckoutWrapper() {
 
   return (
     <Elements stripe={stripePromise} options={{ clientSecret, appearance, loader: "auto" }}>
-      <CheckoutForm totals={trustedTotals} />
+      <CheckoutForm paymentIntentId={paymentIntentId} totals={trustedTotals} />
     </Elements>
   );
 }

@@ -20,6 +20,16 @@ export type TrustedLineItem = {
   isPreorder: boolean;
 };
 
+export type CheckoutCustomerDetails = {
+  name: string;
+  email: string;
+  phone?: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+};
+
 export async function createPaymentIntent(inputs: CartLineInput[]) {
   if (!inputs.length) return { error: "Cart is empty" };
 
@@ -84,7 +94,60 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
   const shipping = shippingPence / 100;
 
   return {
+    paymentIntentId: paymentIntent.id,
     clientSecret: paymentIntent.client_secret ?? "",
     totals: { subtotal, shipping, total: subtotal + shipping },
   };
+}
+
+export async function updatePaymentIntentCustomerDetails(
+  paymentIntentId: string,
+  customer: CheckoutCustomerDetails
+) {
+  const normalized = {
+    name: customer.name.trim(),
+    email: customer.email.trim(),
+    phone: customer.phone?.trim() ?? "",
+    address: customer.address.trim(),
+    city: customer.city.trim(),
+    postalCode: customer.postalCode.trim(),
+    country: customer.country.trim().toUpperCase(),
+  };
+
+  if (
+    !paymentIntentId.trim() ||
+    !normalized.name ||
+    !normalized.email ||
+    !normalized.address ||
+    !normalized.city ||
+    !normalized.postalCode ||
+    !normalized.country
+  ) {
+    return { error: "Missing customer details for checkout." };
+  }
+
+  await stripe.paymentIntents.update(paymentIntentId, {
+    receipt_email: normalized.email,
+    shipping: {
+      name: normalized.name,
+      phone: normalized.phone || undefined,
+      address: {
+        line1: normalized.address,
+        city: normalized.city,
+        postal_code: normalized.postalCode,
+        country: normalized.country,
+      },
+    },
+    metadata: {
+      customerName: normalized.name,
+      customerEmail: normalized.email,
+      customerPhone: normalized.phone,
+      customerAddressLine1: normalized.address,
+      customerCity: normalized.city,
+      customerPostalCode: normalized.postalCode,
+      customerCountry: normalized.country,
+    },
+  });
+
+  return { ok: true };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   PaymentElement,
@@ -9,8 +9,14 @@ import {
 } from "@stripe/react-stripe-js";
 import { useCart } from "@/hooks/cart-context";
 import type { TrustedTotals } from "./checkout-wrapper";
+import { updatePaymentIntentCustomerDetails } from "../_actions/create-payment-intent";
 
-export default function CheckoutForm({ totals }: { totals: TrustedTotals }) {
+type CheckoutFormProps = {
+  paymentIntentId: string;
+  totals: TrustedTotals;
+};
+
+export default function CheckoutForm({ paymentIntentId, totals }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -40,6 +46,13 @@ export default function CheckoutForm({ totals }: { totals: TrustedTotals }) {
 
     setStatus("loading");
     setErrorMsg("");
+
+    const updateResult = await updatePaymentIntentCustomerDetails(paymentIntentId, form);
+    if (updateResult.error) {
+      setErrorMsg(updateResult.error);
+      setStatus("error");
+      return;
+    }
 
     const { error: submitError } = await elements.submit();
     if (submitError) {
