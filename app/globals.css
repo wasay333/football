@@ -1122,8 +1122,10 @@ main {
 }
 
 .pdp-btn {
-  padding: 13px 32px;
+  flex: 1;
+  padding: 13px 24px;
   border-radius: 50px;
+  white-space: nowrap;
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 1px;
