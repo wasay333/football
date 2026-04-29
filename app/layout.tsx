@@ -14,15 +14,63 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://foocaps.com'),
   title: {
     default: 'Foocaps - Wear The Legacy',
     template: '%s | Foocaps',
   },
   description: 'Football-inspired headwear. Crown your game with Foocaps.',
+  applicationName: 'Foocaps',
+  keywords: [
+    'Foocaps',
+    'football caps',
+    'football inspired headwear',
+    'soccer caps',
+    'football merchandise',
+  ],
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    url: '/',
+    siteName: 'Foocaps',
+    title: 'Foocaps - Wear The Legacy',
+    description: 'Football-inspired headwear. Crown your game with Foocaps.',
+    images: [
+      {
+        url: '/foocapsnewlogo.png',
+        width: 1200,
+        height: 630,
+        alt: 'Foocaps',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Foocaps - Wear The Legacy',
+    description: 'Football-inspired headwear. Crown your game with Foocaps.',
+    images: ['/foocapsnewlogo.png'],
+  },
   icons: {
-    icon: [{ url: '/foocapsfavicon.png', type: 'image/png' }],
-    apple: [{ url: '/foocapsfavicon.png', type: 'image/png' }],
-    shortcut: '/foocapsfavicon.png',
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/foocapsfavicon.png', type: 'image/png', sizes: '48x48' },
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: [{ url: '/foocapsfavicon.png', type: 'image/png', sizes: '180x180' }],
+    shortcut: ['/favicon.ico'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
 }
 
