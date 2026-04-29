@@ -4,16 +4,6 @@ import { prisma } from '@/prisma'
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://foocaps.com'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [products, footballers] = await Promise.all([
-    prisma.product.findMany({
-      where: { status: 'ACTIVE' },
-      select: { id: true, updatedAt: true, footballerId: true },
-    }),
-    prisma.footballer.findMany({
-      select: { id: true, updatedAt: true },
-    }),
-  ])
-
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}/`,
@@ -34,6 +24,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
   ]
+
+  // Image builds in CI do not have database access, so fall back to static routes.
+  if (!process.env.DATABASE_URL) {
+    return staticRoutes
+  }
+
+  const [products, footballers] = await Promise.all([
+    prisma.product.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true, updatedAt: true },
+    }),
+    prisma.footballer.findMany({
+      select: { id: true, updatedAt: true },
+    }),
+  ])
 
   const productRoutes: MetadataRoute.Sitemap = products.map((product) => ({
     url: `${baseUrl}/product/${product.id}`,
