@@ -19,6 +19,10 @@ export const metadata: Metadata = {
     template: '%s | Foocaps',
   },
   description: 'Football-inspired headwear. Crown your game with Foocaps.',
+  icons: {
+    icon: '/foocapsfavicon.png',
+    apple: '/foocapsfavicon.png',
+  },
 }
 
 export default function RootLayout({

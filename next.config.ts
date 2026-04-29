@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     localPatterns: [
-      { pathname: '/assets/**' },
+      { pathname: '/**' },
     ],
     remotePatterns: [
       { protocol: 'https', hostname: 'i.pinimg.com' },

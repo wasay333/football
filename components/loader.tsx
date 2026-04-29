@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import gsap from "gsap";
 
 const Loader = () => {
@@ -74,8 +75,14 @@ const Loader = () => {
       <div ref={overlayTopRef} className="loader-curtain loader-curtain--top">
         <div ref={textRef} className="loader-content">
           <div className="loader-logo">
-            <span className="loader-logo-legacy">FOO</span>
-            <span className="loader-logo-caps">CAPS</span>
+            <Image
+              src="/foocapsnewlogo.png"
+              alt="Foocaps"
+              width={180}
+              height={56}
+              style={{ objectFit: "contain" }}
+              priority
+            />
           </div>
           <div className="loader-progress-track">
             <div ref={progressRef} className="loader-progress-bar" />

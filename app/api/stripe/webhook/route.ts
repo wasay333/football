@@ -7,8 +7,6 @@ import { buildOrderConfirmationEmail } from "@/lib/email/order-confirmation";
 import { buildLowStockAlertEmail } from "@/lib/email/low-stock-alert";
 import type { TrustedLineItem } from "@/app/(user)/checkout/_actions/create-payment-intent";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
@@ -43,6 +41,7 @@ export async function POST(req: NextRequest) {
 }
 
 async function handlePaymentSuccess(pi: Stripe.PaymentIntent) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   // Idempotency — unique constraint on paymentIntentId prevents duplicates
   const existing = await prisma.order.findUnique({
     where: { paymentIntentId: pi.id },

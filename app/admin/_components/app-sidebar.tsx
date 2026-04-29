@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Package, ShoppingCart, LogOut, Users, Tag } from 'lucide-react'
@@ -35,13 +36,14 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-600 text-white text-sm font-bold">
-            LC
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold">Foocaps</span>
-            <span className="text-xs text-muted-foreground">Admin Panel</span>
-          </div>
+          <Image
+            src="/foocapsnewlogo.png"
+            alt="Foocaps"
+            width={100}
+            height={32}
+            style={{ objectFit: "contain" }}
+          />
+          <span className="text-xs text-muted-foreground">Admin Panel</span>
         </div>
       </SidebarHeader>
 

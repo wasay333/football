@@ -171,7 +171,13 @@ const Footer = () => {
           </div>
 
           <div className="footer-logo">
-            FOO<span>CAPS</span>
+            <Image
+              src="/foocapsnewlogo.png"
+              alt="Foocaps"
+              width={160}
+              height={50}
+              style={{ objectFit: "contain" }}
+            />
           </div>
 
           <div className="footer-contact">
