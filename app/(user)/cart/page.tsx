@@ -75,7 +75,7 @@ export default function CartPage() {
         {/* Items */}
         <div className="cart-items">
           {items.map((item) => (
-            <div key={`${item.productId}__${item.size ?? ""}`} className="cart-item">
+            <div key={item.productId} className="cart-item">
               {/* Image */}
               <div className="cart-item-img">
                 <Image src={item.image} alt={item.name} fill sizes="140px" style={{ objectFit: "contain" }} />
@@ -88,7 +88,6 @@ export default function CartPage() {
                   <div className="cart-item-meta">
                     <p className="cart-item-name">{item.name}</p>
                     <div className="cart-item-tags">
-                      {item.size && <span className="cart-item-size">{item.size}</span>}
                       {item.allowPreorder && item.stock === 0 && (
                         <span className="cart-item-preorder">Pre-order</span>
                       )}
@@ -97,7 +96,7 @@ export default function CartPage() {
                   </div>
                   <button
                     className="cart-item-remove"
-                    onClick={() => removeFromCart(item.productId, item.size)}
+                    onClick={() => removeFromCart(item.productId)}
                     aria-label="Remove"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -112,13 +111,13 @@ export default function CartPage() {
                   <div className="cart-item-qty">
                     <button
                       className="cart-qty-btn"
-                      onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.productId, undefined, item.quantity - 1)}
                       disabled={item.quantity <= 1}
                     >−</button>
                     <span className="cart-qty-val">{item.quantity}</span>
                     <button
                       className="cart-qty-btn"
-                      onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.productId, undefined, item.quantity + 1)}
                     >+</button>
                   </div>
                   <p className="cart-item-price">${(item.price * item.quantity).toFixed(2)}</p>

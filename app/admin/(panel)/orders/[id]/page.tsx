@@ -89,7 +89,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <thead>
                 <tr className="border-b">
                   <th className="px-4 py-2 text-left font-medium text-muted-foreground">Product</th>
-                  <th className="px-4 py-2 text-left font-medium text-muted-foreground">Size</th>
                   <th className="px-4 py-2 text-left font-medium text-muted-foreground">Qty</th>
                   <th className="px-4 py-2 text-right font-medium text-muted-foreground">Unit Price</th>
                   <th className="px-4 py-2 text-right font-medium text-muted-foreground">Total</th>
@@ -108,7 +107,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{item.size ?? '—'}</td>
                     <td className="px-4 py-3">{item.quantity}</td>
                     <td className="px-4 py-3 text-right">${Number(item.unitPrice).toFixed(2)}</td>
                     <td className="px-4 py-3 text-right">${(Number(item.unitPrice) * item.quantity).toFixed(2)}</td>

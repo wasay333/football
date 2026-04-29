@@ -11,7 +11,6 @@ type Props = {
   image: string;
   stock: number;
   allowPreorder: boolean;
-  sizes: string[];
 };
 
 export default function ProductActions({
@@ -21,54 +20,29 @@ export default function ProductActions({
   image,
   stock,
   allowPreorder,
-  sizes,
 }: Props) {
   const [qty, setQty] = useState(1);
-  const [size, setSize] = useState<string | undefined>(undefined);
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
   const router = useRouter();
 
   const available = stock > 0 || allowPreorder;
-  const needsSize = sizes.length > 0 && !size;
 
   const handleAddToCart = () => {
-    if (!available || needsSize) return;
-    addToCart({ productId, name, price, image, size, stock, allowPreorder, quantity: qty });
+    if (!available) return;
+    addToCart({ productId, name, price, image, stock, allowPreorder, quantity: qty });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
   const handleBuyNow = () => {
-    if (!available || needsSize) return;
-    addToCart({ productId, name, price, image, size, stock, allowPreorder, quantity: qty });
+    if (!available) return;
+    addToCart({ productId, name, price, image, stock, allowPreorder, quantity: qty });
     router.push("/cart");
   };
 
   return (
     <div className="pdp-actions">
-      {/* Size selector */}
-      {sizes.length > 0 && (
-        <div className="pdp-sizes">
-          <p className="pdp-sizes-label">
-            Size {size && <span className="pdp-sizes-selected">— {size}</span>}
-          </p>
-          <div className="pdp-sizes-grid">
-            {sizes.map((s) => (
-              <button
-                key={s}
-                type="button"
-                className={`pdp-size-btn${size === s ? " pdp-size-btn--active" : ""}`}
-                onClick={() => setSize(s)}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-          {needsSize && <p className="pdp-sizes-hint">Please select a size to continue</p>}
-        </div>
-      )}
-
       {/* Quantity */}
       <div className="pdp-qty">
         <button
@@ -93,14 +67,14 @@ export default function ProductActions({
         <button
           className="pdp-btn pdp-btn--cart"
           onClick={handleAddToCart}
-          disabled={!available || needsSize}
+          disabled={!available}
         >
           {!available ? "Out of Stock" : added ? "✓ Added!" : "Add to Cart"}
         </button>
         <button
           className="pdp-btn pdp-btn--buy"
           onClick={handleBuyNow}
-          disabled={!available || needsSize}
+          disabled={!available}
         >
           {allowPreorder && stock === 0 ? "Pre-order" : "Buy Now"}
         </button>

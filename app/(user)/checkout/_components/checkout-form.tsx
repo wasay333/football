@@ -190,7 +190,7 @@ export default function CheckoutForm({ totals }: { totals: TrustedTotals }) {
         <h2 className="checkout-summary-title">Order Summary</h2>
         <div className="checkout-summary-items">
           {items.map((item) => (
-            <div key={`${item.productId}__${item.size ?? ""}`} className="checkout-summary-item">
+            <div key={item.productId} className="checkout-summary-item">
               <div className="checkout-summary-item-img">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={item.image} alt={item.name} />
@@ -198,7 +198,6 @@ export default function CheckoutForm({ totals }: { totals: TrustedTotals }) {
               </div>
               <div className="checkout-summary-item-info">
                 <p className="checkout-summary-item-name">{item.name}</p>
-                {item.size && <p className="checkout-summary-item-size">Size: {item.size}</p>}
               </div>
               <p className="checkout-summary-item-price">${(item.price * item.quantity).toFixed(2)}</p>
             </div>

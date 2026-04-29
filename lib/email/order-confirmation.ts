@@ -25,9 +25,7 @@ export function buildOrderConfirmationEmail(p: Props): string {
       const preorderBadge = item.isPreorder
         ? `<span style="margin-left:8px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;">Pre-order</span>`
         : "";
-      const sizeQty = [item.size ? `Size: ${item.size}` : "", `Qty: ${item.quantity}`]
-        .filter(Boolean)
-        .join(" · ");
+      const sizeQty = `Qty: ${item.quantity}`;
       const lineTotal = (item.unitPrice * item.quantity).toFixed(2);
       const eachNote =
         item.quantity > 1

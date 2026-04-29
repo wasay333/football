@@ -150,7 +150,6 @@ const SingleProductPage = async ({ params }: Props) => {
             image={product.capImage1 ?? ''}
             stock={product.stock}
             allowPreorder={product.allowPreorder}
-            sizes={(product as unknown as { sizes: string[] }).sizes ?? []}
           />
         </div>
       </div>
