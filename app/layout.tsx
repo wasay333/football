@@ -54,6 +54,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: '/favicon.ico', type: 'image/x-icon', sizes: '256x256' },
       { url: '/foocaps-search-favicon.png', type: 'image/png', sizes: '512x512' },
     ],
     apple: [{ url: '/foocaps-search-favicon.png', type: 'image/png', sizes: '512x512' }],

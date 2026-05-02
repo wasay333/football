@@ -1,10 +1,15 @@
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
 import { NextResponse } from 'next/server'
 
-export function GET() {
-  return new NextResponse(null, {
-    status: 308,
+export async function GET() {
+  const iconPath = path.join(process.cwd(), 'public', 'favicon.ico')
+  const icon = await readFile(iconPath)
+
+  return new NextResponse(icon, {
     headers: {
-      Location: '/foocaps-search-favicon.png',
+      'Content-Type': 'image/x-icon',
+      'Cache-Control': 'public, max-age=31536000, immutable',
     },
   })
 }
