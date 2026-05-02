@@ -66,7 +66,7 @@ export default function CheckoutWrapper() {
     variables: {
       colorPrimary: "#c9a84c",
       colorBackground: "#ffffff",
-      colorText: "#0f1d3d",
+      colorText: "#111111",
       colorDanger: "#e53e3e",
       fontFamily: "Arial, sans-serif",
       borderRadius: "8px",

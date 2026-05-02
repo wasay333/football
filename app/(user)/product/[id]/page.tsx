@@ -130,7 +130,7 @@ const SingleProductPage = async ({ params }: Props) => {
                     color:
                       s <= Math.round(avgRating)
                         ? "var(--color-gold)"
-                        : "rgba(15,29,61,0.2)",
+                        : "rgba(0,0,0,0.2)",
                   }}
                 >
                   ★
