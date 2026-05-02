@@ -18,7 +18,10 @@ const SingleProductPage = async ({ params }: Props) => {
       where: { id },
       include: { footballer: true, category: true },
     }),
-    prisma.review.findMany({ where: { productId: id }, select: { rating: true } }),
+    prisma.review.findMany({
+      where: { productId: id },
+      select: { rating: true },
+    }),
   ]);
 
   if (!product) notFound();
@@ -29,8 +32,7 @@ const SingleProductPage = async ({ params }: Props) => {
     : 0;
 
   const { footballer } = product;
-  const heroImage =
-    footballer.image1 || footballer.profileImage || null;
+  const heroImage = footballer.image1 || footballer.profileImage || null;
   const galleryImages = [
     footballer.image1,
     footballer.image2,
@@ -39,7 +41,7 @@ const SingleProductPage = async ({ params }: Props) => {
 
   return (
     <div className="pdp">
-      {/* ── 1. Footballer hero ── */}
+      {/* 1. Footballer hero */}
       <div className="pdp-hero">
         {footballer.videoUrl ? (
           <video
@@ -69,11 +71,10 @@ const SingleProductPage = async ({ params }: Props) => {
           </div>
         )}
 
-        {/* Bottom fade into cream */}
         <div className="pdp-hero-fade" />
       </div>
 
-      {/* ── 3. Footballer diamond gallery ── */}
+      {/* 2. Footballer diamond gallery */}
       {galleryImages.length > 0 && (
         <div className="pdp-diamond-gallery">
           {galleryImages.map((src, i) => (
@@ -92,22 +93,14 @@ const SingleProductPage = async ({ params }: Props) => {
         </div>
       )}
 
-      {/* ── 4. Description below diamonds ── */}
-      <div className="pdp-desc-section">
-        {footballer.bio && (
-          <p className="pdp-desc-bio">&ldquo;{footballer.bio}&rdquo;</p>
-        )}
-        <div className="pdp-desc-divider" />
-        <p className="pdp-desc-body">{product.description}</p>
-      </div>
-
-      {/* ── 5. Product name ── */}
+      {/* 3. Product name */}
       <div className="pdp-name-block">
         <h1 className="pdp-product-name">
           {product.name.split(" ").map((word, i, arr) =>
             i === arr.length - 1 ? (
               <span key={i} className="pdp-product-name--gold">
-                {" "}{word}
+                {" "}
+                {word}
               </span>
             ) : (
               <span key={i}>{word} </span>
@@ -116,22 +109,32 @@ const SingleProductPage = async ({ params }: Props) => {
         </h1>
       </div>
 
-      {/* ── 6. Purchase section ── */}
+      {/* 4. Purchase section */}
       <div className="pdp-purchase">
-        {/* Cap image gallery */}
         <CapGallery
-          images={([product.capImage1, product.capImage2, product.capImage3].filter(Boolean) as string[])}
+          images={
+            [product.capImage1, product.capImage2, product.capImage3].filter(Boolean) as string[]
+          }
           name={product.name}
         />
 
-        {/* Details */}
         <div className="pdp-details">
           <p className="pdp-price">${Number(product.price).toFixed(2)}</p>
 
           {reviewCount > 0 && (
             <div className="pdp-stars">
               {[1, 2, 3, 4, 5].map((s) => (
-                <span key={s} style={{ color: s <= Math.round(avgRating) ? "var(--color-gold)" : "rgba(15,29,61,0.2)" }}>★</span>
+                <span
+                  key={s}
+                  style={{
+                    color:
+                      s <= Math.round(avgRating)
+                        ? "var(--color-gold)"
+                        : "rgba(15,29,61,0.2)",
+                  }}
+                >
+                  ★
+                </span>
               ))}
               <span className="pdp-stars-count">
                 {avgRating.toFixed(1)} ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
@@ -139,23 +142,27 @@ const SingleProductPage = async ({ params }: Props) => {
             </div>
           )}
 
-          {product.category && (
-            <p className="pdp-category">{product.category.name}</p>
-          )}
+          {product.category && <p className="pdp-category">{product.category.name}</p>}
 
           <ProductActions
             productId={product.id}
             name={product.name}
             price={Number(product.price)}
-            image={product.capImage1 ?? ''}
+            image={product.capImage1 ?? ""}
             stock={product.stock}
             allowPreorder={product.allowPreorder}
           />
         </div>
       </div>
 
+      {/* 5. Description below preview and buy section */}
+      <div className="pdp-desc-section">
+        {footballer.bio && <p className="pdp-desc-bio">&ldquo;{footballer.bio}&rdquo;</p>}
+        <div className="pdp-desc-divider" />
+        <p className="pdp-desc-body">{product.description}</p>
+      </div>
 
-      {/* ── 8. Reviews ── */}
+      {/* 6. Reviews */}
       <div className="pdp-reviews-outer">
         <ReviewList productId={product.id} />
         <ReviewForm productId={product.id} />
