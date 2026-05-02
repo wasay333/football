@@ -35,11 +35,11 @@ export function buildOrderConfirmationEmail(p: Props): string {
       return `
         <tr>
           <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
-            <p style="margin:0;color:#0f1d3d;font-size:15px;font-weight:600;">${item.productName}${preorderBadge}</p>
+            <p style="margin:0;color:#111111;font-size:15px;font-weight:600;">${item.productName}${preorderBadge}</p>
             <p style="margin:4px 0 0;color:#888;font-size:13px;">${sizeQty}</p>
           </td>
           <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;white-space:nowrap;">
-            <p style="margin:0;color:#0f1d3d;font-size:15px;font-weight:600;">$${lineTotal}</p>
+            <p style="margin:0;color:#111111;font-size:15px;font-weight:600;">$${lineTotal}</p>
             ${eachNote}
           </td>
         </tr>`;
@@ -63,7 +63,7 @@ export function buildOrderConfirmationEmail(p: Props): string {
 
           <!-- Header -->
           <tr>
-            <td style="background:#0f1d3d;border-radius:8px 8px 0 0;padding:32px 40px;text-align:center;">
+            <td style="background:#111111;border-radius:8px 8px 0 0;padding:32px 40px;text-align:center;">
               <p style="margin:0;color:#c9a84c;font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;">Foocaps</p>
               <h1 style="margin:12px 0 0;color:#fff;font-size:26px;font-weight:700;">Order Confirmed</h1>
             </td>
@@ -72,13 +72,13 @@ export function buildOrderConfirmationEmail(p: Props): string {
           <!-- Greeting -->
           <tr>
             <td style="background:#fff;padding:32px 40px 0;">
-              <p style="margin:0;color:#0f1d3d;font-size:16px;">Hi ${p.customerName},</p>
+              <p style="margin:0;color:#111111;font-size:16px;">Hi ${p.customerName},</p>
               <p style="margin:12px 0 0;color:#555;font-size:15px;line-height:1.6;">
                 Thanks for your order! We&apos;ve received your payment and your cap is on its way to being packed.
                 You&apos;ll get another email when it ships.
               </p>
               <p style="margin:16px 0 0;color:#888;font-size:13px;">
-                Order reference: <strong style="color:#0f1d3d;">${p.orderNumber}</strong>
+                Order reference: <strong style="color:#111111;">${p.orderNumber}</strong>
               </p>
             </td>
           </tr>
@@ -89,7 +89,7 @@ export function buildOrderConfirmationEmail(p: Props): string {
           <!-- Items -->
           <tr>
             <td style="background:#fff;padding:24px 40px 0;">
-              <p style="margin:0 0 16px;color:#0f1d3d;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Items Ordered</p>
+              <p style="margin:0 0 16px;color:#111111;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Items Ordered</p>
               <table width="100%" cellpadding="0" cellspacing="0"><tbody>${itemRows}</tbody></table>
             </td>
           </tr>
@@ -101,15 +101,15 @@ export function buildOrderConfirmationEmail(p: Props): string {
                 <tbody>
                   <tr>
                     <td style="color:#555;font-size:14px;padding:4px 0;">Subtotal</td>
-                    <td style="color:#0f1d3d;font-size:14px;padding:4px 0;text-align:right;">$${p.subtotal.toFixed(2)}</td>
+                    <td style="color:#111111;font-size:14px;padding:4px 0;text-align:right;">$${p.subtotal.toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td style="color:#555;font-size:14px;padding:4px 0;">Shipping</td>
-                    <td style="color:#0f1d3d;font-size:14px;padding:4px 0;text-align:right;">${shippingDisplay}</td>
+                    <td style="color:#111111;font-size:14px;padding:4px 0;text-align:right;">${shippingDisplay}</td>
                   </tr>
-                  <tr><td colspan="2" style="padding:10px 0 0;"><hr style="border:none;border-top:2px solid #0f1d3d;margin:0;"/></td></tr>
+                  <tr><td colspan="2" style="padding:10px 0 0;"><hr style="border:none;border-top:2px solid #111111;margin:0;"/></td></tr>
                   <tr>
-                    <td style="color:#0f1d3d;font-size:16px;font-weight:700;padding:10px 0 0;">Total</td>
+                    <td style="color:#111111;font-size:16px;font-weight:700;padding:10px 0 0;">Total</td>
                     <td style="color:#c9a84c;font-size:18px;font-weight:700;padding:10px 0 0;text-align:right;">$${p.total.toFixed(2)}</td>
                   </tr>
                 </tbody>
@@ -123,7 +123,7 @@ export function buildOrderConfirmationEmail(p: Props): string {
           <!-- Shipping address -->
           <tr>
             <td style="background:#fff;padding:24px 40px 32px;">
-              <p style="margin:0 0 10px;color:#0f1d3d;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Shipping To</p>
+              <p style="margin:0 0 10px;color:#111111;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Shipping To</p>
               <p style="margin:0;color:#555;font-size:14px;line-height:1.8;">
                 ${p.customerName}<br/>
                 ${p.address}<br/>
@@ -135,7 +135,7 @@ export function buildOrderConfirmationEmail(p: Props): string {
 
           <!-- Footer -->
           <tr>
-            <td style="background:#0f1d3d;border-radius:0 0 8px 8px;padding:24px 40px;text-align:center;">
+            <td style="background:#111111;border-radius:0 0 8px 8px;padding:24px 40px;text-align:center;">
               <p style="margin:0;color:#888;font-size:12px;line-height:1.6;">
                 Questions? Reply to this email or contact us anytime.<br/>
                 <span style="color:#c9a84c;">Foocaps</span> &mdash; Premium Football Caps

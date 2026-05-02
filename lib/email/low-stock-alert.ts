@@ -17,7 +17,7 @@ export function buildLowStockAlertEmail({ items }: Props): string {
 
       return `
         <tr>
-          <td style="padding:12px 0;border-bottom:1px solid #f0f0f0;color:#0f1d3d;font-size:15px;font-weight:600;">
+          <td style="padding:12px 0;border-bottom:1px solid #f0f0f0;color:#111111;font-size:15px;font-weight:600;">
             ${item.name}
           </td>
           <td style="padding:12px 0;border-bottom:1px solid #f0f0f0;text-align:right;">
@@ -43,7 +43,7 @@ export function buildLowStockAlertEmail({ items }: Props): string {
 
           <!-- Header -->
           <tr>
-            <td style="background:#0f1d3d;border-radius:8px 8px 0 0;padding:32px 40px;text-align:center;">
+            <td style="background:#111111;border-radius:8px 8px 0 0;padding:32px 40px;text-align:center;">
               <p style="margin:0;color:#c9a84c;font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;">Foocaps Admin</p>
               <h1 style="margin:12px 0 0;color:#fff;font-size:24px;font-weight:700;">⚠️ Low Stock Alert</h1>
             </td>
@@ -65,8 +65,8 @@ export function buildLowStockAlertEmail({ items }: Props): string {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <thead>
                   <tr>
-                    <th style="text-align:left;color:#888;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding-bottom:8px;border-bottom:2px solid #0f1d3d;">Product</th>
-                    <th style="text-align:right;color:#888;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding-bottom:8px;border-bottom:2px solid #0f1d3d;">Stock</th>
+                    <th style="text-align:left;color:#888;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding-bottom:8px;border-bottom:2px solid #111111;">Product</th>
+                    <th style="text-align:right;color:#888;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding-bottom:8px;border-bottom:2px solid #111111;">Stock</th>
                   </tr>
                 </thead>
                 <tbody>${rows}</tbody>
@@ -76,7 +76,7 @@ export function buildLowStockAlertEmail({ items }: Props): string {
 
           <!-- Footer -->
           <tr>
-            <td style="background:#0f1d3d;border-radius:0 0 8px 8px;padding:24px 40px;text-align:center;">
+            <td style="background:#111111;border-radius:0 0 8px 8px;padding:24px 40px;text-align:center;">
               <p style="margin:0;color:#888;font-size:12px;line-height:1.6;">
                 <span style="color:#c9a84c;">Foocaps</span> &mdash; Admin Notification
               </p>
