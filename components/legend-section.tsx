@@ -8,18 +8,33 @@ import Link from "next/link";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const CATCHPHRASES: { key: string; phrase: string }[] = [
+  { key: "messi",   phrase: "La Pulga's Finale: World Cup '26 Edition" },
+  { key: "ronaldo", phrase: "The Sui Strike: World Cup '26 Edition" },
+  { key: "mbappe",  phrase: "Hurricane Force: World Cup '26 Edition" },
+  { key: "pulisic", phrase: "Captain America's Charge: World Cup '26 Edition" },
+  { key: "vinicius",phrase: "The Starboy's Debut: World Cup '26 Edition" },
+  { key: "salah",   phrase: "Turtle Power: World Cup '26 Edition" },
+];
+
+function getCatchphrase(name: string): string {
+  const lower = name.toLowerCase();
+  const match = CATCHPHRASES.find(({ key }) => lower.includes(key));
+  return match ? match.phrase : name;
+}
+
 export type LegendFootballer = {
   id: string;
   name: string;
   profileImage: string | null;
   bio: string | null;
-  products: { capImage1: string | null }[];
+  products: { id: string; capImage1: string | null }[];
 };
 
 const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => {
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const cardRefs = useRef<(HTMLElement | null)[]>([]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -78,8 +93,9 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
       <div className="legend-content">
         <div className="legend-cards">
           {footballers.map((footballer, i) => (
-            <div
+            <Link
               key={footballer.id}
+              href={footballer.products[0]?.id ? `/product/${footballer.products[0].id}` : "/product"}
               ref={(el) => {
                 cardRefs.current[i] = el;
               }}
@@ -107,22 +123,22 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
                     />
                   </div>
                   <div className="legend-card-back-bottom">
-                    <h4>{footballer.name}</h4>
+                    <h4>{getCatchphrase(footballer.name)}</h4>
                     <p style={{
                       overflow: "hidden",
                       display: "-webkit-box",
                       WebkitLineClamp: 3,
                       WebkitBoxOrient: "vertical",
                     }}>{footballer.bio ?? "A legend of the game."}</p>
-                    <Link href="/product" className="legend-view-btn">
-                      View Products
-                    </Link>
+                    <span className="legend-view-btn">
+                      View Product
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <p className="legend-card-label">{footballer.name}</p>
-            </div>
+              <p className="legend-card-label">{getCatchphrase(footballer.name)}</p>
+            </Link>
           ))}
         </div>
 

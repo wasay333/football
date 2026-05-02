@@ -42,98 +42,105 @@ export default function AboutPageClient() {
   const ctaRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    // Hero entrance
-    const tl = gsap.timeline({ delay: 0.2 });
-    tl.fromTo(
-      heroTitleRef.current,
-      { y: 60, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.9, ease: "power3.out" }
-    ).fromTo(
-      heroSubRef.current,
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" },
-      "-=0.4"
-    );
-
-    // Story section
-    const storyEls = storyRef.current?.querySelectorAll(".ap-story-el");
-    if (storyEls) {
-      gsap.fromTo(
-        storyEls,
-        { y: 50, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.7,
-          stagger: 0.15,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: storyRef.current,
-            start: "top 80%",
-          },
-        }
+    const ctx = gsap.context(() => {
+      // Hero entrance
+      const tl = gsap.timeline({ delay: 0.2 });
+      tl.fromTo(
+        heroTitleRef.current,
+        { y: 60, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.9, ease: "power3.out" }
+      ).fromTo(
+        heroSubRef.current,
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" },
+        "-=0.4"
       );
-    }
 
-    // Stats counter
-    const statEls = statsRef.current?.querySelectorAll(".ap-stat");
-    if (statEls) {
-      gsap.fromTo(
-        statEls,
-        { y: 40, opacity: 0, scale: 0.9 },
-        {
-          y: 0,
-          opacity: 1,
-          scale: 1,
-          duration: 0.6,
-          stagger: 0.1,
-          ease: "back.out(1.7)",
-          scrollTrigger: {
-            trigger: statsRef.current,
-            start: "top 80%",
-          },
-        }
-      );
-    }
-
-    // Value cards
-    const cards = valuesRef.current?.querySelectorAll(".ap-value-card");
-    if (cards) {
-      gsap.fromTo(
-        cards,
-        { x: -40, opacity: 0 },
-        {
-          x: 0,
-          opacity: 1,
-          duration: 0.7,
-          stagger: 0.15,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: valuesRef.current,
-            start: "top 80%",
-          },
-        }
-      );
-    }
-
-    // CTA
-    gsap.fromTo(
-      ctaRef.current,
-      { y: 40, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: 0.8,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: ctaRef.current,
-          start: "top 85%",
-        },
+      // Story section
+      const storyEls = storyRef.current?.querySelectorAll(".ap-story-el");
+      if (storyEls) {
+        gsap.fromTo(
+          storyEls,
+          { y: 50, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.7,
+            stagger: 0.15,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: storyRef.current,
+              start: "top 80%",
+            },
+          }
+        );
       }
-    );
+
+      // Stats counter
+      const statEls = statsRef.current?.querySelectorAll(".ap-stat");
+      if (statEls) {
+        gsap.fromTo(
+          statEls,
+          { y: 40, opacity: 0, scale: 0.9 },
+          {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            duration: 0.6,
+            stagger: 0.1,
+            ease: "back.out(1.7)",
+            scrollTrigger: {
+              trigger: statsRef.current,
+              start: "top 80%",
+            },
+          }
+        );
+      }
+
+      // Value cards
+      const cards = valuesRef.current?.querySelectorAll(".ap-value-card");
+      if (cards) {
+        gsap.fromTo(
+          cards,
+          { x: -40, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.7,
+            stagger: 0.15,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: valuesRef.current,
+              start: "top 80%",
+            },
+          }
+        );
+      }
+
+      // CTA
+      gsap.fromTo(
+        ctaRef.current,
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: ctaRef.current,
+            start: "top 85%",
+          },
+        }
+      );
+
+    });
+
+    // Refresh after context is built so ScrollTrigger measures correct positions
+    const rafId = requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
-      ScrollTrigger.getAll().forEach((t) => t.kill());
+      cancelAnimationFrame(rafId);
+      ctx.revert();
     };
   }, []);
 

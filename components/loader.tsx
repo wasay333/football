@@ -13,6 +13,13 @@ const Loader = () => {
   const overlayBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Already shown this session — hide instantly, no animation
+    if (sessionStorage.getItem("loader_shown")) {
+      setVisible(false);
+      return;
+    }
+    sessionStorage.setItem("loader_shown", "1");
+
     const tl = gsap.timeline();
 
     tl.fromTo(

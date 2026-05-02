@@ -1,9 +1,10 @@
 import { prisma } from "@/prisma";
 import HeroSection from "@/components/hero-section";
+import Loader from "@/components/loader";
 
 export const dynamic = "force-dynamic";
-import AboutSection from "@/components/about-section";
-import CrownSection from "@/components/crown-section";
+import PromoBanner from "@/components/promo-banner";
+import BentoBannerSection from "@/components/bento-banner-section";
 import LegendSection from "@/components/legend-section";
 import BestsellingSection from "@/components/bestselling-section";
 
@@ -21,7 +22,7 @@ const LandingPage = async () => {
           take: 1,
           where: { capImage1: { not: null } },
           orderBy: { createdAt: "desc" },
-          select: { capImage1: true },
+          select: { id: true, capImage1: true },
         },
       },
     }),
@@ -42,11 +43,12 @@ const LandingPage = async () => {
 
   return (
     <>
+      <Loader />
       <HeroSection />
-      <AboutSection />
-      <CrownSection />
+      <PromoBanner />
+      <BentoBannerSection />
       <LegendSection footballers={footballers} />
-      <BestsellingSection products={bestsellers} />
+      <BestsellingSection products={bestsellers.map(p => ({ ...p, price: Number(p.price) }))} />
     </>
   );
 };
