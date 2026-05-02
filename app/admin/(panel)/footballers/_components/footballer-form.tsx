@@ -17,7 +17,15 @@ function FieldError({ message }: { message?: string }) {
   return <p className="mt-1 text-xs text-destructive">{message}</p>
 }
 
-function FormSection({ title, children, description }: { title: string; description?: string; children: React.ReactNode }) {
+function FormSection({
+  title,
+  children,
+  description,
+}: {
+  title: string
+  description?: string
+  children: React.ReactNode
+}) {
   return (
     <div className="space-y-4">
       <div>
@@ -35,7 +43,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus()
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? 'Saving…' : isEdit ? 'Update Footballer' : 'Save Footballer'}
+      {pending ? 'Saving...' : isEdit ? 'Update Footballer' : 'Save Footballer'}
     </Button>
   )
 }
@@ -57,7 +65,6 @@ export function FootballerForm({ footballer }: { footballer?: Footballer | null 
         </div>
       )}
 
-      {/* ── Profile ── */}
       <FormSection title="Profile">
         <div className="space-y-1.5">
           <Label htmlFor="name">Full name</Label>
@@ -87,43 +94,25 @@ export function FootballerForm({ footballer }: { footballer?: Footballer | null 
 
         <div className="space-y-1.5">
           <Label htmlFor="bio">Bio (optional)</Label>
-          <Textarea id="bio" name="bio" rows={3} placeholder="Short biography…" defaultValue={footballer?.bio ?? ''} />
+          <Textarea id="bio" name="bio" rows={3} placeholder="Short biography..." defaultValue={footballer?.bio ?? ''} />
         </div>
 
         <div className="space-y-1.5">
           <Label>
             Profile photo
-            <span className="ml-1 text-xs font-normal text-muted-foreground">— used in admin lists (optional)</span>
+            <span className="ml-1 text-xs font-normal text-muted-foreground">- used in admin lists and as an image fallback (optional)</span>
           </Label>
           <FileImageInput name="profileImage" existingUrl={footballer?.profileImage} />
         </div>
       </FormSection>
 
-      {/* ── Product Page Photos ── */}
-      <FormSection
-        title="Product Page Photos (optional)"
-        description={isEdit ? 'Current photos shown below. Pick a new file to replace one.' : 'These 3 photos appear on the product page alongside the cap.'}
-      >
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-1.5">
-            <Label>Photo 1</Label>
-            <FileImageInput name="image1" existingUrl={footballer?.image1} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Photo 2</Label>
-            <FileImageInput name="image2" existingUrl={footballer?.image2} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Photo 3</Label>
-            <FileImageInput name="image3" existingUrl={footballer?.image3} />
-          </div>
-        </div>
-      </FormSection>
-
-      {/* ── Video ── */}
       <FormSection
         title="Featured Video (optional)"
-        description={isEdit ? 'Current video shown below. Pick a new file to replace it.' : 'One video shown on the product page.'}
+        description={
+          isEdit
+            ? 'Current video shown below. Pick a new file to replace it.'
+            : 'One featured video shown on the product page.'
+        }
       >
         <div className="space-y-1.5">
           <Label>Video file</Label>
@@ -132,7 +121,7 @@ export function FootballerForm({ footballer }: { footballer?: Footballer | null 
         <div className="space-y-1.5">
           <Label>
             Video thumbnail
-            <span className="ml-1 text-xs font-normal text-muted-foreground">— preview frame before the video plays (optional)</span>
+            <span className="ml-1 text-xs font-normal text-muted-foreground">- preview image for the product page video (optional)</span>
           </Label>
           <FileImageInput name="videoThumbnail" existingUrl={footballer?.videoThumbnail} />
         </div>

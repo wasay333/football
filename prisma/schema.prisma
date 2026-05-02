@@ -38,8 +38,8 @@ enum OrderStatus {
 
 // ─── Footballer ───────────────────────────────────────────────────────────────
 
-// Exactly 3 photos and 1 video shown on the product page.
-// videoThumbnail is the preview frame displayed before the video plays.
+// profileImage is used in admin lists and can act as an image fallback.
+// videoThumbnail is the preview frame displayed before the featured video plays.
 model Footballer {
   id             String    @id @default(uuid())
   name           String
@@ -47,10 +47,10 @@ model Footballer {
   club           String?
   nationality    String?
   bio            String?
-  profileImage   String?   // small photo used in admin lists
-  image1         String?   // first photo on product page
-  image2         String?   // second photo
-  image3         String?   // third photo
+  profileImage   String?   // small photo used in admin lists and image fallback
+  image1         String?   // legacy unused product-page photo
+  image2         String?   // legacy unused product-page photo
+  image3         String?   // legacy unused product-page photo
   videoUrl       String?   // the one featured video
   videoThumbnail String?   // preview frame for the video
   products       Product[]

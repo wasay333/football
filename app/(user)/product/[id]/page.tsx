@@ -32,12 +32,7 @@ const SingleProductPage = async ({ params }: Props) => {
     : 0;
 
   const { footballer } = product;
-  const heroImage = footballer.image1 || footballer.profileImage || null;
-  const galleryImages = [
-    footballer.image1,
-    footballer.image2,
-    footballer.image3,
-  ].filter(Boolean) as string[];
+  const heroImage = footballer.videoThumbnail || footballer.profileImage || null;
 
   return (
     <div className="pdp">
@@ -47,6 +42,7 @@ const SingleProductPage = async ({ params }: Props) => {
           <video
             className="pdp-hero-media"
             src={footballer.videoUrl}
+            poster={footballer.videoThumbnail ?? undefined}
             autoPlay
             muted
             loop
@@ -73,27 +69,7 @@ const SingleProductPage = async ({ params }: Props) => {
 
         <div className="pdp-hero-fade" />
       </div>
-
-      {/* 2. Footballer diamond gallery */}
-      {galleryImages.length > 0 && (
-        <div className="pdp-diamond-gallery">
-          {galleryImages.map((src, i) => (
-            <div key={i} className={`pdp-diamond pdp-diamond--${i}`}>
-              <div className="pdp-diamond-inner">
-                <Image
-                  src={src}
-                  alt={`${footballer.name} ${i + 1}`}
-                  fill
-                  sizes="300px"
-                  style={{ objectFit: "cover", objectPosition: "top center" }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 3. Product name */}
+      {/* 2. Product name */}
       <div className="pdp-name-block">
         <h1 className="pdp-product-name">
           {product.name.split(" ").map((word, i, arr) =>
@@ -109,7 +85,7 @@ const SingleProductPage = async ({ params }: Props) => {
         </h1>
       </div>
 
-      {/* 4. Purchase section */}
+      {/* 3. Purchase section */}
       <div className="pdp-purchase">
         <CapGallery
           images={
@@ -155,14 +131,14 @@ const SingleProductPage = async ({ params }: Props) => {
         </div>
       </div>
 
-      {/* 5. Description below preview and buy section */}
+      {/* 4. Description below preview and buy section */}
       <div className="pdp-desc-section">
         {footballer.bio && <p className="pdp-desc-bio">&ldquo;{footballer.bio}&rdquo;</p>}
         <div className="pdp-desc-divider" />
         <p className="pdp-desc-body">{product.description}</p>
       </div>
 
-      {/* 6. Reviews */}
+      {/* 5. Reviews */}
       <div className="pdp-reviews-outer">
         <ReviewList productId={product.id} />
         <ReviewForm productId={product.id} />

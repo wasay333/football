@@ -13,9 +13,6 @@ const FootballerSchema = z.object({
   nationality: z.string().optional(),
   bio: z.string().optional(),
   profileImage: z.string().optional(),
-  image1: z.string().optional(),
-  image2: z.string().optional(),
-  image3: z.string().optional(),
   videoUrl: z.string().optional(),
   videoThumbnail: z.string().optional(),
 })
@@ -33,24 +30,15 @@ export async function createFootballerAction(
 ): Promise<FootballerFormState> {
   // Save any uploaded files (all optional)
   let profileImage: string | undefined
-  let image1: string | undefined
-  let image2: string | undefined
-  let image3: string | undefined
   let videoUrl: string | undefined
   let videoThumbnail: string | undefined
 
   try {
     const fProfile = formData.get('profileImage') as File | null
-    const fImg1    = formData.get('image1') as File | null
-    const fImg2    = formData.get('image2') as File | null
-    const fImg3    = formData.get('image3') as File | null
     const fVideo   = formData.get('videoUrl') as File | null
     const fThumb   = formData.get('videoThumbnail') as File | null
 
     if (fProfile?.size) profileImage   = await saveUploadedFile(fProfile, 'footballers/images')
-    if (fImg1?.size)    image1         = await saveUploadedFile(fImg1,    'footballers/images')
-    if (fImg2?.size)    image2         = await saveUploadedFile(fImg2,    'footballers/images')
-    if (fImg3?.size)    image3         = await saveUploadedFile(fImg3,    'footballers/images')
     if (fVideo?.size)   videoUrl       = await saveUploadedFile(fVideo,   'footballers/videos')
     if (fThumb?.size)   videoThumbnail = await saveUploadedFile(fThumb,   'footballers/images')
   } catch {
@@ -64,9 +52,6 @@ export async function createFootballerAction(
     nationality: formData.get('nationality') || undefined,
     bio: formData.get('bio') || undefined,
     profileImage,
-    image1,
-    image2,
-    image3,
     videoUrl,
     videoThumbnail,
   }
@@ -85,9 +70,9 @@ export async function createFootballerAction(
         nationality: result.data.nationality ?? null,
         bio: result.data.bio ?? null,
         profileImage: result.data.profileImage ?? null,
-        image1: result.data.image1 ?? null,
-        image2: result.data.image2 ?? null,
-        image3: result.data.image3 ?? null,
+        image1: null,
+        image2: null,
+        image3: null,
         videoUrl: result.data.videoUrl ?? null,
         videoThumbnail: result.data.videoThumbnail ?? null,
       },
@@ -113,38 +98,25 @@ export async function updateFootballerAction(
   })
 
   let profileImage: string | undefined
-  let image1: string | undefined
-  let image2: string | undefined
-  let image3: string | undefined
   let videoUrl: string | undefined
   let videoThumbnail: string | undefined
   const filesToDelete: (string | null | undefined)[] = []
 
   try {
     const fProfile = formData.get('profileImage') as File | null
-    const fImg1    = formData.get('image1') as File | null
-    const fImg2    = formData.get('image2') as File | null
-    const fImg3    = formData.get('image3') as File | null
     const fVideo   = formData.get('videoUrl') as File | null
     const fThumb   = formData.get('videoThumbnail') as File | null
 
     if (fProfile?.size) { profileImage   = await saveUploadedFile(fProfile, 'footballers/images'); filesToDelete.push(existing?.profileImage) }
     else                { profileImage   = formData.get('profileImage_existing') as string || undefined }
 
-    if (fImg1?.size)    { image1         = await saveUploadedFile(fImg1,    'footballers/images'); filesToDelete.push(existing?.image1) }
-    else                { image1         = formData.get('image1_existing') as string || undefined }
-
-    if (fImg2?.size)    { image2         = await saveUploadedFile(fImg2,    'footballers/images'); filesToDelete.push(existing?.image2) }
-    else                { image2         = formData.get('image2_existing') as string || undefined }
-
-    if (fImg3?.size)    { image3         = await saveUploadedFile(fImg3,    'footballers/images'); filesToDelete.push(existing?.image3) }
-    else                { image3         = formData.get('image3_existing') as string || undefined }
-
     if (fVideo?.size)   { videoUrl       = await saveUploadedFile(fVideo,   'footballers/videos'); filesToDelete.push(existing?.videoUrl) }
     else                { videoUrl       = formData.get('videoUrl_existing') as string || undefined }
 
     if (fThumb?.size)   { videoThumbnail = await saveUploadedFile(fThumb,   'footballers/images'); filesToDelete.push(existing?.videoThumbnail) }
     else                { videoThumbnail = formData.get('videoThumbnail_existing') as string || undefined }
+
+    filesToDelete.push(existing?.image1, existing?.image2, existing?.image3)
   } catch {
     return { errors: { form: ['Failed to save uploaded files. Please try again.'] } }
   }
@@ -156,9 +128,6 @@ export async function updateFootballerAction(
     nationality: formData.get('nationality') || undefined,
     bio: formData.get('bio') || undefined,
     profileImage,
-    image1,
-    image2,
-    image3,
     videoUrl,
     videoThumbnail,
   }
@@ -178,9 +147,9 @@ export async function updateFootballerAction(
         nationality: result.data.nationality ?? null,
         bio: result.data.bio ?? null,
         profileImage: result.data.profileImage ?? null,
-        image1: result.data.image1 ?? null,
-        image2: result.data.image2 ?? null,
-        image3: result.data.image3 ?? null,
+        image1: null,
+        image2: null,
+        image3: null,
         videoUrl: result.data.videoUrl ?? null,
         videoThumbnail: result.data.videoThumbnail ?? null,
       },
