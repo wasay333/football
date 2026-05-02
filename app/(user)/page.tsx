@@ -9,7 +9,7 @@ import LegendSection from "@/components/legend-section";
 import BestsellingSection from "@/components/bestselling-section";
 
 const LandingPage = async () => {
-  const [footballers, bestsellers] = await Promise.all([
+  const [footballers, preorders, bestsellers] = await Promise.all([
     prisma.footballer.findMany({
       take: 4,
       orderBy: { createdAt: "asc" },
@@ -27,7 +27,12 @@ const LandingPage = async () => {
       },
     }),
     prisma.product.findMany({
-      where: { status: "ACTIVE" },
+      where: {
+        status: "ACTIVE",
+        stock: 0,
+        allowPreorder: true,
+        capImage1: { not: null },
+      },
       take: 3,
       orderBy: { createdAt: "desc" },
       select: {
@@ -36,6 +41,27 @@ const LandingPage = async () => {
         price: true,
         capImage1: true,
         description: true,
+        stock: true,
+        allowPreorder: true,
+        footballer: { select: { name: true } },
+      },
+    }),
+    prisma.product.findMany({
+      where: {
+        status: "ACTIVE",
+        stock: { gt: 0 },
+        capImage1: { not: null },
+      },
+      take: 3,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        capImage1: true,
+        description: true,
+        stock: true,
+        allowPreorder: true,
         footballer: { select: { name: true } },
       },
     }),
@@ -48,7 +74,15 @@ const LandingPage = async () => {
       <PromoBanner />
       <BentoBannerSection />
       <LegendSection footballers={footballers} />
-      <BestsellingSection products={bestsellers.map(p => ({ ...p, price: Number(p.price) }))} />
+      <BestsellingSection
+        title="PRE"
+        highlight="ORDER"
+        badgeText="Pre-order"
+        products={preorders.map((p) => ({ ...p, price: Number(p.price) }))}
+      />
+      <BestsellingSection
+        products={bestsellers.map((p) => ({ ...p, price: Number(p.price) }))}
+      />
     </div>
   );
 };

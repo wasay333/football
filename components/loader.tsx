@@ -91,6 +91,9 @@ const Loader = () => {
               priority
             />
           </div>
+          <p className="loader-catchphrase">
+            Set Your Head in the Game. Literally.
+          </p>
           <div className="loader-progress-track">
             <div ref={progressRef} className="loader-progress-bar" />
           </div>

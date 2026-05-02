@@ -131,6 +131,18 @@
   text-transform: uppercase;
 }
 
+.loader-catchphrase {
+  color: var(--color-navy);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 2.8px;
+  text-transform: uppercase;
+  text-align: center;
+  max-width: 320px;
+  opacity: 0.72;
+  margin-top: -6px;
+}
+
 .loader-logo-legacy {
   color: var(--color-navy);
 }
@@ -3188,17 +3200,66 @@ main {
   text-align: center;
 }
 
+.bestselling-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto 60px;
+}
+
 .bestselling-heading {
   font-size: 3.2rem;
   font-weight: 900;
   letter-spacing: 3px;
   color: var(--color-navy);
-  margin-bottom: 60px;
+  margin-bottom: 0;
 }
 
 .bestselling-heading span {
   color: var(--color-gold);
   font-style: italic;
+}
+
+.bestselling-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bestselling-control-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: var(--color-white);
+  color: var(--color-navy);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.bestselling-control-btn:hover:not(:disabled) {
+  background: var(--color-navy);
+  color: var(--color-white);
+  border-color: var(--color-navy);
+  transform: translateY(-2px);
+}
+
+.bestselling-control-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.bestselling-controls-count {
+  min-width: 44px;
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
 .bestselling-cards {
@@ -3239,6 +3300,28 @@ main {
   color: var(--color-gold);
   text-transform: uppercase;
   margin-bottom: 4px;
+}
+
+.bestselling-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.bestselling-card-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(201, 168, 76, 0.16);
+  color: var(--color-navy);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .bestselling-card-image {
@@ -3552,6 +3635,10 @@ main {
     padding: 80px 32px;
   }
 
+  .bestselling-header-row {
+    margin-bottom: 48px;
+  }
+
   .bestselling-heading {
     font-size: 2.6rem;
   }
@@ -3739,6 +3826,12 @@ main {
   .loader-logo {
     font-size: 2.2rem;
     gap: 10px;
+  }
+
+  .loader-catchphrase {
+    font-size: 0.7rem;
+    letter-spacing: 2.2px;
+    max-width: 280px;
   }
 
   .loader-progress-track {
@@ -3956,9 +4049,14 @@ main {
     padding: 60px 24px;
   }
 
+  .bestselling-header-row {
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 40px;
+  }
+
   .bestselling-heading {
     font-size: 2rem;
-    margin-bottom: 40px;
   }
 
   .bestselling-cards {
@@ -4071,6 +4169,12 @@ main {
     font-size: 1.8rem;
     gap: 8px;
     letter-spacing: 3px;
+  }
+
+  .loader-catchphrase {
+    font-size: 0.62rem;
+    letter-spacing: 1.8px;
+    max-width: 240px;
   }
 
   .loader-progress-track {
@@ -4314,9 +4418,26 @@ main {
     padding: 50px 16px;
   }
 
+  .bestselling-header-row {
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
   .bestselling-heading {
     font-size: 1.6rem;
-    margin-bottom: 32px;
+  }
+
+  .bestselling-controls {
+    gap: 10px;
+  }
+
+  .bestselling-control-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .bestselling-controls-count {
+    font-size: 0.72rem;
   }
 
   .bestselling-card-link {
