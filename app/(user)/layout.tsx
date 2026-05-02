@@ -9,9 +9,11 @@ export default function UserLayout({
 }) {
   return (
     <CartProvider>
-      <Header />
-      <main>{children}</main>
-      <Footer />
+      <div className="site-shell">
+        <Header />
+        <main className="site-main">{children}</main>
+        <Footer />
+      </div>
     </CartProvider>
   )
 }

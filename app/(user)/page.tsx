@@ -42,14 +42,14 @@ const LandingPage = async () => {
   ]);
 
   return (
-    <>
+    <div className="home-page">
       <Loader />
       <HeroSection />
       <PromoBanner />
       <BentoBannerSection />
       <LegendSection footballers={footballers} />
       <BestsellingSection products={bestsellers.map(p => ({ ...p, price: Number(p.price) }))} />
-    </>
+    </div>
   );
 };
 
