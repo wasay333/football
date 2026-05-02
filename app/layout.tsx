@@ -54,11 +54,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico' },
-      { url: '/foocapsfavicon.png', type: 'image/png', sizes: '48x48' },
-      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+      { url: '/foocaps-search-favicon.png', type: 'image/png', sizes: '512x512' },
     ],
-    apple: [{ url: '/foocapsfavicon.png', type: 'image/png', sizes: '180x180' }],
+    apple: [{ url: '/foocaps-search-favicon.png', type: 'image/png', sizes: '512x512' }],
     shortcut: ['/favicon.ico'],
   },
   robots: {

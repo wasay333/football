@@ -4,7 +4,7 @@ export function GET() {
   return new NextResponse(null, {
     status: 308,
     headers: {
-      Location: '/foocapsfavicon.png',
+      Location: '/foocaps-search-favicon.png',
     },
   })
 }
