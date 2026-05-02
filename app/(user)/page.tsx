@@ -33,7 +33,7 @@ const LandingPage = async () => {
         allowPreorder: true,
         capImage1: { not: null },
       },
-      take: 3,
+      take: 6,
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -52,7 +52,7 @@ const LandingPage = async () => {
         stock: { gt: 0 },
         capImage1: { not: null },
       },
-      take: 3,
+      take: 6,
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -78,6 +78,7 @@ const LandingPage = async () => {
         title="PRE"
         highlight="ORDER"
         badgeText="Pre-order"
+        variant="preorder"
         products={preorders.map((p) => ({ ...p, price: Number(p.price) }))}
       />
       <BestsellingSection

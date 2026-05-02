@@ -24,6 +24,7 @@ type Props = {
   title?: string;
   highlight?: string;
   badgeText?: string;
+  variant?: "default" | "preorder";
 };
 
 const BestsellingSection = ({
@@ -31,6 +32,7 @@ const BestsellingSection = ({
   title = "BEST",
   highlight = "SELLING",
   badgeText,
+  variant = "default",
 }: Props) => {
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -151,7 +153,10 @@ const BestsellingSection = ({
   if (!products.length) return null;
 
   return (
-    <section ref={sectionRef} className="bestselling-section">
+    <section
+      ref={sectionRef}
+      className={`bestselling-section ${variant === "preorder" ? "bestselling-section--preorder" : ""}`}
+    >
       <div className="bestselling-header-row">
         <h2 ref={headingRef} className="bestselling-heading">
           {title} <span>{highlight}</span>
@@ -193,7 +198,7 @@ const BestsellingSection = ({
           <Link key={item.id} href={`/product/${item.id}`} className="bestselling-card-link">
             <div
               ref={(el) => { cardRefs.current[i] = el; }}
-              className={`bestselling-card ${i === Math.floor(visibleProducts.length / 2) ? "bestselling-card--center" : ""}`}
+              className={`bestselling-card ${variant === "preorder" ? "bestselling-card--preorder" : ""} ${i === Math.floor(visibleProducts.length / 2) ? "bestselling-card--center" : ""}`}
             >
               <div className="bestselling-card-image">
                 {item.capImage1 && (

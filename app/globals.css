@@ -3200,6 +3200,12 @@ main {
   text-align: center;
 }
 
+.bestselling-section--preorder {
+  background:
+    radial-gradient(circle at top, rgba(201, 168, 76, 0.1) 0%, transparent 34%),
+    linear-gradient(180deg, #080808 0%, #121212 100%);
+}
+
 .bestselling-header-row {
   display: flex;
   align-items: center;
@@ -3220,6 +3226,10 @@ main {
 .bestselling-heading span {
   color: var(--color-gold);
   font-style: italic;
+}
+
+.bestselling-section--preorder .bestselling-heading {
+  color: var(--color-white);
 }
 
 .bestselling-controls {
@@ -3262,6 +3272,22 @@ main {
   letter-spacing: 1px;
 }
 
+.bestselling-section--preorder .bestselling-control-btn {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-white);
+  border-color: rgba(201, 168, 76, 0.35);
+}
+
+.bestselling-section--preorder .bestselling-control-btn:hover:not(:disabled) {
+  background: var(--color-gold);
+  color: var(--color-navy-dark);
+  border-color: var(--color-gold);
+}
+
+.bestselling-section--preorder .bestselling-controls-count {
+  color: rgba(255, 255, 255, 0.68);
+}
+
 .bestselling-cards {
   display: flex;
   justify-content: center;
@@ -3287,10 +3313,21 @@ main {
   will-change: transform, opacity, filter;
 }
 
+.bestselling-card--preorder {
+  background: linear-gradient(180deg, rgba(31, 31, 31, 0.98) 0%, rgba(10, 10, 10, 0.98) 100%);
+  border: 1px solid rgba(201, 168, 76, 0.18);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.38);
+}
+
 .bestselling-card--center {
   transform: scale(1.08);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   z-index: 2;
+}
+
+.bestselling-card--preorder.bestselling-card--center {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.48);
+  border-color: rgba(201, 168, 76, 0.34);
 }
 
 .bestselling-card-player {
@@ -3324,11 +3361,24 @@ main {
   white-space: nowrap;
 }
 
+.bestselling-section--preorder .bestselling-card-badge {
+  background: var(--color-gold);
+  color: var(--color-navy-dark);
+}
+
 .bestselling-card-image {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
+}
+
+.bestselling-card--preorder .bestselling-card-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.45) 0%, transparent 55%);
+  pointer-events: none;
 }
 
 .bestselling-card-info {
@@ -3343,6 +3393,10 @@ main {
   margin-bottom: 6px;
 }
 
+.bestselling-card--preorder .bestselling-card-info h4 {
+  color: var(--color-white);
+}
+
 .bestselling-card-desc {
   font-size: 0.78rem;
   color: #666;
@@ -3354,11 +3408,19 @@ main {
   overflow: hidden;
 }
 
+.bestselling-card--preorder .bestselling-card-desc {
+  color: rgba(255, 255, 255, 0.68);
+}
+
 .bestselling-card-price {
   font-size: 1.3rem;
   font-weight: 900;
   color: var(--color-navy);
   text-align: right;
+}
+
+.bestselling-card--preorder .bestselling-card-price {
+  color: var(--color-gold);
 }
 
 .bestselling-card--center .bestselling-card-price {
