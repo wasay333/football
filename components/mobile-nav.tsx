@@ -1,10 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import SearchBar from "./search-bar";
+
+type Footballer = {
+  id: string;
+  name: string;
+  profileImage: string | null;
+  products: { id: string }[];
+};
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -15,7 +22,27 @@ const navLinks = [
 
 const MobileNav = () => {
   const [open, setOpen] = useState(false);
+  const [playersOpen, setPlayersOpen] = useState(false);
+  const [footballers, setFootballers] = useState<Footballer[]>([]);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/search")
+      .then((r) => r.json())
+      .then((data) => setFootballers(data.footballers ?? []));
+  }, []);
+
+  const closeAll = () => {
+    setOpen(false);
+    setPlayersOpen(false);
+  };
+
+  const goToPlayer = (f: Footballer) => {
+    const pid = f.products[0]?.id;
+    router.push(pid ? `/product/${pid}` : "/product");
+    closeAll();
+  };
 
   return (
     <>
@@ -32,7 +59,7 @@ const MobileNav = () => {
         </button>
       </div>
 
-      {open && <div className="mobile-overlay" onClick={() => setOpen(false)} />}
+      {open && <div className="mobile-overlay" onClick={closeAll} />}
 
       <aside className={`mobile-drawer ${open ? "open" : ""}`}>
         <div className="mobile-drawer-logo">
@@ -52,17 +79,69 @@ const MobileNav = () => {
                 <Link
                   href={link.href}
                   className={pathname === link.href ? "active" : ""}
-                  onClick={() => setOpen(false)}
+                  onClick={closeAll}
                 >
                   {link.label}
                 </Link>
               </li>
             ))}
+
+            {/* Players accordion */}
+            {footballers.length > 0 && (
+              <li className="mn-players-item">
+                <button
+                  className={`mn-players-trigger ${playersOpen ? "mn-players-trigger--open" : ""}`}
+                  onClick={() => setPlayersOpen((o) => !o)}
+                >
+                  Players
+                  <svg
+                    className="mn-chevron"
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+
+                {playersOpen && (
+                  <div className="mn-players-list">
+                    {footballers.map((f) => (
+                      <button
+                        key={f.id}
+                        className="mn-player-btn"
+                        onClick={() => goToPlayer(f)}
+                      >
+                        <div className="mn-player-avatar">
+                          {f.profileImage ? (
+                            <Image
+                              src={f.profileImage}
+                              alt={f.name}
+                              fill
+                              sizes="28px"
+                              style={{ objectFit: "cover", objectPosition: "top" }}
+                            />
+                          ) : (
+                            <span>{f.name[0]}</span>
+                          )}
+                        </div>
+                        <span>{f.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </li>
+            )}
           </ul>
         </nav>
 
         <div className="mobile-drawer-actions">
-          <Link href="/cart" className="mobile-btn-cart" onClick={() => setOpen(false)}>
+          <Link href="/cart" className="mobile-btn-cart" onClick={closeAll}>
             Cart
           </Link>
         </div>

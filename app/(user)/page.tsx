@@ -77,7 +77,6 @@ const LandingPage = async () => {
       <BestsellingSection
         title="PRE"
         highlight="ORDER"
-        badgeText="Pre-order"
         variant="preorder"
         products={preorders.map((p) => ({ ...p, price: Number(p.price) }))}
       />

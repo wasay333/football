@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import MobileNav from "./mobile-nav";
 import SearchBar from "./search-bar";
+import PlayerDropdown from "./player-dropdown";
 import { useCart } from "@/hooks/cart-context";
 
 const navLinks = [
@@ -65,6 +66,9 @@ const Header = () => {
               </Link>
             </li>
           ))}
+          <li>
+            <PlayerDropdown />
+          </li>
         </ul>
       </nav>
 

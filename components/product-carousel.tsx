@@ -91,11 +91,8 @@ export default function ProductCarousel({
                       />
                     )}
                     <div className="psc-card-badges">
-                      {!inStock && (
+                      {!inStock && variant !== "preorder" && (
                         <span className="psc-badge psc-badge--sold">Sold Out</span>
-                      )}
-                      {product.allowPreorder && product.stock === 0 && (
-                        <span className="psc-badge psc-badge--pre">Pre-order</span>
                       )}
                     </div>
                   </div>

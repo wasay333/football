@@ -23,7 +23,6 @@ type Props = {
   products: Product[];
   title?: string;
   highlight?: string;
-  badgeText?: string;
   variant?: "default" | "preorder";
 };
 
@@ -31,7 +30,6 @@ const BestsellingSection = ({
   products,
   title = "BEST",
   highlight = "SELLING",
-  badgeText,
   variant = "default",
 }: Props) => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -198,9 +196,6 @@ const BestsellingSection = ({
                 <div className="bestselling-card-meta">
                   {item.footballer && (
                     <div className="bestselling-card-player">{item.footballer.name.toUpperCase()}</div>
-                  )}
-                  {badgeText && item.allowPreorder && item.stock === 0 && (
-                    <span className="bestselling-card-badge">{badgeText}</span>
                   )}
                 </div>
                 <h4>{item.name}</h4>
