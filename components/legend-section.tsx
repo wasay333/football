@@ -11,10 +11,11 @@ gsap.registerPlugin(ScrollTrigger);
 const CATCHPHRASES: { key: string; phrase: string }[] = [
   { key: "messi",   phrase: "La Pulga's Finale: World Cup '26 Edition" },
   { key: "ronaldo", phrase: "The Sui Strike: World Cup '26 Edition" },
-  { key: "mbappe",  phrase: "Hurricane Force: World Cup '26 Edition" },
+  { key: "mbappe",  phrase: "Turtle Power: World Cup '26 Edition" },
+  { key: "yamal",   phrase: "The Starboy's Debut: World Cup '26 Edition" },
+  { key: "lamine",  phrase: "The Starboy's Debut: World Cup '26 Edition" },
   { key: "pulisic", phrase: "Captain America's Charge: World Cup '26 Edition" },
-  { key: "vinicius",phrase: "The Starboy's Debut: World Cup '26 Edition" },
-  { key: "salah",   phrase: "Turtle Power: World Cup '26 Edition" },
+  { key: "kane",    phrase: "Hurricane Force: World Cup '26 Edition" },
 ];
 
 function getCatchphrase(name: string): string {

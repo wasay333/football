@@ -26,6 +26,7 @@ export default function SearchBar() {
   const [products, setProducts] = useState<ProductResult[]>([]);
   const [footballers, setFootballers] = useState<Footballer[]>([]);
   const [loading, setLoading] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const router = useRouter();
@@ -45,14 +46,16 @@ export default function SearchBar() {
     [router, close]
   );
 
-  // Load footballers when panel opens
+  // Focus input when opened
   useEffect(() => {
     if (!open) return;
-    setTimeout(() => inputRef.current?.focus(), 50);
-    fetch("/api/search")
-      .then((r) => r.json())
-      .then((data) => setFootballers(data.footballers ?? []));
-  }, [open]);
+    setTimeout(() => inputRef.current?.focus(), 30);
+    if (footballers.length === 0) {
+      fetch("/api/search")
+        .then((r) => r.json())
+        .then((data) => setFootballers(data.footballers ?? []));
+    }
+  }, [open, footballers.length]);
 
   // Debounced product search
   useEffect(() => {
@@ -72,155 +75,108 @@ export default function SearchBar() {
     return () => clearTimeout(debounceRef.current);
   }, [query]);
 
-  // Close on Escape
+  // Close on Escape or outside click
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
+    const onClick = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) close();
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onClick);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onClick);
+    };
   }, [open, close]);
 
+  const showDropdown = open && (query.trim() ? true : footballers.length > 0);
+
   return (
-    <>
-      {/* Trigger button — used in header */}
-      <button
-        className="search-trigger"
-        onClick={() => setOpen(true)}
-        aria-label="Search"
-      >
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+    <div ref={wrapRef} className={`search-wrap ${open ? "search-wrap--open" : ""}`}>
+      {/* Icon button — hidden when open */}
+      {!open && (
+        <button
+          className="search-trigger"
+          onClick={() => setOpen(true)}
+          aria-label="Search"
         >
-          <circle cx="11" cy="11" r="8" />
-          <path d="M21 21l-4.35-4.35" />
-        </svg>
-      </button>
-
-      {open && (
-        <>
-          {/* Backdrop */}
-          <div className="search-backdrop" onClick={close} />
-
-          {/* Panel */}
-          <div className="search-panel">
-            {/* Input row */}
-            <div className="search-input-row">
-              <svg
-                className="search-input-icon"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" />
-              </svg>
-              <input
-                ref={inputRef}
-                className="search-input"
-                type="text"
-                placeholder="Search products…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                autoComplete="off"
-              />
-              <button className="search-close-btn" onClick={close} aria-label="Close search">
-                ✕
-              </button>
-            </div>
-
-            {/* Results */}
-            <div className="search-body">
-              {query.trim() ? (
-                /* ── Product results ── */
-                loading ? (
-                  <p className="search-status">Searching…</p>
-                ) : products.length > 0 ? (
-                  <div className="search-products">
-                    {products.map((p) => (
-                      <Link
-                        key={p.id}
-                        href={`/product/${p.id}`}
-                        className="search-product-row"
-                        onClick={close}
-                      >
-                        <div className="search-product-thumb">
-                          {p.capImage1 && (
-                            <Image
-                              src={p.capImage1}
-                              alt={p.name}
-                              fill
-                              sizes="48px"
-                              style={{ objectFit: "cover" }}
-                            />
-                          )}
-                        </div>
-                        <div className="search-product-meta">
-                          <span className="search-product-name">{p.name}</span>
-                          {p.footballer && (
-                            <span className="search-product-player">
-                              {p.footballer.name}
-                            </span>
-                          )}
-                        </div>
-                        <span className="search-product-price">
-                          ${p.price.toFixed(2)}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="search-status">No results for &ldquo;{query}&rdquo;</p>
-                )
-              ) : (
-                /* ── Footballer dropdown ── */
-                <>
-                  <p className="search-section-label">Browse by Player</p>
-                  <div className="search-footballer-grid">
-                    {footballers.map((f) => (
-                      <button
-                        key={f.id}
-                        className="search-footballer-btn"
-                        onClick={() => goToFootballer(f)}
-                      >
-                        <div className="search-footballer-avatar">
-                          {f.profileImage ? (
-                            <Image
-                              src={f.profileImage}
-                              alt={f.name}
-                              fill
-                              sizes="44px"
-                              style={{ objectFit: "cover", objectPosition: "top" }}
-                            />
-                          ) : (
-                            <span className="search-footballer-initial">
-                              {f.name[0]}
-                            </span>
-                          )}
-                        </div>
-                        <span className="search-footballer-name">{f.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+        </button>
       )}
-    </>
+
+      {/* Expanded input */}
+      {open && (
+        <div className="search-field">
+          <svg className="search-field-icon" width="15" height="15" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+          <input
+            ref={inputRef}
+            className="search-field-input"
+            type="text"
+            placeholder="Search products…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoComplete="off"
+          />
+          <button className="search-field-close" onClick={close} aria-label="Close">✕</button>
+        </div>
+      )}
+
+      {/* Dropdown */}
+      {showDropdown && (
+        <div className="search-dropdown">
+          {query.trim() ? (
+            loading ? (
+              <p className="search-drop-status">Searching…</p>
+            ) : products.length > 0 ? (
+              products.map((p) => (
+                <Link key={p.id} href={`/product/${p.id}`} className="search-drop-row" onClick={close}>
+                  <div className="search-drop-thumb">
+                    {p.capImage1 && (
+                      <Image src={p.capImage1} alt={p.name} fill sizes="40px"
+                        style={{ objectFit: "cover" }} />
+                    )}
+                  </div>
+                  <div className="search-drop-meta">
+                    <span className="search-drop-name">{p.name}</span>
+                    {p.footballer && <span className="search-drop-player">{p.footballer.name}</span>}
+                  </div>
+                  <span className="search-drop-price">${p.price.toFixed(2)}</span>
+                </Link>
+              ))
+            ) : (
+              <p className="search-drop-status">No results for &ldquo;{query}&rdquo;</p>
+            )
+          ) : (
+            <>
+              <p className="search-drop-label">Browse by Player</p>
+              <div className="search-drop-players">
+                {footballers.map((f) => (
+                  <button key={f.id} className="search-drop-player-btn" onClick={() => goToFootballer(f)}>
+                    <div className="search-drop-avatar">
+                      {f.profileImage ? (
+                        <Image src={f.profileImage} alt={f.name} fill sizes="36px"
+                          style={{ objectFit: "cover", objectPosition: "top" }} />
+                      ) : (
+                        <span>{f.name[0]}</span>
+                      )}
+                    </div>
+                    <span>{f.name}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

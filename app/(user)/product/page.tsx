@@ -1,86 +1,32 @@
 import { prisma } from "@/prisma";
 import Image from "next/image";
 import Link from "next/link";
+import ShopHero from "@/components/shop-hero";
 
 export const dynamic = "force-dynamic";
 
-type Props = {
-  searchParams: Promise<{ footballer?: string }>;
-};
-
-const ProductsPage = async ({ searchParams }: Props) => {
-  const { footballer: footballerFilter } = await searchParams;
-
-  const [products, footballers] = await Promise.all([
-    prisma.product.findMany({
-      where: {
-        status: "ACTIVE",
-        ...(footballerFilter ? { footballerId: footballerFilter } : {}),
-      },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        capImage1: true,
-        description: true,
-        stock: true,
-        allowPreorder: true,
-        footballer: { select: { id: true, name: true } },
-        category: { select: { name: true } },
-      },
-    }),
-    prisma.footballer.findMany({
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
-    }),
-  ]);
+const ProductsPage = async () => {
+  const products = await prisma.product.findMany({
+    where: { status: "ACTIVE" },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      capImage1: true,
+      description: true,
+      stock: true,
+      allowPreorder: true,
+      footballer: { select: { name: true } },
+      category: { select: { name: true } },
+    },
+  });
 
   return (
     <div className="shop-page">
-      {/* Page Hero */}
-      <div className="shop-hero">
-        <div className="shop-hero-inner">
-          <p className="shop-hero-eyebrow">Foocaps</p>
-          <h1 className="shop-hero-title">
-            All <span>Products</span>
-          </h1>
-          <p className="shop-hero-sub">
-            {products.length} cap{products.length !== 1 ? "s" : ""} in the
-            collection
-          </p>
-        </div>
-      </div>
+      <ShopHero />
 
-      <div className="shop-body">
-        {/* Sidebar filters */}
-        <aside className="shop-sidebar">
-          <div className="shop-filter-group">
-            <h3 className="shop-filter-label">Footballer</h3>
-            <ul className="shop-filter-list">
-              <li>
-                <Link
-                  href="/product"
-                  className={`shop-filter-item${!footballerFilter ? " shop-filter-item--active" : ""}`}
-                >
-                  All
-                </Link>
-              </li>
-              {footballers.map((f) => (
-                <li key={f.id}>
-                  <Link
-                    href={`/product?footballer=${f.id}`}
-                    className={`shop-filter-item${footballerFilter === f.id ? " shop-filter-item--active" : ""}`}
-                  >
-                    {f.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </aside>
-
-        {/* Product grid */}
+      <div className="shop-body shop-body--full">
         <section className="shop-grid-area">
           {products.length === 0 ? (
             <div className="shop-empty">
@@ -96,7 +42,6 @@ const ProductsPage = async ({ searchParams }: Props) => {
                     href={`/product/${product.id}`}
                     className="shop-card"
                   >
-                    {/* Image */}
                     <div className="shop-card-img">
                       {product.capImage1 && (
                         <Image
@@ -106,7 +51,6 @@ const ProductsPage = async ({ searchParams }: Props) => {
                           style={{ objectFit: "cover" }}
                         />
                       )}
-                      {/* Badges */}
                       <div className="shop-card-badges">
                         {!inStock && (
                           <span className="shop-badge shop-badge--sold">
@@ -121,7 +65,6 @@ const ProductsPage = async ({ searchParams }: Props) => {
                       </div>
                     </div>
 
-                    {/* Info */}
                     <div className="shop-card-body">
                       {product.footballer && (
                         <span className="shop-card-footballer">
