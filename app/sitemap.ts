@@ -30,15 +30,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return staticRoutes
   }
 
-  const [products, footballers] = await Promise.all([
-    prisma.product.findMany({
-      where: { status: 'ACTIVE' },
-      select: { id: true, updatedAt: true },
-    }),
-    prisma.footballer.findMany({
-      select: { id: true, updatedAt: true },
-    }),
-  ])
+  const products = await prisma.product.findMany({
+    where: { status: 'ACTIVE' },
+    select: { id: true, updatedAt: true },
+  })
 
   const productRoutes: MetadataRoute.Sitemap = products.map((product) => ({
     url: `${baseUrl}/product/${product.id}`,
@@ -47,12 +42,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  const footballerFilterRoutes: MetadataRoute.Sitemap = footballers.map((footballer) => ({
-    url: `${baseUrl}/product?footballer=${footballer.id}`,
-    lastModified: footballer.updatedAt,
-    changeFrequency: 'weekly',
-    priority: 0.6,
-  }))
-
-  return [...staticRoutes, ...productRoutes, ...footballerFilterRoutes]
+  return [...staticRoutes, ...productRoutes]
 }
