@@ -37,19 +37,8 @@ const BestsellingSection = ({
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [itemsPerPage, setItemsPerPage] = useState(3);
   const [page, setPage] = useState(0);
-
-  useEffect(() => {
-    const syncItemsPerPage = () => {
-      setItemsPerPage(window.innerWidth <= 768 ? 1 : 3);
-    };
-
-    syncItemsPerPage();
-    window.addEventListener("resize", syncItemsPerPage);
-
-    return () => window.removeEventListener("resize", syncItemsPerPage);
-  }, []);
+  const itemsPerPage = 3;
 
   const shouldUseCarousel = products.length > 3;
   const pageCount = shouldUseCarousel ? Math.ceil(products.length / itemsPerPage) : 1;
