@@ -6,6 +6,9 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import SearchBar from "./search-bar";
 
+const toTitleCase = (str: string) =>
+  str.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+
 type Footballer = {
   id: string;
   name: string;
@@ -135,7 +138,7 @@ const MobileNav = () => {
                             <span>{f.name[0]}</span>
                           )}
                         </div>
-                        <span>{f.name}</span>
+                        <span>{toTitleCase(f.name)}</span>
                       </button>
                     ))}
                   </div>

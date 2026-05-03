@@ -6,6 +6,16 @@ import gsap from "gsap";
 const HeroSection = () => {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    // React doesn't reliably set the muted attribute on the DOM element,
+    // which causes mobile browsers to block autoplay. Set it directly.
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     const tl = gsap.timeline({ delay: 3.8 });
@@ -31,6 +41,7 @@ const HeroSection = () => {
   return (
     <section className="hero-section">
       <video
+        ref={videoRef}
         className="hero-video"
         autoPlay
         muted

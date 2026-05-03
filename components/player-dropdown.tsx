@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
+const toTitleCase = (str: string) =>
+  str.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+
 type Footballer = {
   id: string;
   name: string;
@@ -74,7 +77,7 @@ export default function PlayerDropdown() {
         <div className="pd-dropdown">
           {footballers.map((f) => (
             <button key={f.id} className="pd-item" onClick={() => go(f)}>
-              <span className="pd-item-name">{f.name}</span>
+              <span className="pd-item-name">{toTitleCase(f.name)}</span>
             </button>
           ))}
         </div>
