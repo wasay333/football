@@ -131,9 +131,6 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
                       WebkitLineClamp: 3,
                       WebkitBoxOrient: "vertical",
                     }}>{footballer.bio ?? "A legend of the game."}</p>
-                    <span className="legend-view-btn">
-                      View Product
-                    </span>
                   </div>
                 </div>
               </div>
