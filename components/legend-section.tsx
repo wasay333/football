@@ -109,7 +109,7 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
                     src={footballer.profileImage ?? "/image2.png"}
                     alt={footballer.name}
                     fill
-                    style={{ objectFit: "cover" }}
+                    style={{ objectFit: "cover", objectPosition: "center top" }}
                   />
                 </div>
 

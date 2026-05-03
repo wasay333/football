@@ -49,7 +49,7 @@ export default function ShopHero() {
           alt="Foocaps Collection"
           fill
           sizes="(max-width: 768px) 100vw, 58vw"
-          style={{ objectFit: "cover", objectPosition: "center" }}
+          style={{ objectFit: "cover", objectPosition: "center 20%" }}
           priority
         />
         <div className="sh-overlay sh-overlay--main" />
@@ -74,7 +74,7 @@ export default function ShopHero() {
           alt="Foocaps Cap"
           fill
           sizes="(max-width: 768px) 100vw, 42vw"
-          style={{ objectFit: "cover", objectPosition: "center top" }}
+          style={{ objectFit: "cover", objectPosition: "center 15%" }}
         />
         <div className="sh-overlay sh-overlay--top" />
         <div className="sh-content sh-content--top">
@@ -97,7 +97,7 @@ export default function ShopHero() {
           alt="Foocaps Limited Edition"
           fill
           sizes="(max-width: 768px) 100vw, 42vw"
-          style={{ objectFit: "cover", objectPosition: "center top" }}
+          style={{ objectFit: "cover", objectPosition: "center 15%" }}
         />
         <div className="sh-overlay sh-overlay--bottom" />
         <div className="sh-content sh-content--bottom">
