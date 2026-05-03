@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import SearchBar from "./search-bar";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -18,15 +19,18 @@ const MobileNav = () => {
 
   return (
     <>
-      <button
-        className={`hamburger ${open ? "open" : ""}`}
-        onClick={() => setOpen(!open)}
-        aria-label="Toggle menu"
-      >
-        <span />
-        <span />
-        <span />
-      </button>
+      <div className="mobile-header-actions">
+        <SearchBar />
+        <button
+          className={`hamburger ${open ? "open" : ""}`}
+          onClick={() => setOpen(!open)}
+          aria-label="Toggle menu"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      </div>
 
       {open && <div className="mobile-overlay" onClick={() => setOpen(false)} />}
 

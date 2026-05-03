@@ -312,6 +312,231 @@ main {
   display: none;
 }
 
+.mobile-header-actions {
+  display: none;
+}
+
+/* ========== SEARCH ========== */
+.search-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-white);
+  transition: background 0.18s ease;
+}
+
+.search-trigger:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Full-screen backdrop */
+.search-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 20, 40, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 1100;
+}
+
+/* Panel */
+.search-panel {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(620px, calc(100vw - 32px));
+  background: var(--color-white);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  z-index: 1101;
+  overflow: hidden;
+}
+
+/* Input row */
+.search-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(15, 29, 61, 0.08);
+}
+
+.search-input-icon {
+  flex-shrink: 0;
+  color: rgba(15, 29, 61, 0.4);
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  color: var(--color-navy);
+  background: transparent;
+  font-family: inherit;
+}
+
+.search-input::placeholder {
+  color: rgba(15, 29, 61, 0.35);
+}
+
+.search-close-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: rgba(15, 29, 61, 0.45);
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.search-close-btn:hover {
+  color: var(--color-navy);
+  background: rgba(15, 29, 61, 0.06);
+}
+
+/* Body area */
+.search-body {
+  padding: 16px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.search-status {
+  font-size: 0.85rem;
+  color: rgba(15, 29, 61, 0.45);
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* Section label */
+.search-section-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(15, 29, 61, 0.4);
+  margin-bottom: 12px;
+}
+
+/* Product results */
+.search-products {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.search-product-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.search-product-row:hover {
+  background: rgba(15, 29, 61, 0.05);
+}
+
+.search-product-thumb {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-cream);
+  flex-shrink: 0;
+}
+
+.search-product-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.search-product-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-product-player {
+  font-size: 0.72rem;
+  color: rgba(15, 29, 61, 0.5);
+}
+
+.search-product-price {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  flex-shrink: 0;
+}
+
+/* Footballer grid */
+.search-footballer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+}
+
+.search-footballer-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border: 1px solid rgba(15, 29, 61, 0.08);
+  border-radius: 12px;
+  background: none;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.search-footballer-btn:hover {
+  background: var(--color-cream);
+  border-color: var(--color-gold);
+}
+
+.search-footballer-avatar {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.search-footballer-initial {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-white);
+}
+
+.search-footballer-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-navy);
+  text-align: center;
+  line-height: 1.3;
+}
+
 /* ========== HERO SECTION ========== */
 .hero-section {
   position: relative;
@@ -3730,6 +3955,12 @@ main {
     display: none;
   }
 
+  .mobile-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
   .site-header {
     padding: 12px 20px;
   }
@@ -4175,6 +4406,15 @@ main {
 
 /* Mobile phones */
 @media (max-width: 480px) {
+  .search-panel {
+    top: 56px;
+    border-radius: 12px;
+  }
+
+  .search-footballer-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+
   .site-header {
     padding: 10px 16px;
   }

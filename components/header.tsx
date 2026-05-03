@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import MobileNav from "./mobile-nav";
+import SearchBar from "./search-bar";
 import { useCart } from "@/hooks/cart-context";
 
 const navLinks = [
@@ -68,6 +69,7 @@ const Header = () => {
       </nav>
 
       <div className="header-actions">
+        <SearchBar />
         <Link href="/cart" className="header-cart" aria-label="Cart">
           <span className="header-cart-icon-wrap">
             <svg

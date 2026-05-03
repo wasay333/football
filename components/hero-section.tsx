@@ -58,7 +58,7 @@ const HeroSection = () => {
           football-inspired headwear crafted for true fans.
         </p>
         <p ref={taglineRef} className="hero-tagline" style={{ opacity: 0 }}>
-          Set Your Head in the Game. Literally.
+          Foocaps — The Jersey Evolved.
         </p>
       </div>
     </section>

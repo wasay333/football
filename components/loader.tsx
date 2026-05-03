@@ -14,7 +14,7 @@ const Loader = () => {
 
   useEffect(() => {
     // Already shown this session — hide instantly, no animation
-    if (sessionStorage.getItem("loader_shown")) {
+    if (typeof window !== "undefined" && sessionStorage.getItem("loader_shown")) {
       setVisible(false);
       return;
     }
@@ -92,7 +92,7 @@ const Loader = () => {
             />
           </div>
           <p className="loader-catchphrase">
-            Set Your Head in the Game. Literally.
+            Foocaps — The Jersey Evolved.
           </p>
           <div className="loader-progress-track">
             <div ref={progressRef} className="loader-progress-bar" />
