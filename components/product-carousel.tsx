@@ -99,7 +99,7 @@ export default function ProductCarousel({
                         src={product.capImage1}
                         alt={product.name}
                         fill
-                        style={{ objectFit: "cover", objectPosition: "center top" }}
+                        style={{ objectFit: "cover", objectPosition: "center center" }}
                       />
                     )}
                     <div className="psc-card-badges">
