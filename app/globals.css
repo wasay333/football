@@ -568,7 +568,7 @@ main {
   top: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%);
-  min-width: 200px;
+  min-width: 180px;
   background: #111;
   border: 1px solid rgba(201, 168, 76, 0.2);
   border-radius: 12px;
@@ -581,59 +581,31 @@ main {
 }
 
 .pd-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
   border: none;
   background: none;
   cursor: pointer;
   border-radius: 8px;
   font-family: inherit;
+  text-align: center;
   transition: background 0.14s ease;
-  width: 100%;
-  text-align: left;
 }
 
 .pd-item:hover {
   background: rgba(201, 168, 76, 0.1);
 }
 
-.pd-avatar {
-  position: relative;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #222;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pd-avatar-initial {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-gold);
-}
-
 .pd-item-name {
-  flex: 1;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-white);
+  transition: color 0.14s ease;
 }
 
-.pd-item-arrow {
-  color: rgba(255, 255, 255, 0.3);
-  flex-shrink: 0;
-  transition: color 0.14s ease, transform 0.14s ease;
-}
-
-.pd-item:hover .pd-item-arrow {
+.pd-item:hover .pd-item-name {
   color: var(--color-gold);
-  transform: translateX(2px);
 }
 
 /* ========== PLAYER ACCORDION (mobile drawer) ========== */
@@ -4598,6 +4570,8 @@ main {
     z-index: 200;
     padding: 40px 28px;
     transition: left 0.4s ease;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .mobile-drawer.open {
@@ -5965,5 +5939,32 @@ main {
   .ap-hero-title { font-size: 2rem; }
   .ap-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
   .ap-stat-value { font-size: 2.2rem; }
+}
+
+/* ===== GLOBAL SMALL-SCREEN TEXT SCALE ===== */
+@media (max-width: 480px) {
+  /* Product carousel cards */
+  .psc-card-player  { font-size: 0.44rem; letter-spacing: 0.6px; }
+  .psc-card-name    { font-size: 0.58rem; }
+  .psc-card-price   { font-size: 0.62rem; }
+  .psc-card-info    { padding: 4px 2px 0; gap: 1px; }
+
+  /* Bestselling cards */
+  .bestselling-card-player          { font-size: 0.46rem; }
+  .bestselling-card-info h4         { font-size: 0.58rem; }
+  .bestselling-card-price           { font-size: 0.66rem; }
+  .bestselling-card-info            { padding: 5px 7px 8px; }
+
+  /* Shop grid cards */
+  .shop-card-footballer { font-size: 0.55rem; }
+  .shop-card-name       { font-size: 0.72rem; }
+  .shop-card-category   { font-size: 0.6rem; }
+  .shop-card-price      { font-size: 0.82rem; }
+  .shop-card-cta        { font-size: 0.65rem; }
+  .shop-card-body       { padding: 12px 12px 14px; }
+
+  /* Section headings */
+  .bestselling-heading  { font-size: 1.6rem; }
+  .psc-title            { font-size: 1.3rem; }
 }
 

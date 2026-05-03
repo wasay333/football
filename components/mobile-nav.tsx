@@ -33,6 +33,11 @@ const MobileNav = () => {
       .then((data) => setFootballers(data.footballers ?? []));
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
   const closeAll = () => {
     setOpen(false);
     setPlayersOpen(false);

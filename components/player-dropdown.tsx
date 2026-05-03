@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 type Footballer = {
   id: string;
@@ -75,33 +74,7 @@ export default function PlayerDropdown() {
         <div className="pd-dropdown">
           {footballers.map((f) => (
             <button key={f.id} className="pd-item" onClick={() => go(f)}>
-              <div className="pd-avatar">
-                {f.profileImage ? (
-                  <Image
-                    src={f.profileImage}
-                    alt={f.name}
-                    fill
-                    sizes="32px"
-                    style={{ objectFit: "cover", objectPosition: "top" }}
-                  />
-                ) : (
-                  <span className="pd-avatar-initial">{f.name[0]}</span>
-                )}
-              </div>
               <span className="pd-item-name">{f.name}</span>
-              <svg
-                className="pd-item-arrow"
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M9 18l6-6-6-6" />
-              </svg>
             </button>
           ))}
         </div>
