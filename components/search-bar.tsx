@@ -27,8 +27,23 @@ export default function SearchBar() {
   const [footballers, setFootballers] = useState<Footballer[]>([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const router = useRouter();
+
+  const close = useCallback(() => {
+    setOpen(false);
+    setQuery("");
+    setProducts([]);
+  }, []);
+
+  const goToFootballer = useCallback(
+    (f: Footballer) => {
+      const pid = f.products[0]?.id;
+      router.push(pid ? `/product/${pid}` : "/product");
+      close();
+    },
+    [router, close]
+  );
 
   // Load footballers when panel opens
   useEffect(() => {
@@ -66,21 +81,6 @@ export default function SearchBar() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [open, close]);
-
-  const close = useCallback(() => {
-    setOpen(false);
-    setQuery("");
-    setProducts([]);
-  }, []);
-
-  const goToFootballer = useCallback(
-    (f: Footballer) => {
-      const pid = f.products[0]?.id;
-      router.push(pid ? `/product/${pid}` : "/product");
-      close();
-    },
-    [router, close]
-  );
 
   return (
     <>
