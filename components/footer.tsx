@@ -1,12 +1,5 @@
-"use client";
-
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import Link from "next/link";
-
-gsap.registerPlugin(ScrollTrigger);
 
 const navLinks = [
   { label: "About Us", href: "/about" },
@@ -36,64 +29,11 @@ const socials = [
 ];
 
 const Footer = () => {
-  const footerRef = useRef<HTMLElement>(null);
-  const leftRef = useRef<HTMLDivElement>(null);
-  const centerRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const footer = footerRef.current;
-    const left = leftRef.current;
-    const center = centerRef.current;
-
-    if (!footer || !left || !center) return;
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        left,
-        { x: -60, opacity: 0 },
-        {
-          x: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: footer,
-            start: "top bottom",
-            once: true,
-          },
-        }
-      );
-
-      const links = center.querySelectorAll(".footer-nav-link");
-      gsap.fromTo(
-        links,
-        { y: 30, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.5,
-          stagger: 0.1,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: footer,
-            start: "top bottom",
-            once: true,
-          },
-        }
-      );
-    }, footerRef);
-
-    const rafId = requestAnimationFrame(() => ScrollTrigger.refresh());
-    return () => {
-      cancelAnimationFrame(rafId);
-      ctx.revert();
-    };
-  }, []);
-
   return (
-    <footer ref={footerRef} className="site-footer">
+    <footer className="site-footer">
       <div className="footer-inner">
         {/* Left Column */}
-        <div ref={leftRef} className="footer-left">
+        <div className="footer-left">
           <div className="footer-social-row">
             <span className="footer-social-label">
               Follow us! We&apos;re friendly:
@@ -127,7 +67,7 @@ const Footer = () => {
         </div>
 
         {/* Center Column */}
-        <nav ref={centerRef} className="footer-nav">
+        <nav className="footer-nav">
           {navLinks.map((link) => (
             <Link
               key={link.label}

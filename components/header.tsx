@@ -23,12 +23,15 @@ const Header = () => {
   const { totalItems } = useCart();
 
   useEffect(() => {
+    const isHome = pathname === "/";
+    const loaderAlreadyShown = typeof window !== "undefined" && !!sessionStorage.getItem("loader_shown");
+    const needsDelay = isHome && !loaderAlreadyShown;
     gsap.fromTo(
       headerRef.current,
-      { y: -80, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out", delay: 3.8 }
+      { y: needsDelay ? -80 : 0, opacity: 0 },
+      { y: 0, opacity: 1, duration: needsDelay ? 0.8 : 0.3, ease: "power3.out", delay: needsDelay ? 3.8 : 0 }
     );
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     const handleScroll = () => {
