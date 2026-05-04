@@ -3720,12 +3720,16 @@ main {
     display: flex;
     flex-direction: row;
     align-items: stretch;
+    overflow: hidden;
   }
 
   .shop-carousels .psc-section {
     flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
     min-width: 0;
-    padding: 28px 10px 28px;
+    overflow: hidden;
+    padding: 20px 6px 20px;
   }
 
   .shop-carousels .psc-section--preorder {
@@ -3735,12 +3739,12 @@ main {
   .shop-carousels .psc-left {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 14px;
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
   .shop-carousels .psc-title {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
   }
 
   .shop-carousels .psc-controls {
@@ -3748,8 +3752,63 @@ main {
   }
 
   .shop-carousels .psc-btn {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
+  }
+
+  .shop-carousels .psc-right {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .shop-carousels .psc-overflow {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .shop-carousels .psc-track {
+    width: 100%;
+  }
+
+  .shop-carousels .psc-card {
+    flex: 0 0 100% !important;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .shop-carousels .psc-card-img {
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+  }
+
+  .shop-carousels .psc-card-info {
+    padding: 5px 2px 0;
+    gap: 2px;
+  }
+
+  .shop-carousels .psc-card-player {
+    font-size: 0.45rem;
+    letter-spacing: 0.5px;
+  }
+
+  .shop-carousels .psc-card-name {
+    font-size: 0.6rem;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: unset;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .shop-carousels .psc-card-price {
+    font-size: 0.65rem;
   }
 }
 
