@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   },
   description: 'Player-inspired caps for the FIFA World Cup 2026. Wear the legend.',
   applicationName: 'Foocaps',
+  manifest: '/manifest.webmanifest',
   keywords: [
     'Foocaps',
     'football caps',
@@ -41,20 +42,20 @@ export const metadata: Metadata = {
     title: 'Foocaps - The Jersey Evolved',
     description: 'Player-inspired caps for the FIFA World Cup 2026. Wear the legend.',
     images: [
-      { url: '/rem1.png', width: 1200, height: 630, alt: 'Foocaps - World Cup 2026 Collection' },
-      { url: '/rem2.png', width: 1200, height: 630, alt: 'Foocaps - Player Caps' },
-      { url: '/rem3.png', width: 1200, height: 630, alt: 'Foocaps - The Jersey Evolved' },
+      { url: '/search-preview.png', width: 1200, height: 1200, alt: 'Foocaps featured World Cup 2026 cap collection' },
     ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Foocaps - The Jersey Evolved',
     description: 'Player-inspired caps for the FIFA World Cup 2026. Wear the legend.',
-    images: ['/rem1.png', '/rem2.png', '/rem3.png'],
+    images: ['/search-preview.png'],
   },
   icons: {
     icon: [
       { url: '/favicon.ico', type: 'image/x-icon' },
+      { url: '/favicon-48x48.png', type: 'image/png', sizes: '48x48' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
       { url: '/foocaps-search-favicon.png', type: 'image/png', sizes: '512x512' },
     ],
     apple: [{ url: '/foocaps-search-favicon.png', sizes: '512x512' }],
