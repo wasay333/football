@@ -4189,11 +4189,35 @@ main {
 
 .psc-overflow {
   overflow: hidden;
+  touch-action: pan-y;
 }
 
 .psc-track {
   display: flex;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.psc-dots {
+  display: none;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.psc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(12, 20, 38, 0.2);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.psc-dot--active {
+  background: var(--color-gold);
+  transform: scale(1.3);
 }
 
 .psc-card {
@@ -4326,6 +4350,10 @@ main {
   .psc-card {
     flex: 0 0 100% !important;
     padding: 0 4px;
+  }
+
+  .psc-dots {
+    display: flex;
   }
 
   .psc-card-img {
