@@ -43,6 +43,7 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
       stock: true,
       allowPreorder: true,
       status: true,
+      mannequinImage: true,
       capImage1: true,
     },
   });
@@ -70,7 +71,7 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
       price: Number(product.price),
       quantity: input.quantity,
       size: input.size ?? null,
-      image: product.capImage1 ?? "",
+      image: product.mannequinImage ?? product.capImage1 ?? "",
       isPreorder: product.stock === 0 && product.allowPreorder,
     });
   }

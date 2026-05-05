@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Product" ADD COLUMN     "mannequinImage" TEXT,
+ALTER COLUMN "capImage1" DROP NOT NULL,
+ALTER COLUMN "capImage2" DROP NOT NULL,
+ALTER COLUMN "capImage3" DROP NOT NULL;

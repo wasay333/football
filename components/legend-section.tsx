@@ -29,7 +29,7 @@ export type LegendFootballer = {
   name: string;
   profileImage: string | null;
   bio: string | null;
-  products: { id: string; capImage1: string | null }[];
+  products: { id: string; mannequinImage: string | null }[];
 };
 
 const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => {
@@ -117,7 +117,7 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
                 <div className="legend-card-back">
                   <div className="legend-card-back-top">
                     <Image
-                      src={footballer.products[0]?.capImage1 ?? "/image2.png"}
+                      src={footballer.products[0]?.mannequinImage ?? "/image2.png"}
                       alt={`${footballer.name} cap`}
                       fill
                       style={{ objectFit: "cover" }}

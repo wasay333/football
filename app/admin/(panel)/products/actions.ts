@@ -26,6 +26,7 @@ const ProductSchema = z.object({
       try { return JSON.parse(val) as string[] } catch { return [] }
     })
     .pipe(z.array(z.string().min(1))),
+  mannequinImage: z.string().optional(),
   capImage1: z.string().optional(),
   capImage2: z.string().optional(),
   capImage3: z.string().optional(),
@@ -40,6 +41,7 @@ export type ProductFormState = {
     stock?: string[]
     lowStockThreshold?: string[]
     footballerId?: string[]
+    mannequinImage?: string[]
     capImage1?: string[]
     capImage2?: string[]
     capImage3?: string[]
@@ -52,7 +54,7 @@ export async function createProductAction(
   formData: FormData,
 ): Promise<ProductFormState> {
   // Validate text fields first — no point uploading files if they fail
-  const textResult = ProductSchema.omit({ capImage1: true, capImage2: true, capImage3: true }).safeParse({
+  const textResult = ProductSchema.omit({ mannequinImage: true, capImage1: true, capImage2: true, capImage3: true }).safeParse({
     name: formData.get('name'),
     slug: formData.get('slug'),
     description: formData.get('description'),
@@ -70,14 +72,17 @@ export async function createProductAction(
   }
 
   // Text fields valid — now save images
+  let mannequinImage: string | null = null
   let capImage1: string | null = null
   let capImage2: string | null = null
   let capImage3: string | null = null
 
   try {
+    const fm = formData.get('mannequinImage') as File | null
     const f1 = formData.get('capImage1') as File | null
     const f2 = formData.get('capImage2') as File | null
     const f3 = formData.get('capImage3') as File | null
+    if (fm?.size) mannequinImage = await saveUploadedFile(fm, 'products/images')
     if (f1?.size) capImage1 = await saveUploadedFile(f1, 'products/images')
     if (f2?.size) capImage2 = await saveUploadedFile(f2, 'products/images')
     if (f3?.size) capImage3 = await saveUploadedFile(f3, 'products/images')
@@ -99,6 +104,7 @@ export async function createProductAction(
         footballerId: textResult.data.footballerId,
         categoryId: textResult.data.categoryId ?? null,
         sizes: textResult.data.sizes,
+        mannequinImage,
         capImage1,
         capImage2,
         capImage3,
@@ -124,11 +130,11 @@ export async function updateProductAction(
   // Fetch current image paths so we can delete replaced files afterwards
   const existing = await prisma.product.findUnique({
     where: { id },
-    select: { capImage1: true, capImage2: true, capImage3: true },
+    select: { mannequinImage: true, capImage1: true, capImage2: true, capImage3: true },
   })
 
   // Validate text fields before uploading anything
-  const textResult = ProductSchema.omit({ capImage1: true, capImage2: true, capImage3: true }).safeParse({
+  const textResult = ProductSchema.omit({ mannequinImage: true, capImage1: true, capImage2: true, capImage3: true }).safeParse({
     name: formData.get('name'),
     slug: formData.get('slug'),
     description: formData.get('description'),
@@ -145,6 +151,7 @@ export async function updateProductAction(
     return { errors: textResult.error.flatten().fieldErrors }
   }
 
+  let mannequinImage: string | null = null
   let capImage1: string | null = null
   let capImage2: string | null = null
   let capImage3: string | null = null
@@ -152,9 +159,13 @@ export async function updateProductAction(
   const filesToDelete: (string | null | undefined)[] = []
 
   try {
+    const fm = formData.get('mannequinImage') as File | null
     const f1 = formData.get('capImage1') as File | null
     const f2 = formData.get('capImage2') as File | null
     const f3 = formData.get('capImage3') as File | null
+
+    if (fm?.size) { mannequinImage = await saveUploadedFile(fm, 'products/images'); newlyUploaded.push(mannequinImage); filesToDelete.push(existing?.mannequinImage) }
+    else          { mannequinImage = (formData.get('mannequinImage_existing') as string) || null }
 
     if (f1?.size) { capImage1 = await saveUploadedFile(f1, 'products/images'); newlyUploaded.push(capImage1); filesToDelete.push(existing?.capImage1) }
     else          { capImage1 = (formData.get('capImage1_existing') as string) || null }
@@ -184,6 +195,7 @@ export async function updateProductAction(
         footballerId: textResult.data.footballerId,
         categoryId: textResult.data.categoryId ?? null,
         sizes: textResult.data.sizes,
+        mannequinImage,
         capImage1,
         capImage2,
         capImage3,
@@ -216,7 +228,7 @@ export async function deleteProductAction(id: string): Promise<{ error?: string 
   // Fetch image paths before deleting the record
   const existing = await prisma.product.findUnique({
     where: { id },
-    select: { capImage1: true, capImage2: true, capImage3: true },
+    select: { mannequinImage: true, capImage1: true, capImage2: true, capImage3: true },
   })
 
   try {
@@ -232,7 +244,7 @@ export async function deleteProductAction(id: string): Promise<{ error?: string 
   // Remove all associated images after successful DB delete
   if (existing) {
     await Promise.all(
-      [existing.capImage1, existing.capImage2, existing.capImage3].map(deleteUploadedFile)
+      [existing.mannequinImage, existing.capImage1, existing.capImage2, existing.capImage3].map(deleteUploadedFile)
     )
   }
 

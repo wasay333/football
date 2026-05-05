@@ -313,16 +313,29 @@ export function ProductForm({
         )}
       </FormSection>
 
-      {/* ── Cap Images ── */}
-      <FormSection title="Cap Images (optional)">
+      {/* ── Mannequin Image ── */}
+      <FormSection title="Mannequin Image">
         <p className="text-xs text-muted-foreground">
-          {isEdit
-            ? 'Current images shown below. Pick a new file to replace one.'
-            : 'All images are optional — you can add them later.'}
+          Shown on the home page and product listing. Use a mannequin or model shot.
+        </p>
+        <div className="max-w-[160px]">
+          <FileImageInput
+            name="mannequinImage"
+            existingUrl={(product as unknown as { mannequinImage?: string | null })?.mannequinImage}
+            error={state?.errors?.mannequinImage?.[0]}
+          />
+        </div>
+      </FormSection>
+
+      {/* ── Cap Images ── */}
+      <FormSection title="Product Detail Images (optional)">
+        <p className="text-xs text-muted-foreground">
+          Shown only on the product page gallery. Use close-up cap shots.
+          {isEdit ? ' Pick a new file to replace one.' : ''}
         </p>
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <Label>Cover image</Label>
+            <Label>Image 1</Label>
             <FileImageInput
               name="capImage1"
               existingUrl={product?.capImage1}

@@ -70,7 +70,8 @@ model Category {
 }
 
 // Each cap is tied to exactly one footballer.
-// capImage1 is the cover shown in listings; 2 and 3 are the detail gallery.
+// mannequinImage is shown on listings and home page carousels.
+// capImage1/2/3 are the detail gallery shown only on the product page.
 // lowStockThreshold: admin gets a warning when stock falls to this number.
 // allowPreorder: when true and stock = 0, customers see "Pre-order" instead of "Out of stock".
 model Product {
@@ -88,9 +89,10 @@ model Product {
   footballer        Footballer    @relation(fields: [footballerId], references: [id])
   footballerId      String
   sizes             String[]      @default([]) // e.g. ["S/M", "L/XL"] — empty means one-size
-  capImage1         String?       // cover / main image
-  capImage2         String?
-  capImage3         String?
+  mannequinImage    String?       // shown on listings and home page (mannequin/model shot)
+  capImage1         String?       // product detail gallery image 1
+  capImage2         String?       // product detail gallery image 2
+  capImage3         String?       // product detail gallery image 3
   orderItems        OrderItem[]
   reviews           Review[]
   createdAt         DateTime      @default(now())

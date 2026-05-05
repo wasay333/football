@@ -8,7 +8,7 @@ type Product = {
   id: string;
   name: string;
   price: number;
-  capImage1: string | null;
+  mannequinImage: string | null;
   footballer: { name: string } | null;
   category: { name: string } | null;
   stock: number;
@@ -94,9 +94,9 @@ export default function ProductCarousel({
               return (
                 <Link key={product.id} href={`/product/${product.id}`} className="psc-card">
                   <div className="psc-card-img">
-                    {product.capImage1 && (
+                    {product.mannequinImage && (
                       <Image
-                        src={product.capImage1}
+                        src={product.mannequinImage}
                         alt={product.name}
                         fill
                         style={{ objectFit: "cover", objectPosition: "center center" }}

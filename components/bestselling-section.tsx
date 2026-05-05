@@ -12,7 +12,7 @@ type Product = {
   id: string;
   name: string;
   price: unknown;
-  capImage1: string | null;
+  mannequinImage: string | null;
   description: string;
   stock?: number;
   allowPreorder?: boolean;
@@ -188,8 +188,8 @@ const BestsellingSection = ({
               className={`bestselling-card ${variant === "preorder" ? "bestselling-card--preorder" : ""} ${i === Math.floor(visibleProducts.length / 2) ? "bestselling-card--center" : ""}`}
             >
               <div className="bestselling-card-image">
-                {item.capImage1 && (
-                  <Image src={item.capImage1} alt={item.name} fill style={{ objectFit: "cover" }} />
+                {item.mannequinImage && (
+                  <Image src={item.mannequinImage} alt={item.name} fill style={{ objectFit: "cover" }} />
                 )}
               </div>
               <div className="bestselling-card-info">

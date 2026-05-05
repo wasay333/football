@@ -10,7 +10,7 @@ const ProductsPage = async () => {
       where: { status: "ACTIVE", stock: { gt: 0 } },
       orderBy: { createdAt: "desc" },
       select: {
-        id: true, name: true, price: true, capImage1: true,
+        id: true, name: true, price: true, mannequinImage: true,
         description: true, stock: true, allowPreorder: true,
         footballer: { select: { name: true } },
         category: { select: { name: true } },
@@ -20,7 +20,7 @@ const ProductsPage = async () => {
       where: { status: "ACTIVE", stock: 0, allowPreorder: true },
       orderBy: { createdAt: "desc" },
       select: {
-        id: true, name: true, price: true, capImage1: true,
+        id: true, name: true, price: true, mannequinImage: true,
         description: true, stock: true, allowPreorder: true,
         footballer: { select: { name: true } },
         category: { select: { name: true } },
