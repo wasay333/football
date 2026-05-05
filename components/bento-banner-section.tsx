@@ -119,7 +119,7 @@ const BentoBannerSection = () => {
               <br />
               <em>Stage.</em>
             </p>
-            <span className="bento-pill bento-pill--ghost">32 Nations</span>
+            <span className="bento-pill bento-pill--ghost">48 Nations</span>
           </div>
         </div>
       </div>

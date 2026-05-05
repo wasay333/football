@@ -29,7 +29,7 @@ const stats = [
   { value: "500+", label: "Caps Sold" },
   { value: "20+", label: "Footballer Tributes" },
   { value: "100%", label: "Fan Approved" },
-  { value: "2024", label: "Founded" },
+  { value: "2026", label: "Founded" },
 ];
 
 export default function AboutPageClient() {
