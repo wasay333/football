@@ -159,10 +159,6 @@ export default function AboutPageClient() {
             pays tribute to the footballers who defined generations.
           </p>
         </div>
-        <div className="ap-hero-scroll">
-          <span>scroll</span>
-          <div className="ap-hero-scroll-line" />
-        </div>
       </div>
 
       {/* ── Story ── */}
@@ -235,13 +231,13 @@ export default function AboutPageClient() {
       <section ref={ctaRef} className="ap-cta">
         <div className="ap-cta-inner">
           <h2 className="ap-cta-title">
-            READY TO WEAR<br /><span>THE LEGACY?</span>
+            NEED A BULK ORDER<br /><span>OR EVENT QUOTE?</span>
           </h2>
           <p className="ap-cta-sub">
-            Explore our full collection of footballer-inspired caps.
+            Use our dedicated contact page and we&apos;ll reply by email with pricing and next steps.
           </p>
-          <Link href="/product" className="ap-cta-btn">
-            Shop the Collection
+          <Link href="/contact" className="ap-cta-btn">
+            Contact Foocaps
           </Link>
         </div>
       </section>

@@ -23,6 +23,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.7,
     },
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
   ]
 
   // Image builds in CI do not have database access, so fall back to static routes.
@@ -30,17 +36,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return staticRoutes
   }
 
-  const products = await prisma.product.findMany({
-    where: { status: 'ACTIVE' },
-    select: { id: true, updatedAt: true },
-  })
+  try {
+    const products = await prisma.product.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true, updatedAt: true },
+    })
 
-  const productRoutes: MetadataRoute.Sitemap = products.map((product) => ({
-    url: `${baseUrl}/product/${product.id}`,
-    lastModified: product.updatedAt,
-    changeFrequency: 'weekly',
-    priority: 0.8,
-  }))
+    const productRoutes: MetadataRoute.Sitemap = products.map((product) => ({
+      url: `${baseUrl}/product/${product.id}`,
+      lastModified: product.updatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    }))
 
-  return [...staticRoutes, ...productRoutes]
+    return [...staticRoutes, ...productRoutes]
+  } catch (error) {
+    console.warn('[sitemap] Falling back to static routes because the database is unavailable.', error)
+    return staticRoutes
+  }
 }
