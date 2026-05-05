@@ -189,7 +189,7 @@ const BestsellingSection = ({
             >
               <div className="bestselling-card-image">
                 {item.mannequinImage && (
-                  <Image src={item.mannequinImage} alt={item.name} fill style={{ objectFit: "cover" }} />
+                  <Image src={item.mannequinImage} alt={item.name} fill unoptimized style={{ objectFit: "cover" }} />
                 )}
               </div>
               <div className="bestselling-card-info">

@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   },
   images: {
     localPatterns: [
+      { pathname: '/assets/**' },
+      { pathname: '/_next/**' },
       { pathname: '/**' },
     ],
     remotePatterns: [

@@ -120,6 +120,7 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
                       src={footballer.products[0]?.mannequinImage ?? "/image2.png"}
                       alt={`${footballer.name} cap`}
                       fill
+                      unoptimized
                       style={{ objectFit: "cover" }}
                     />
                   </div>

@@ -99,6 +99,7 @@ export default function ProductCarousel({
                         src={product.mannequinImage}
                         alt={product.name}
                         fill
+                        unoptimized
                         style={{ objectFit: "cover", objectPosition: "center center" }}
                       />
                     )}
