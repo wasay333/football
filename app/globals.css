@@ -1275,43 +1275,7 @@ main {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform: rotateY(180deg);
-  background: var(--color-cream-dark);
-  display: flex;
-  flex-direction: column;
-}
-
-.legend-card-back-top {
-  position: relative;
-  flex: 0 0 55%;
   background: #111;
-  overflow: hidden;
-}
-
-.legend-card-back-bottom {
-  flex: 1;
-  padding: 14px 14px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  background: var(--color-navy);
-}
-
-.legend-card-back-bottom h4 {
-  font-size: 0.62rem;
-  font-weight: 800;
-  color: var(--color-gold);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
-
-.legend-card-back-bottom p {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.5;
-  flex: 1;
 }
 
 .legend-view-btn {
@@ -4866,14 +4830,6 @@ main {
     gap: 28px;
   }
 
-  .legend-card-back-bottom h4 {
-    font-size: 0.58rem;
-  }
-
-  .legend-card-back-bottom p {
-    font-size: 0.65rem;
-  }
-
   .legend-view-btn {
     padding: 8px 22px;
     font-size: 0.75rem;
@@ -5260,20 +5216,6 @@ main {
   .legend-card--tall,
   .legend-card--short {
     transform: none;
-  }
-
-  .legend-card-back-bottom {
-    padding: 12px 10px;
-    gap: 6px;
-  }
-
-  .legend-card-back-bottom h4 {
-    font-size: 0.54rem;
-  }
-
-  .legend-card-back-bottom p {
-    font-size: 0.62rem;
-    line-height: 1.4;
   }
 
   .legend-view-btn {
@@ -5688,24 +5630,6 @@ main {
 
   .legend-card {
     aspect-ratio: 3 / 4;
-  }
-
-  .legend-card-back-top {
-    flex: 0 0 50%;
-  }
-
-  .legend-card-back-bottom {
-    padding: 8px 8px;
-    gap: 4px;
-  }
-
-  .legend-card-back-bottom h4 {
-    font-size: 0.48rem;
-  }
-
-  .legend-card-back-bottom p {
-    font-size: 0.52rem;
-    line-height: 1.3;
   }
 
   .legend-view-btn {

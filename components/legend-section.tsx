@@ -109,30 +109,19 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
                     src={footballer.profileImage ?? "/image2.png"}
                     alt={footballer.name}
                     fill
-                    style={{ objectFit: "cover", objectPosition: "center top" }}
+                    style={{ objectFit: "cover", objectPosition: "center center" }}
                   />
                 </div>
 
                 {/* Back */}
                 <div className="legend-card-back">
-                  <div className="legend-card-back-top">
-                    <Image
-                      src={footballer.products[0]?.mannequinImage ?? "/image2.png"}
-                      alt={`${footballer.name} cap`}
-                      fill
-                      unoptimized
-                      style={{ objectFit: "cover" }}
-                    />
-                  </div>
-                  <div className="legend-card-back-bottom">
-                    <h4>{getCatchphrase(footballer.name)}</h4>
-                    <p style={{
-                      overflow: "hidden",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: "vertical",
-                    }}>{footballer.bio ?? "A legend of the game."}</p>
-                  </div>
+                  <Image
+                    src={footballer.products[0]?.mannequinImage ?? "/image2.png"}
+                    alt={`${footballer.name} cap`}
+                    fill
+                    unoptimized
+                    style={{ objectFit: "cover", objectPosition: "center center" }}
+                  />
                 </div>
               </div>
 
