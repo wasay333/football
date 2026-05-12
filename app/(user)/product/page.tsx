@@ -1,5 +1,4 @@
 import { prisma } from "@/prisma";
-import ShopHero from "@/components/shop-hero";
 import AllProductsGrid from "@/components/all-products-grid";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +22,6 @@ const ProductsPage = async () => {
 
   return (
     <div className="shop-page">
-      <ShopHero />
       <AllProductsGrid
         products={products.map((product) => ({ ...product, price: Number(product.price) }))}
         title="Products"
