@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/hooks/cart-context";
+import { isUploadedAssetPath } from "@/lib/image";
 
 const FREE_SHIPPING_THRESHOLD = 100;
 const SHIPPING_COST = 9.99;
@@ -78,7 +79,14 @@ export default function CartPage() {
             <div key={item.productId} className="cart-item">
               {/* Image */}
               <div className="cart-item-img">
-                <Image src={item.image} alt={item.name} fill sizes="140px" style={{ objectFit: "contain" }} />
+                <Image
+                  src={item.image}
+                  alt={item.name}
+                  fill
+                  sizes="140px"
+                  unoptimized={isUploadedAssetPath(item.image)}
+                  style={{ objectFit: "contain" }}
+                />
               </div>
 
               {/* Content */}

@@ -161,12 +161,13 @@ model OrderItem {
 }
 
 // Full audit trail — every time the admin moves an order to a new status,
-// a row is added here. The admin can also leave a note (e.g. tracking number).
+// a row is added here. The admin can also leave a note (e.g. courier and tracking number).
 model OrderStatusHistory {
   id        String      @id @default(uuid())
   order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId   String
   status    OrderStatus
-  note      String?     // e.g. "Shipped via DHL — tracking: 1Z999AA1"
+  note      String?     // e.g. "Shipped via courier - tracking: TRACK123456"
   createdAt DateTime    @default(now())
 }
+

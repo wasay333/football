@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
+import { isUploadedAssetPath } from '@/lib/image'
 
 const ZOOM = 2.5
 const LENS = 130
@@ -51,6 +52,7 @@ export default function CapGallery({
             alt={name}
             fill
             sizes="320px"
+            unoptimized={isUploadedAssetPath(images[active])}
             style={{ objectFit: 'contain' }}
             priority
           />
@@ -85,6 +87,7 @@ export default function CapGallery({
                 alt={`${name} view ${i + 1}`}
                 fill
                 sizes="80px"
+                unoptimized={isUploadedAssetPath(src)}
                 style={{ objectFit: 'cover' }}
               />
             </button>

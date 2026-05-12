@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import Link from "next/link";
+import { isUploadedAssetPath } from "@/lib/image";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -109,6 +110,7 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
                     src={footballer.profileImage ?? "/image2.png"}
                     alt={footballer.name}
                     fill
+                    unoptimized={isUploadedAssetPath(footballer.profileImage)}
                     style={{ objectFit: "cover", objectPosition: "center center" }}
                   />
                 </div>
@@ -119,7 +121,7 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
                     src={footballer.products[0]?.mannequinImage ?? "/image2.png"}
                     alt={`${footballer.name} cap`}
                     fill
-                    unoptimized
+                    unoptimized={isUploadedAssetPath(footballer.products[0]?.mannequinImage)}
                     style={{ objectFit: "cover", objectPosition: "center center" }}
                   />
                 </div>

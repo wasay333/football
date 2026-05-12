@@ -17,7 +17,7 @@ function SubmitButton() {
       disabled={pending}
       className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
     >
-      {pending ? 'Saving…' : 'Update Status'}
+      {pending ? 'Saving...' : 'Update Status'}
     </button>
   )
 }
@@ -56,7 +56,7 @@ export function UpdateStatusForm({
         <input
           type="text"
           name="note"
-          placeholder="e.g. Shipped via UPS — tracking: 1Z999AA1"
+          placeholder="e.g. Shipped via courier - tracking: TRACK123456"
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>

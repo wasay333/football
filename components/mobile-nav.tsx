@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import SearchBar from "./search-bar";
+import { isUploadedAssetPath } from "@/lib/image";
 
 const toTitleCase = (str: string) =>
   str.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
@@ -133,6 +134,7 @@ const MobileNav = () => {
                               alt={f.name}
                               fill
                               sizes="28px"
+                              unoptimized={isUploadedAssetPath(f.profileImage)}
                               style={{ objectFit: "cover", objectPosition: "top" }}
                             />
                           ) : (

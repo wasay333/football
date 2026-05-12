@@ -1,6 +1,7 @@
 import { prisma } from "@/prisma";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { isUploadedAssetPath } from "@/lib/image";
 
 export const dynamic = "force-dynamic";
 import ProductActions from "./_components/product-actions";
@@ -54,6 +55,7 @@ const SingleProductPage = async ({ params }: Props) => {
             alt={footballer.name}
             fill
             sizes="100vw"
+            unoptimized={isUploadedAssetPath(heroImage)}
             className="pdp-hero-media"
             style={{ objectFit: "cover", objectPosition: "top center" }}
           />

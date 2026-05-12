@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { isUploadedAssetPath } from "@/lib/image";
 
 type ProductResult = {
   id: string;
@@ -142,6 +143,7 @@ export default function SearchBar() {
                   <div className="search-drop-thumb">
                     {p.capImage1 && (
                       <Image src={p.capImage1} alt={p.name} fill sizes="40px"
+                        unoptimized={isUploadedAssetPath(p.capImage1)}
                         style={{ objectFit: "cover" }} />
                     )}
                   </div>
@@ -164,6 +166,7 @@ export default function SearchBar() {
                     <div className="search-drop-avatar">
                       {f.profileImage ? (
                         <Image src={f.profileImage} alt={f.name} fill sizes="36px"
+                          unoptimized={isUploadedAssetPath(f.profileImage)}
                           style={{ objectFit: "cover", objectPosition: "top" }} />
                       ) : (
                         <span>{f.name[0]}</span>
