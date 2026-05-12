@@ -1,54 +1,35 @@
 import { prisma } from "@/prisma";
 import ShopHero from "@/components/shop-hero";
-import ProductCarousel from "@/components/product-carousel";
+import AllProductsGrid from "@/components/all-products-grid";
 
 export const dynamic = "force-dynamic";
 
 const ProductsPage = async () => {
-  const [available, preorders] = await Promise.all([
-    prisma.product.findMany({
-      where: { status: "ACTIVE", stock: { gt: 0 } },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true, name: true, price: true, mannequinImage: true,
-        description: true, stock: true, allowPreorder: true,
-        footballer: { select: { name: true } },
-        category: { select: { name: true } },
-      },
-    }),
-    prisma.product.findMany({
-      where: { status: "ACTIVE", stock: 0, allowPreorder: true },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true, name: true, price: true, mannequinImage: true,
-        description: true, stock: true, allowPreorder: true,
-        footballer: { select: { name: true } },
-        category: { select: { name: true } },
-      },
-    }),
-  ]);
-
-  const serialize = (p: typeof available[number]) => ({ ...p, price: Number(p.price) });
+  const products = await prisma.product.findMany({
+    where: { status: "ACTIVE" },
+    orderBy: [{ stock: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      mannequinImage: true,
+      description: true,
+      stock: true,
+      allowPreorder: true,
+      footballer: { select: { name: true } },
+      category: { select: { name: true } },
+    },
+  });
 
   return (
     <div className="shop-page">
       <ShopHero />
-      <div className="shop-carousels">
-        <ProductCarousel
-          products={available.map(serialize)}
-          title="AVAILABLE"
-          highlight="NOW"
-          variant="default"
-        />
-        {preorders.length > 0 && (
-          <ProductCarousel
-            products={preorders.map(serialize)}
-            title="PRE"
-            highlight="ORDER"
-            variant="preorder"
-          />
-        )}
-      </div>
+      <AllProductsGrid
+        products={products.map((product) => ({ ...product, price: Number(product.price) }))}
+        title="Products"
+        eyebrow="Shop All"
+        description="Browse every active release in one place, with preorder drops clearly marked right inside the grid."
+      />
     </div>
   );
 };
