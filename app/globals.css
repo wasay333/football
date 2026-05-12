@@ -3917,24 +3917,7 @@ main {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   line-height: 1.3;
-}
-
-.shop-card-category {
-  font-size: 0.72rem;
-  color: rgba(0, 0, 0, 0.4);
-  letter-spacing: 0.5px;
-  margin-top: 2px;
-}
-
-.shop-card-description {
-  margin-top: 8px;
-  font-size: 0.82rem;
-  line-height: 1.6;
-  color: rgba(0, 0, 0, 0.58);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  margin-bottom: 12px;
 }
 
 .shop-card-footer {
@@ -3943,7 +3926,6 @@ main {
   justify-content: space-between;
   margin-top: auto;
   padding-top: 14px;
-  border-top: 1px solid rgba(0, 0, 0, 0.07);
 }
 
 .shop-card-price {
@@ -6438,11 +6420,9 @@ main {
   /* Shop grid cards */
   .shop-card-footballer { font-size: 0.55rem; }
   .shop-card-name       { font-size: 0.72rem; }
-  .shop-card-category   { font-size: 0.6rem; }
   .shop-card-price      { font-size: 0.82rem; }
   .shop-card-cta        { font-size: 0.65rem; }
   .shop-card-body       { padding: 12px 12px 14px; }
-  .shop-card-description { font-size: 0.67rem; margin-top: 6px; }
 
   /* Section headings */
   .bestselling-heading  { font-size: 1.6rem; }

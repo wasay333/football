@@ -6,11 +6,9 @@ type Product = {
   name: string;
   price: number;
   mannequinImage: string | null;
-  description: string;
   stock: number;
   allowPreorder: boolean;
   footballer: { name: string } | null;
-  category: { name: string } | null;
 };
 
 type Props = {
@@ -26,9 +24,6 @@ export default function AllProductsGrid({
   eyebrow = "All Products",
   description = "Explore the full lineup, including ready-to-ship drops and preorder releases.",
 }: Props) {
-  const preorderCount = products.filter((product) => product.stock === 0 && product.allowPreorder).length;
-  const inStockCount = products.filter((product) => product.stock > 0).length;
-
   return (
     <section className="shop-listing-section">
       <div className="shop-body shop-body--full">
@@ -38,11 +33,6 @@ export default function AllProductsGrid({
             <h2 className="shop-grid-title">{title}</h2>
           </div>
           <p className="shop-grid-copy">{description}</p>
-          <div className="shop-grid-summary" aria-label="Product summary">
-            <span>{products.length} styles</span>
-            <span>{inStockCount} ready now</span>
-            {preorderCount > 0 && <span>{preorderCount} preorder</span>}
-          </div>
         </div>
 
         {products.length === 0 ? (
@@ -82,10 +72,6 @@ export default function AllProductsGrid({
                         <span className="shop-card-footballer">{product.footballer.name}</span>
                       )}
                       <h3 className="shop-card-name">{product.name}</h3>
-                      <p className="shop-card-category">
-                        {product.category?.name ?? (isPreorder ? "Ships when restocked" : "Limited release")}
-                      </p>
-                      <p className="shop-card-description">{product.description}</p>
 
                       <div className="shop-card-footer">
                         <span className="shop-card-price">${product.price.toFixed(2)}</span>
