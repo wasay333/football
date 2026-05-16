@@ -1,14 +1,43 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import Script from 'next/script'
+import { useActionState, useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { submitQuoteAction, type QuoteRequestState } from '@/app/(user)/contact/actions'
 
-function SubmitButton() {
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        container: HTMLElement,
+        options: {
+          sitekey: string
+          theme?: 'auto' | 'light' | 'dark'
+          size?: 'normal' | 'compact' | 'flexible'
+          callback?: (token: string) => void
+          'error-callback'?: () => void
+          'expired-callback'?: () => void
+          'timeout-callback'?: () => void
+        },
+      ) => string
+      reset: (widgetId?: string) => void
+      remove: (widgetId?: string) => void
+    }
+  }
+}
+
+function SubmitButton({
+  requiresVerification,
+  hasVerificationToken,
+}: {
+  requiresVerification: boolean
+  hasVerificationToken: boolean
+}) {
   const { pending } = useFormStatus()
+  const disabled = pending || (requiresVerification && !hasVerificationToken)
 
   return (
-    <button type="submit" disabled={pending} className="ap-quote-submit">
+    <button type="submit" disabled={disabled} className="ap-quote-submit">
       {pending ? 'Sending Request...' : 'Request a Quote'}
     </button>
   )
@@ -17,15 +46,101 @@ function SubmitButton() {
 export default function QuoteRequestForm() {
   const [state, formAction] = useActionState<QuoteRequestState, FormData>(submitQuoteAction, null)
   const formRef = useRef<HTMLFormElement>(null)
+  const startedAtRef = useRef<HTMLInputElement>(null)
+  const turnstileContainerRef = useRef<HTMLDivElement>(null)
+  const turnstileWidgetIdRef = useRef<string | undefined>(undefined)
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? ''
+  const requiresVerification = Boolean(turnstileSiteKey)
+  const [turnstileScriptReady, setTurnstileScriptReady] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileError, setTurnstileError] = useState<string | null>(null)
+
+  const resetStartedAt = useEffectEvent(() => {
+    if (startedAtRef.current) {
+      startedAtRef.current.value = Date.now().toString()
+    }
+  })
+
+  const resetTurnstile = useEffectEvent(() => {
+    if (turnstileWidgetIdRef.current) {
+      window.turnstile?.reset(turnstileWidgetIdRef.current)
+    }
+
+    setTurnstileToken('')
+  })
+
+  const renderTurnstile = useEffectEvent(() => {
+    if (
+      !requiresVerification ||
+      !turnstileScriptReady ||
+      !turnstileContainerRef.current ||
+      !window.turnstile ||
+      turnstileWidgetIdRef.current
+    ) {
+      return
+    }
+
+    turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
+      sitekey: turnstileSiteKey,
+      theme: 'light',
+      size: 'flexible',
+      callback: (token) => {
+        setTurnstileToken(token)
+        setTurnstileError(null)
+      },
+      'error-callback': () => {
+        setTurnstileToken('')
+        setTurnstileError('Spam check could not load. Refresh the page and try again.')
+      },
+      'expired-callback': () => {
+        setTurnstileError('Spam check expired. Please complete it again.')
+        resetTurnstile()
+      },
+      'timeout-callback': () => {
+        setTurnstileError('Spam check timed out. Please complete it again.')
+        resetTurnstile()
+      },
+    })
+  })
 
   useEffect(() => {
     if (state?.success) {
       formRef.current?.reset()
+      resetStartedAt()
+      resetTurnstile()
     }
   }, [state?.success])
 
+  useEffect(() => {
+    renderTurnstile()
+  }, [requiresVerification, turnstileScriptReady])
+
+  useEffect(() => {
+    resetStartedAt()
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (turnstileWidgetIdRef.current) {
+        window.turnstile?.remove(turnstileWidgetIdRef.current)
+        turnstileWidgetIdRef.current = undefined
+      }
+    }
+  }, [])
+
   return (
     <form ref={formRef} action={formAction} className="ap-quote-form">
+      {requiresVerification && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          strategy="afterInteractive"
+          onLoad={() => setTurnstileScriptReady(true)}
+        />
+      )}
+
+      <input ref={startedAtRef} type="hidden" name="startedAt" defaultValue="" />
+      <input type="hidden" name="turnstileToken" value={turnstileToken} readOnly />
+
       {state?.errors?.form && (
         <div className="ap-quote-feedback ap-quote-feedback--error">{state.errors.form[0]}</div>
       )}
@@ -183,15 +298,26 @@ export default function QuoteRequestForm() {
         <input id="quote-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
+      {requiresVerification && (
+        <div className="ap-quote-field ap-quote-field--full">
+          <label>Spam Check</label>
+          <div ref={turnstileContainerRef} className="ap-turnstile" />
+          {turnstileError && <p className="ap-quote-error">{turnstileError}</p>}
+        </div>
+      )}
+
       <div className="ap-quote-field ap-quote-field--full">
         <p className="ap-quote-note">
-          This form is rate limited to protect against spam. If you have an urgent request, email
+          This form is protected with rate limiting, bot traps, and spam verification. If you have an urgent request, email
           us directly after submitting and we will match it up with your quote.
         </p>
       </div>
 
       <div className="ap-quote-field ap-quote-field--full">
-        <SubmitButton />
+        <SubmitButton
+          requiresVerification={requiresVerification}
+          hasVerificationToken={!requiresVerification || Boolean(turnstileToken)}
+        />
       </div>
     </form>
   )

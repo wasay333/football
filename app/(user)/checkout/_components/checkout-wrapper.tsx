@@ -75,7 +75,11 @@ export default function CheckoutWrapper() {
 
   return (
     <Elements stripe={stripePromise} options={{ clientSecret, appearance, loader: "auto" }}>
-      <CheckoutForm paymentIntentId={paymentIntentId} totals={trustedTotals} />
+      <CheckoutForm
+        paymentIntentId={paymentIntentId}
+        totals={trustedTotals}
+        onTotalsChange={setTrustedTotals}
+      />
     </Elements>
   );
 }

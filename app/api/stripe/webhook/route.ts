@@ -77,7 +77,7 @@ async function handlePaymentSuccess(pi: Stripe.PaymentIntent) {
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingCost = subtotal >= 100 ? 0 : 9.99;
+  const shippingCost = Number(pi.metadata.fedexShippingAmount || 0);
   const total = subtotal + shippingCost;
   const isPreorder = items.some((item) => item.isPreorder);
 
@@ -146,7 +146,9 @@ async function handlePaymentSuccess(pi: Stripe.PaymentIntent) {
         statusHistory: {
           create: {
             status: "CONFIRMED",
-            note: `Payment received via Stripe (${pi.id})`,
+            note: pi.metadata.fedexServiceName
+              ? `Payment received via Stripe (${pi.id}). FedEx service selected: ${pi.metadata.fedexServiceName}.`
+              : `Payment received via Stripe (${pi.id})`,
           },
         },
       },

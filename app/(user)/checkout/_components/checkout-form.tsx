@@ -9,23 +9,29 @@ import {
 } from "@stripe/react-stripe-js";
 import { useCart } from "@/hooks/cart-context";
 import type { TrustedTotals } from "./checkout-wrapper";
-import { updatePaymentIntentCustomerDetails } from "../_actions/create-payment-intent";
+import {
+  quoteFedExShippingForPaymentIntent,
+  updatePaymentIntentCustomerDetails,
+} from "../_actions/create-payment-intent";
 
 type CheckoutFormProps = {
   paymentIntentId: string;
   totals: TrustedTotals;
+  onTotalsChange: (totals: TrustedTotals) => void;
 };
 
-export default function CheckoutForm({ paymentIntentId, totals }: CheckoutFormProps) {
+export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
   const { items } = useCart();
 
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [shippingStatus, setShippingStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   const { subtotal: totalPrice, shipping, total } = totals;
+  const qualifiesForFreeShipping = totalPrice >= 100
 
   const [form, setForm] = useState({
     name: "",
@@ -33,16 +39,41 @@ export default function CheckoutForm({ paymentIntentId, totals }: CheckoutFormPr
     phone: "",
     address: "",
     city: "",
+    state: "",
     postalCode: "",
     country: "GB",
   });
+  const requiresState = form.country === "US" || form.country === "CA"
 
-  const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+  const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    if (shippingStatus === "ready" && !qualifiesForFreeShipping) {
+      setShippingStatus("idle");
+    }
+  };
+
+  async function handleQuoteShipping() {
+    setShippingStatus("loading");
+    setErrorMsg("");
+
+    const result = await quoteFedExShippingForPaymentIntent(paymentIntentId, form);
+    if (result.error || !result.totals) {
+      setErrorMsg(result.error ?? "Unable to calculate shipping right now.");
+      setShippingStatus("error");
+      return;
+    }
+
+    onTotalsChange(result.totals);
+    setShippingStatus("ready");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!stripe || !elements) return;
+    if (!qualifiesForFreeShipping && shippingStatus !== "ready") {
+      setErrorMsg("Please calculate shipping before paying.");
+      return;
+    }
 
     setStatus("loading");
     setErrorMsg("");
@@ -113,7 +144,22 @@ export default function CheckoutForm({ paymentIntentId, totals }: CheckoutFormPr
             </div>
             <div className="checkout-field">
               <label>City</label>
-              <input value={form.city} onChange={set("city")} required placeholder="London" />
+              <input
+                value={form.city}
+                onChange={set("city")}
+                required
+                placeholder={form.country === "US" ? "Plainsboro" : "London"}
+              />
+            </div>
+            <div className="checkout-field">
+              <label>State / Province</label>
+              <input
+                value={form.state}
+                onChange={set("state")}
+                required={requiresState}
+                placeholder={form.country === "US" ? "NJ" : "Optional"}
+                maxLength={32}
+              />
             </div>
             <div className="checkout-field">
               <label>Postal code</label>
@@ -122,6 +168,7 @@ export default function CheckoutForm({ paymentIntentId, totals }: CheckoutFormPr
             <div className="checkout-field checkout-field--full">
               <label>Country</label>
               <select value={form.country} onChange={set("country")}>
+                <option value="PK">Pakistan</option>
                 <option value="GB">United Kingdom</option>
                 <option value="US">United States</option>
                 <option value="DE">Germany</option>
@@ -148,6 +195,30 @@ export default function CheckoutForm({ paymentIntentId, totals }: CheckoutFormPr
               </select>
             </div>
           </div>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {!qualifiesForFreeShipping && (
+              <button
+                type="button"
+                className="checkout-pay-btn"
+                onClick={handleQuoteShipping}
+                disabled={shippingStatus === "loading" || status === "loading"}
+              >
+                {shippingStatus === "loading" ? (
+                  <span className="checkout-spinner" />
+                ) : (
+                  "Calculate FedEx Shipping"
+                )}
+              </button>
+            )}
+            <p className="checkout-secure-note">
+              {qualifiesForFreeShipping
+                ? "This order qualifies for free shipping. No FedEx rate quote is needed before payment."
+                : shippingStatus === "ready"
+                ? "FedEx shipping has been calculated for this address."
+                : "Shipping is quoted live from FedEx after you enter your address."}
+            </p>
+          </div>
+          {shippingStatus === "error" && errorMsg && <p className="checkout-error">{errorMsg}</p>}
         </section>
 
         {/* Payment */}
@@ -167,12 +238,12 @@ export default function CheckoutForm({ paymentIntentId, totals }: CheckoutFormPr
           </div>
         </section>
 
-        {errorMsg && <p className="checkout-error">{errorMsg}</p>}
+        {errorMsg && shippingStatus !== "error" && <p className="checkout-error">{errorMsg}</p>}
 
         <button
           type="submit"
           className="checkout-pay-btn"
-          disabled={!stripe || status === "loading"}
+          disabled={!stripe || status === "loading" || (!qualifiesForFreeShipping && shippingStatus !== "ready")}
         >
           {status === "loading" ? (
             <span className="checkout-spinner" />
@@ -212,7 +283,15 @@ export default function CheckoutForm({ paymentIntentId, totals }: CheckoutFormPr
           </div>
           <div className="checkout-summary-row">
             <span>Shipping</span>
-            <span>{shipping === 0 ? <span className="checkout-free">Free</span> : `$${shipping.toFixed(2)}`}</span>
+            <span>
+              {qualifiesForFreeShipping
+                ? <span className="checkout-free">Free</span>
+                : shippingStatus === "ready"
+                ? shipping === 0
+                  ? <span className="checkout-free">Free</span>
+                  : `$${shipping.toFixed(2)}`
+                : "Calculate shipping"}
+            </span>
           </div>
           <div className="checkout-summary-divider" />
           <div className="checkout-summary-total">

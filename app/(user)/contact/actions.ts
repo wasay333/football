@@ -8,6 +8,13 @@ import {
   buildQuoteRequestConfirmationEmail,
 } from '@/lib/email/quote-request'
 import { checkRateLimit } from '@/lib/rate-limit'
+import {
+  getEmailDomain,
+  hasMinimumFillTime,
+  isDisposableEmailDomain,
+  looksLikeSeoSpam,
+  verifyTurnstileToken,
+} from '@/lib/spam-protection'
 
 const requestTypeOptions = [
   'Bulk Team Order',
@@ -102,10 +109,88 @@ export async function submitQuoteAction(
     }
   }
 
+  if (!hasMinimumFillTime(formData.get('startedAt'))) {
+    return {
+      success: true,
+      message: 'Your request has been received. We will be in touch by email.',
+    }
+  }
+
   if (result.data.website) {
     return {
       success: true,
       message: 'Your request has been received. We will be in touch by email.',
+    }
+  }
+
+  if (isDisposableEmailDomain(result.data.email)) {
+    return {
+      success: false,
+      errors: {
+        email: ['Use a business or personal email address so we can reply to your request.'],
+      },
+    }
+  }
+
+  if (
+    looksLikeSeoSpam([
+      result.data.name,
+      result.data.email,
+      result.data.phone || undefined,
+      result.data.details,
+    ])
+  ) {
+    return {
+      success: true,
+      message: 'Your request has been received. We will be in touch by email.',
+    }
+  }
+
+  const turnstileResult = await verifyTurnstileToken({
+    token: String(formData.get('turnstileToken') ?? ''),
+    remoteIp: clientIp,
+  })
+
+  if (!turnstileResult.success) {
+    return {
+      success: false,
+      errors: {
+        form: ['Please complete the spam check and submit the form again.'],
+      },
+    }
+  }
+
+  const normalizedEmail = result.data.email.trim().toLowerCase()
+  const emailDomain = getEmailDomain(normalizedEmail)
+  const emailRateLimit = checkRateLimit({
+    key: `quote-request:email:${normalizedEmail}`,
+    limit: 2,
+    windowMs: 60 * 60 * 1000,
+  })
+
+  if (!emailRateLimit.allowed) {
+    return {
+      success: false,
+      errors: {
+        form: ['We already received a recent request from this email address. Please wait a bit before sending another one.'],
+      },
+    }
+  }
+
+  if (emailDomain) {
+    const domainRateLimit = checkRateLimit({
+      key: `quote-request:domain:${emailDomain}`,
+      limit: 5,
+      windowMs: 60 * 60 * 1000,
+    })
+
+    if (!domainRateLimit.allowed) {
+      return {
+        success: false,
+        errors: {
+          form: ['Too many requests have been sent from this email domain recently. Please try again later.'],
+        },
+      }
     }
   }
 

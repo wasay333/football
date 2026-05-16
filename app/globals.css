@@ -2380,6 +2380,16 @@ main {
   overflow: hidden;
 }
 
+.ap-turnstile {
+  width: 100%;
+  min-height: 66px;
+  padding: 6px 0 0;
+}
+
+.ap-turnstile iframe {
+  max-width: 100%;
+}
+
 .contact-page {
   background:
     linear-gradient(180deg, var(--color-cream) 0%, #ede3cf 56%, #e7dac1 100%);

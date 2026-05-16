@@ -1,7 +1,9 @@
 "use server";
 
+import Stripe from 'stripe'
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/prisma";
+import { selectCheapestFedExRateForItems } from '@/lib/fedex-shipping'
 
 export type CartLineInput = {
   productId: string;
@@ -26,9 +28,21 @@ export type CheckoutCustomerDetails = {
   phone?: string;
   address: string;
   city: string;
+  state?: string;
   postalCode: string;
   country: string;
 };
+
+export type CheckoutShippingQuote = {
+  serviceType: string
+  serviceName: string
+  amount: number
+  currency: string
+  deliveryTimestamp?: string
+  transitTime?: string
+}
+
+const FREE_SHIPPING_THRESHOLD = 100
 
 export async function createPaymentIntent(inputs: CartLineInput[]) {
   if (!inputs.length) return { error: "Cart is empty" };
@@ -79,8 +93,7 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
   const subtotalPence = Math.round(
     lines.reduce((s, i) => s + i.price * i.quantity, 0) * 100
   );
-  const shippingPence = subtotalPence / 100 >= 100 ? 0 : Math.round(9.99 * 100);
-  const total = subtotalPence + shippingPence;
+  const total = subtotalPence;
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: total,
@@ -92,28 +105,56 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
   });
 
   const subtotal = subtotalPence / 100;
-  const shipping = shippingPence / 100;
 
   return {
     paymentIntentId: paymentIntent.id,
     clientSecret: paymentIntent.client_secret ?? "",
-    totals: { subtotal, shipping, total: subtotal + shipping },
+    totals: { subtotal, shipping: 0, total: subtotal },
   };
 }
 
-export async function updatePaymentIntentCustomerDetails(
-  paymentIntentId: string,
-  customer: CheckoutCustomerDetails
-) {
-  const normalized = {
+function normalizeCustomerDetails(customer: CheckoutCustomerDetails) {
+  return {
     name: customer.name.trim(),
     email: customer.email.trim(),
     phone: customer.phone?.trim() ?? "",
     address: customer.address.trim(),
     city: customer.city.trim(),
+    state: customer.state?.trim().toUpperCase() ?? "",
     postalCode: customer.postalCode.trim(),
     country: customer.country.trim().toUpperCase(),
   };
+}
+
+async function getTrustedLineItemsFromPaymentIntent(paymentIntentId: string) {
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+  const items: TrustedLineItem[] = JSON.parse(paymentIntent.metadata.items ?? '[]')
+
+  if (!items.length) {
+    throw new Error('No items were found for this checkout session.')
+  }
+
+  return { paymentIntent, items }
+}
+
+function buildCustomerShippingMetadata(normalized: ReturnType<typeof normalizeCustomerDetails>) {
+  return {
+    customerName: normalized.name,
+    customerEmail: normalized.email,
+    customerPhone: normalized.phone,
+    customerAddressLine1: normalized.address,
+    customerCity: normalized.city,
+    customerState: normalized.state,
+    customerPostalCode: normalized.postalCode,
+    customerCountry: normalized.country,
+  }
+}
+
+export async function quoteFedExShippingForPaymentIntent(
+  paymentIntentId: string,
+  customer: CheckoutCustomerDetails
+) {
+  const normalized = normalizeCustomerDetails(customer)
 
   if (
     !paymentIntentId.trim() ||
@@ -127,7 +168,74 @@ export async function updatePaymentIntentCustomerDetails(
     return { error: "Missing customer details for checkout." };
   }
 
+  if (['US', 'CA'].includes(normalized.country) && !normalized.state) {
+    return { error: 'State / province code is required for this destination.' }
+  }
+
+  const { paymentIntent, items } = await getTrustedLineItemsFromPaymentIntent(paymentIntentId)
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const subtotalCents = Math.round(subtotal * 100)
+
+  if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+    await stripe.paymentIntents.update(paymentIntentId, {
+      amount: subtotalCents,
+      receipt_email: normalized.email,
+      shipping: {
+        name: normalized.name,
+        phone: normalized.phone || undefined,
+        address: {
+          line1: normalized.address,
+          city: normalized.city,
+          state: normalized.state || undefined,
+          postal_code: normalized.postalCode,
+          country: normalized.country,
+        },
+      },
+      metadata: {
+        ...buildCustomerShippingMetadata(normalized),
+        fedexServiceType: '',
+        fedexServiceName: '',
+        fedexShippingAmount: '0.00',
+        fedexShippingCurrency: 'USD',
+        fedexDeliveryTimestamp: '',
+        fedexTransitTime: '',
+      },
+    })
+
+    return {
+      ok: true,
+      totals: {
+        subtotal,
+        shipping: 0,
+        total: subtotal,
+      },
+      quote: null,
+      paymentIntentId: paymentIntent.id,
+    }
+  }
+
+  let quote: CheckoutShippingQuote
+  try {
+    quote = await selectCheapestFedExRateForItems({
+      recipient: {
+        city: normalized.city,
+        stateOrProvinceCode: normalized.state || undefined,
+        postalCode: normalized.postalCode,
+        countryCode: normalized.country,
+        streetLines: [normalized.address],
+      },
+      items,
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'FedEx shipping quote failed.'
+    return { error: message }
+  }
+
+  const shippingCents = Math.round(quote.amount * 100)
+  const totalCents = subtotalCents + shippingCents
+
   await stripe.paymentIntents.update(paymentIntentId, {
+    amount: totalCents,
     receipt_email: normalized.email,
     shipping: {
       name: normalized.name,
@@ -135,20 +243,74 @@ export async function updatePaymentIntentCustomerDetails(
       address: {
         line1: normalized.address,
         city: normalized.city,
+        state: normalized.state || undefined,
         postal_code: normalized.postalCode,
         country: normalized.country,
       },
     },
     metadata: {
-      customerName: normalized.name,
-      customerEmail: normalized.email,
-      customerPhone: normalized.phone,
-      customerAddressLine1: normalized.address,
-      customerCity: normalized.city,
-      customerPostalCode: normalized.postalCode,
-      customerCountry: normalized.country,
+      ...buildCustomerShippingMetadata(normalized),
+      fedexServiceType: quote.serviceType,
+      fedexServiceName: quote.serviceName,
+      fedexShippingAmount: quote.amount.toFixed(2),
+      fedexShippingCurrency: quote.currency,
+      fedexDeliveryTimestamp: quote.deliveryTimestamp ?? '',
+      fedexTransitTime: quote.transitTime ?? '',
     },
   });
+
+  const updatedIntent = paymentIntent.id
+    ? await stripe.paymentIntents.retrieve(paymentIntentId)
+    : paymentIntent
+
+  return {
+    ok: true,
+    totals: {
+      subtotal,
+      shipping: quote.amount,
+      total: subtotal + quote.amount,
+    },
+    quote,
+    paymentIntentId: updatedIntent.id,
+  };
+}
+
+export async function updatePaymentIntentCustomerDetails(
+  paymentIntentId: string,
+  customer: CheckoutCustomerDetails
+) {
+  const normalized = normalizeCustomerDetails(customer)
+
+  if (
+    !paymentIntentId.trim() ||
+    !normalized.name ||
+    !normalized.email ||
+    !normalized.address ||
+    !normalized.city ||
+    !normalized.postalCode ||
+    !normalized.country
+  ) {
+    return { error: "Missing customer details for checkout." };
+  }
+
+  if (['US', 'CA'].includes(normalized.country) && !normalized.state) {
+    return { error: 'State / province code is required for this destination.' }
+  }
+
+  let paymentIntent: Stripe.PaymentIntent
+  try {
+    paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+  } catch {
+    return { error: 'Checkout session was not found.' }
+  }
+
+  if (!paymentIntent.metadata.fedexServiceType || !paymentIntent.metadata.fedexShippingAmount) {
+    const { items } = await getTrustedLineItemsFromPaymentIntent(paymentIntentId)
+    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    if (subtotal < FREE_SHIPPING_THRESHOLD) {
+      return { error: 'Please calculate shipping before paying.' }
+    }
+  }
 
   return { ok: true };
 }

@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import type { OrderStatus } from '@prisma/client'
 import { UpdateStatusForm } from './_components/update-status-form'
+import { CreateFedExShipmentForm } from './_components/create-fedex-shipment-form'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -138,6 +139,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader><CardTitle className="text-sm">FedEx Shipment</CardTitle></CardHeader>
+            <CardContent>
+              <CreateFedExShipmentForm orderId={order.id} />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-6">
           {/* Status history */}
           <Card>
             <CardHeader><CardTitle className="text-sm">Status History</CardTitle></CardHeader>
