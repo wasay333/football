@@ -96,18 +96,6 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/success`,
-        receipt_email: form.email.trim(),
-        shipping: {
-          name: form.name.trim(),
-          phone: form.phone.trim() || undefined,
-          address: {
-            line1: form.address.trim(),
-            city: form.city.trim(),
-            state: form.state.trim() || undefined,
-            postal_code: form.postalCode.trim(),
-            country: form.country.trim().toUpperCase(),
-          },
-        },
         payment_method_data: {
           billing_details: {
             name: form.name.trim(),
