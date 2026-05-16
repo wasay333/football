@@ -1,11 +1,13 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { Resend } from 'resend'
 import {
   createFedExShipment,
   getConfiguredFedExServiceType,
   selectCheapestFedExRateForItems,
 } from '@/lib/fedex-shipping'
+import { buildShipmentCreatedEmail } from '@/lib/email/shipment-created'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/prisma'
 
@@ -110,6 +112,14 @@ export async function createFedExShipmentAction(
       },
     })
 
+    await sendShipmentCreatedEmail({
+      customerEmail: order.customerEmail,
+      customerName: order.customerName,
+      orderNumber: order.orderNumber,
+      trackingNumber: shipment.trackingNumber,
+      serviceName: selectedRate.serviceName,
+    })
+
     hasDownloadableLabel = Boolean(shipment.encodedLabel || shipment.labelUrl)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create FedEx shipment.'
@@ -122,5 +132,50 @@ export async function createFedExShipmentAction(
   return {
     success: 'FedEx shipment created successfully. Tracking details were added to the order history.',
     labelPath: hasDownloadableLabel ? `/admin/orders/${orderId}/label` : undefined,
+  }
+}
+
+async function sendShipmentCreatedEmail({
+  customerEmail,
+  customerName,
+  orderNumber,
+  trackingNumber,
+  serviceName,
+}: {
+  customerEmail: string
+  customerName: string
+  orderNumber: string
+  trackingNumber: string
+  serviceName: string
+}) {
+  const resendApiKey = process.env.RESEND_API_KEY
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL ?? 'Foocaps <onboarding@resend.dev>'
+
+  if (!resendApiKey) {
+    console.error(`FedEx shipment created for ${orderNumber}, but RESEND_API_KEY is missing so no shipment email was sent.`)
+    return
+  }
+
+  if (!customerEmail?.trim()) {
+    console.error(`FedEx shipment created for ${orderNumber}, but customer email is missing so no shipment email was sent.`)
+    return
+  }
+
+  try {
+    const resend = new Resend(resendApiKey)
+    await resend.emails.send({
+      from: resendFromEmail,
+      to: customerEmail,
+      subject: `Your Foocaps shipment is ready - ${orderNumber}`,
+      html: buildShipmentCreatedEmail({
+        customerEmail,
+        customerName,
+        orderNumber,
+        trackingNumber,
+        serviceName,
+      }),
+    })
+  } catch (error) {
+    console.error(`Failed to send shipment-created email for ${orderNumber}:`, error)
   }
 }

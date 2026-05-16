@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Users, Tag } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Users, Tag, X } from 'lucide-react'
 
 import {
   Sidebar,
@@ -16,6 +16,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -31,19 +32,40 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const handleMobileNavigation = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
 
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2">
-          <Image
-            src="/foocapsnewlogo.png"
-            alt="Foocaps"
-            width={100}
-            height={32}
-            style={{ objectFit: "contain" }}
-          />
-          <span className="text-xs text-muted-foreground">Admin Panel</span>
+        <div className="flex items-center justify-between gap-2 px-2 py-2">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <Image
+              src="/foocapsnewlogo.png"
+              alt="Foocaps"
+              width={100}
+              height={32}
+              style={{ objectFit: "contain" }}
+            />
+            <span className="text-xs text-muted-foreground">Admin Panel</span>
+          </div>
+          {isMobile && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={() => setOpenMobile(false)}
+            >
+              <X className="size-4" />
+              <span className="sr-only">Close navigation</span>
+            </Button>
+          )}
         </div>
       </SidebarHeader>
 
@@ -59,7 +81,7 @@ export function AppSidebar() {
                     isActive={pathname.startsWith(item.url)}
                     tooltip={item.title}
                   >
-                    <Link href={item.url}>
+                    <Link href={item.url} onClick={handleMobileNavigation}>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
@@ -89,6 +111,7 @@ export function AppSidebar() {
               size="icon"
               className="h-8 w-8 shrink-0"
               title="Sign out"
+              onClick={handleMobileNavigation}
             >
               <LogOut className="size-4" />
             </Button>

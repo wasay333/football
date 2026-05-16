@@ -5,7 +5,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>{children}</SidebarInset>
+      <SidebarInset className="min-h-svh overflow-x-hidden">{children}</SidebarInset>
     </SidebarProvider>
   )
 }

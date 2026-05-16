@@ -1,3 +1,5 @@
+import { buildOrderTrackingUrl } from '@/lib/order-tracking-url'
+
 type Item = {
   productName: string;
   size?: string | null;
@@ -21,10 +23,7 @@ type Props = {
 };
 
 export function buildOrderConfirmationEmail(p: Props): string {
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.APP_URL ?? "").trim().replace(/\/$/, "");
-  const trackingUrl = siteUrl
-    ? `${siteUrl}/track?order=${encodeURIComponent(p.orderNumber)}&email=${encodeURIComponent(p.customerEmail)}`
-    : "";
+  const trackingUrl = buildOrderTrackingUrl(p.orderNumber, p.customerEmail)
   const itemRows = p.items
     .map((item) => {
       const preorderBadge = item.isPreorder
@@ -80,7 +79,7 @@ export function buildOrderConfirmationEmail(p: Props): string {
               <p style="margin:0;color:#111111;font-size:16px;">Hi ${p.customerName},</p>
               <p style="margin:12px 0 0;color:#555;font-size:15px;line-height:1.6;">
                 Thanks for your order! We&apos;ve received your payment and your cap is on its way to being packed.
-                You&apos;ll get another email when it ships.
+                We&apos;ll send you another email with your tracking link as soon as your FedEx shipment is created.
               </p>
               <p style="margin:16px 0 0;color:#888;font-size:13px;">
                 Order reference: <strong style="color:#111111;">${p.orderNumber}</strong>
@@ -130,7 +129,8 @@ export function buildOrderConfirmationEmail(p: Props): string {
             <td style="background:#fff;padding:24px 40px 0;">
               <p style="margin:0 0 10px;color:#111111;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Track Your Order</p>
               <p style="margin:0;color:#555;font-size:14px;line-height:1.7;">
-                Use the tracking button below to open your Foocaps tracking page with your order details already filled in.
+                You can use the tracking button below to open your Foocaps tracking page at any time. If your shipment
+                has not been created yet, the page will let you know and we&apos;ll email you again once FedEx tracking is available.
               </p>
               ${trackingUrl
                 ? `<p style="margin:16px 0 0;">
