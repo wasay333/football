@@ -9,6 +9,7 @@ type Item = {
 type Props = {
   orderNumber: string;
   customerName: string;
+  customerEmail: string;
   items: Item[];
   subtotal: number;
   shippingCost: number;
@@ -20,6 +21,10 @@ type Props = {
 };
 
 export function buildOrderConfirmationEmail(p: Props): string {
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.APP_URL ?? "").trim().replace(/\/$/, "");
+  const trackingUrl = siteUrl
+    ? `${siteUrl}/track?order=${encodeURIComponent(p.orderNumber)}&email=${encodeURIComponent(p.customerEmail)}`
+    : "";
   const itemRows = p.items
     .map((item) => {
       const preorderBadge = item.isPreorder
@@ -114,6 +119,26 @@ export function buildOrderConfirmationEmail(p: Props): string {
                   </tr>
                 </tbody>
               </table>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr><td style="background:#fff;padding:24px 40px 0;"><hr style="border:none;border-top:1px solid #e5e7eb;margin:0;"/></td></tr>
+
+          <!-- Tracking -->
+          <tr>
+            <td style="background:#fff;padding:24px 40px 0;">
+              <p style="margin:0 0 10px;color:#111111;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Track Your Order</p>
+              <p style="margin:0;color:#555;font-size:14px;line-height:1.7;">
+                Use the tracking button below to open your Foocaps tracking page with your order details already filled in.
+              </p>
+              ${trackingUrl
+                ? `<p style="margin:16px 0 0;">
+                    <a href="${trackingUrl}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 18px;border-radius:6px;">
+                      Open Order Tracking
+                    </a>
+                  </p>`
+                : `<p style="margin:12px 0 0;color:#888;font-size:13px;">Track with order ${p.orderNumber} and email ${p.customerEmail}</p>`}
             </td>
           </tr>
 

@@ -16,6 +16,7 @@ const navLinks = [
   { href: "/collections", label: "Collections" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
+  { href: "/track", label: "Track Order" },
 ];
 
 const Header = () => {

@@ -18,6 +18,8 @@ type CachedFedExToken = {
   expiresAt: number
 }
 
+type FedExScope = 'shipping' | 'tracking'
+
 type FedExRequestInit = Omit<RequestInit, 'body' | 'headers'> & {
   body?: BodyInit | object
   headers?: HeadersInit
@@ -28,7 +30,7 @@ const FEDEX_PRODUCTION_BASE_URL = 'https://apis.fedex.com'
 const TOKEN_REFRESH_BUFFER_MS = 60 * 1000
 
 const globalForFedEx = globalThis as typeof globalThis & {
-  __foocapsFedExToken?: CachedFedExToken
+  __foocapsFedExTokens?: Partial<Record<FedExScope, CachedFedExToken>>
 }
 
 function readEnv(name: string) {
@@ -44,33 +46,51 @@ function requireEnv(name: string) {
   return value
 }
 
-export function getFedExBaseUrl() {
+export function getFedExBaseUrl(scope: FedExScope = 'shipping') {
+  if (scope === 'tracking') {
+    return readEnv('FEDEX_TRACK_API_BASE_URL') ?? readEnv('FEDEX_API_BASE_URL') ?? FEDEX_SANDBOX_BASE_URL
+  }
+
   return readEnv('FEDEX_API_BASE_URL') ?? FEDEX_SANDBOX_BASE_URL
 }
 
-export function isFedExSandbox() {
-  return getFedExBaseUrl() === FEDEX_SANDBOX_BASE_URL
+export function isFedExSandbox(scope: FedExScope = 'shipping') {
+  return getFedExBaseUrl(scope) === FEDEX_SANDBOX_BASE_URL
 }
 
-export function getFedExConfig() {
+export function getFedExConfig(scope: FedExScope = 'shipping') {
+  const isTracking = scope === 'tracking'
   return {
-    apiKey: requireEnv('FEDEX_API_KEY'),
-    secretKey: requireEnv('FEDEX_SECRET_KEY'),
+    apiKey: isTracking
+      ? readEnv('FEDEX_TRACK_API_KEY') ?? requireEnv('FEDEX_API_KEY')
+      : requireEnv('FEDEX_API_KEY'),
+    secretKey: isTracking
+      ? readEnv('FEDEX_TRACK_SECRET_KEY') ?? requireEnv('FEDEX_SECRET_KEY')
+      : requireEnv('FEDEX_SECRET_KEY'),
     accountNumber: readEnv('FEDEX_ACCOUNT_NUMBER') ?? '',
-    baseUrl: getFedExBaseUrl(),
-    grantType: readEnv('FEDEX_GRANT_TYPE') ?? 'client_credentials',
-    childKey: readEnv('FEDEX_CHILD_KEY') ?? '',
-    childSecret: readEnv('FEDEX_CHILD_SECRET') ?? '',
+    baseUrl: getFedExBaseUrl(scope),
+    grantType:
+      readEnv(isTracking ? 'FEDEX_TRACK_GRANT_TYPE' : 'FEDEX_GRANT_TYPE') ??
+      readEnv('FEDEX_GRANT_TYPE') ??
+      'client_credentials',
+    childKey:
+      readEnv(isTracking ? 'FEDEX_TRACK_CHILD_KEY' : 'FEDEX_CHILD_KEY') ??
+      (isTracking ? readEnv('FEDEX_CHILD_KEY') : '') ??
+      '',
+    childSecret:
+      readEnv(isTracking ? 'FEDEX_TRACK_CHILD_SECRET' : 'FEDEX_CHILD_SECRET') ??
+      (isTracking ? readEnv('FEDEX_CHILD_SECRET') : '') ??
+      '',
   }
 }
 
-export async function getFedExAccessToken() {
-  const cachedToken = globalForFedEx.__foocapsFedExToken
+export async function getFedExAccessToken(scope: FedExScope = 'shipping') {
+  const cachedToken = globalForFedEx.__foocapsFedExTokens?.[scope]
   if (cachedToken && cachedToken.expiresAt > Date.now() + TOKEN_REFRESH_BUFFER_MS) {
     return cachedToken.accessToken
   }
 
-  const { apiKey, secretKey, baseUrl, grantType, childKey, childSecret } = getFedExConfig()
+  const { apiKey, secretKey, baseUrl, grantType, childKey, childSecret } = getFedExConfig(scope)
   const body = new URLSearchParams({
     grant_type: grantType,
     client_id: apiKey,
@@ -101,20 +121,27 @@ export async function getFedExAccessToken() {
       payload.errors?.map((error) => error.message).filter(Boolean).join('; ') ||
       'Unable to authenticate with FedEx.'
 
-    throw new Error(`[FedEx auth: ${grantType}] ${message}`)
+    throw new Error(`[FedEx auth:${scope}:${grantType}] ${message}`)
   }
 
-  globalForFedEx.__foocapsFedExToken = {
+  globalForFedEx.__foocapsFedExTokens = {
+    ...(globalForFedEx.__foocapsFedExTokens ?? {}),
+    [scope]: {
     accessToken: payload.access_token,
     expiresAt: Date.now() + payload.expires_in * 1000,
+    },
   }
 
   return payload.access_token
 }
 
-export async function fedexRequest<T>(path: string, init: FedExRequestInit = {}): Promise<T> {
-  const accessToken = await getFedExAccessToken()
-  const { baseUrl } = getFedExConfig()
+export async function fedexRequest<T>(
+  path: string,
+  init: FedExRequestInit = {},
+  scope: FedExScope = 'shipping',
+): Promise<T> {
+  const accessToken = await getFedExAccessToken(scope)
+  const { baseUrl } = getFedExConfig(scope)
   const headers = new Headers(init.headers)
 
   headers.set('authorization', `Bearer ${accessToken}`)

@@ -199,6 +199,7 @@ async function sendOrderEmails({
       html: buildOrderConfirmationEmail({
         orderNumber,
         customerName,
+        customerEmail,
         items: items.map((item) => ({
           productName: item.name,
           size: item.size,

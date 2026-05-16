@@ -2,8 +2,10 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { extractFedExLabelUrlFromNotes } from '@/lib/fedex-label'
+import { trackFedExShipment } from '@/lib/fedex-tracking'
 import { prisma } from '@/prisma'
 import { Badge } from '@/components/ui/badge'
+import { TrackingSummary } from '@/components/tracking-summary'
 
 export const dynamic = "force-dynamic";
 import { Button } from '@/components/ui/button'
@@ -46,6 +48,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const hasStoredFedExLabel = Boolean(order.shippingLabelBase64)
   const legacyLabelUrl = extractFedExLabelUrlFromNotes(order.statusHistory.map((entry) => entry.note))
   const hasFedExLabel = hasStoredFedExLabel || Boolean(legacyLabelUrl)
+  const liveTracking = order.trackingNumber
+    ? await trackFedExShipment(order.trackingNumber).catch(() => null)
+    : null
 
   return (
     <>
@@ -176,6 +181,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
 
         <div className="grid gap-6">
+          {liveTracking && <TrackingSummary snapshot={liveTracking} />}
+
           {/* Status history */}
           <Card>
             <CardHeader><CardTitle className="text-sm">Status History</CardTitle></CardHeader>
