@@ -38,6 +38,10 @@ export async function createFedExShipmentAction(
     return { error: 'Cannot create a FedEx shipment for a cancelled or refunded order.' }
   }
 
+  if (order.trackingNumber || order.shippingLabelBase64) {
+    return { error: 'A FedEx shipment has already been created for this order.' }
+  }
+
   let hasDownloadableLabel = false
 
   try {

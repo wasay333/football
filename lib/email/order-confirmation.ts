@@ -1,5 +1,3 @@
-import { buildOrderTrackingUrl } from '@/lib/order-tracking-url'
-
 type Item = {
   productName: string;
   size?: string | null;
@@ -23,7 +21,6 @@ type Props = {
 };
 
 export function buildOrderConfirmationEmail(p: Props): string {
-  const trackingUrl = buildOrderTrackingUrl(p.orderNumber, p.customerEmail)
   const itemRows = p.items
     .map((item) => {
       const preorderBadge = item.isPreorder
@@ -118,27 +115,6 @@ export function buildOrderConfirmationEmail(p: Props): string {
                   </tr>
                 </tbody>
               </table>
-            </td>
-          </tr>
-
-          <!-- Divider -->
-          <tr><td style="background:#fff;padding:24px 40px 0;"><hr style="border:none;border-top:1px solid #e5e7eb;margin:0;"/></td></tr>
-
-          <!-- Tracking -->
-          <tr>
-            <td style="background:#fff;padding:24px 40px 0;">
-              <p style="margin:0 0 10px;color:#111111;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Track Your Order</p>
-              <p style="margin:0;color:#555;font-size:14px;line-height:1.7;">
-                You can use the tracking button below to open your Foocaps tracking page at any time. If your shipment
-                has not been created yet, the page will let you know and we&apos;ll email you again once FedEx tracking is available.
-              </p>
-              ${trackingUrl
-                ? `<p style="margin:16px 0 0;">
-                    <a href="${trackingUrl}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 18px;border-radius:6px;">
-                      Open Order Tracking
-                    </a>
-                  </p>`
-                : `<p style="margin:12px 0 0;color:#888;font-size:13px;">Track with order ${p.orderNumber} and email ${p.customerEmail}</p>`}
             </td>
           </tr>
 

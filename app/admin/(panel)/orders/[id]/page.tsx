@@ -48,6 +48,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const hasStoredFedExLabel = Boolean(order.shippingLabelBase64)
   const legacyLabelUrl = extractFedExLabelUrlFromNotes(order.statusHistory.map((entry) => entry.note))
   const hasFedExLabel = hasStoredFedExLabel || Boolean(legacyLabelUrl)
+  const shipmentAlreadyCreated = Boolean(order.trackingNumber || hasFedExLabel)
   const liveTracking = order.trackingNumber
     ? await trackFedExShipment(order.trackingNumber).catch(() => null)
     : null
@@ -175,7 +176,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   )}
                 </div>
               )}
-              <CreateFedExShipmentForm orderId={order.id} />
+              <CreateFedExShipmentForm orderId={order.id} shipmentAlreadyCreated={shipmentAlreadyCreated} />
             </CardContent>
           </Card>
         </div>
