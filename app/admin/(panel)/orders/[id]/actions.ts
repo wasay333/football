@@ -13,6 +13,7 @@ export type CreateFedExShipmentState =
   | {
       error?: string
       success?: string
+      labelPath?: string
     }
   | null
 
@@ -34,6 +35,8 @@ export async function createFedExShipmentAction(
   if (order.status === 'CANCELLED' || order.status === 'REFUNDED') {
     return { error: 'Cannot create a FedEx shipment for a cancelled or refunded order.' }
   }
+
+  let hasDownloadableLabel = false
 
   try {
     let recipientStateOrProvinceCode = ''
@@ -84,6 +87,14 @@ export async function createFedExShipmentAction(
       serviceType: selectedRate.serviceType,
     })
 
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        trackingNumber: shipment.trackingNumber,
+        shippingLabelBase64: shipment.encodedLabel || undefined,
+      },
+    })
+
     await prisma.orderStatusHistory.create({
       data: {
         orderId: order.id,
@@ -98,6 +109,8 @@ export async function createFedExShipmentAction(
           .join(' - '),
       },
     })
+
+    hasDownloadableLabel = Boolean(shipment.encodedLabel || shipment.labelUrl)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create FedEx shipment.'
     return { error: message }
@@ -106,5 +119,8 @@ export async function createFedExShipmentAction(
   revalidatePath(`/admin/orders/${orderId}`)
   revalidatePath('/admin/orders')
 
-  return { success: 'FedEx shipment created successfully. Tracking details were added to the order history.' }
+  return {
+    success: 'FedEx shipment created successfully. Tracking details were added to the order history.',
+    labelPath: hasDownloadableLabel ? `/admin/orders/${orderId}/label` : undefined,
+  }
 }

@@ -137,6 +137,10 @@ model Order {
   isPreorder      Boolean              @default(false)
   notes           String?
   paymentIntentId String?              @unique
+  trackingNumber  String?
+  upsShipmentId   String?
+  pickupConfirmation String?
+  shippingLabelBase64 String?          @db.Text
   items           OrderItem[]
   statusHistory OrderStatusHistory[]
   createdAt     DateTime             @default(now())

@@ -150,6 +150,23 @@ function buildCustomerShippingMetadata(normalized: ReturnType<typeof normalizeCu
   }
 }
 
+function buildStripeCustomerUpdate(normalized: ReturnType<typeof normalizeCustomerDetails>) {
+  return {
+    receipt_email: normalized.email,
+    shipping: {
+      name: normalized.name,
+      phone: normalized.phone || undefined,
+      address: {
+        line1: normalized.address,
+        city: normalized.city,
+        state: normalized.state || undefined,
+        postal_code: normalized.postalCode,
+        country: normalized.country,
+      },
+    },
+  } satisfies Pick<Stripe.PaymentIntentUpdateParams, 'receipt_email' | 'shipping'>
+}
+
 export async function quoteFedExShippingForPaymentIntent(
   paymentIntentId: string,
   customer: CheckoutCustomerDetails
@@ -179,18 +196,7 @@ export async function quoteFedExShippingForPaymentIntent(
   if (subtotal >= FREE_SHIPPING_THRESHOLD) {
     await stripe.paymentIntents.update(paymentIntentId, {
       amount: subtotalCents,
-      receipt_email: normalized.email,
-      shipping: {
-        name: normalized.name,
-        phone: normalized.phone || undefined,
-        address: {
-          line1: normalized.address,
-          city: normalized.city,
-          state: normalized.state || undefined,
-          postal_code: normalized.postalCode,
-          country: normalized.country,
-        },
-      },
+      ...buildStripeCustomerUpdate(normalized),
       metadata: {
         ...buildCustomerShippingMetadata(normalized),
         fedexServiceType: '',
@@ -236,18 +242,7 @@ export async function quoteFedExShippingForPaymentIntent(
 
   await stripe.paymentIntents.update(paymentIntentId, {
     amount: totalCents,
-    receipt_email: normalized.email,
-    shipping: {
-      name: normalized.name,
-      phone: normalized.phone || undefined,
-      address: {
-        line1: normalized.address,
-        city: normalized.city,
-        state: normalized.state || undefined,
-        postal_code: normalized.postalCode,
-        country: normalized.country,
-      },
-    },
+    ...buildStripeCustomerUpdate(normalized),
     metadata: {
       ...buildCustomerShippingMetadata(normalized),
       fedexServiceType: quote.serviceType,
@@ -310,7 +305,36 @@ export async function updatePaymentIntentCustomerDetails(
     if (subtotal < FREE_SHIPPING_THRESHOLD) {
       return { error: 'Please calculate shipping before paying.' }
     }
+
+    await stripe.paymentIntents.update(paymentIntentId, {
+      amount: Math.round(subtotal * 100),
+      ...buildStripeCustomerUpdate(normalized),
+      metadata: {
+        ...buildCustomerShippingMetadata(normalized),
+        fedexServiceType: '',
+        fedexServiceName: '',
+        fedexShippingAmount: '0.00',
+        fedexShippingCurrency: 'USD',
+        fedexDeliveryTimestamp: '',
+        fedexTransitTime: '',
+      },
+    })
+
+    return { ok: true }
   }
+
+  await stripe.paymentIntents.update(paymentIntentId, {
+    ...buildStripeCustomerUpdate(normalized),
+    metadata: {
+      ...buildCustomerShippingMetadata(normalized),
+      fedexServiceType: paymentIntent.metadata.fedexServiceType ?? '',
+      fedexServiceName: paymentIntent.metadata.fedexServiceName ?? '',
+      fedexShippingAmount: paymentIntent.metadata.fedexShippingAmount ?? '',
+      fedexShippingCurrency: paymentIntent.metadata.fedexShippingCurrency ?? 'USD',
+      fedexDeliveryTimestamp: paymentIntent.metadata.fedexDeliveryTimestamp ?? '',
+      fedexTransitTime: paymentIntent.metadata.fedexTransitTime ?? '',
+    },
+  })
 
   return { ok: true };
 }

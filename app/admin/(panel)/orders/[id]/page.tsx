@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
+import { extractFedExLabelUrlFromNotes } from '@/lib/fedex-label'
 import { prisma } from '@/prisma'
 import { Badge } from '@/components/ui/badge'
 
@@ -41,6 +42,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   })
 
   if (!order) notFound()
+
+  const hasStoredFedExLabel = Boolean(order.shippingLabelBase64)
+  const legacyLabelUrl = extractFedExLabelUrlFromNotes(order.statusHistory.map((entry) => entry.note))
+  const hasFedExLabel = hasStoredFedExLabel || Boolean(legacyLabelUrl)
 
   return (
     <>
@@ -142,6 +147,29 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <Card>
             <CardHeader><CardTitle className="text-sm">FedEx Shipment</CardTitle></CardHeader>
             <CardContent>
+              {(order.trackingNumber || hasFedExLabel) && (
+                <div className="mb-4 space-y-3 rounded-md border p-3 text-sm">
+                  {order.trackingNumber && (
+                    <p className="text-muted-foreground">
+                      Tracking number: <span className="font-medium text-foreground">{order.trackingNumber}</span>
+                    </p>
+                  )}
+                  {hasFedExLabel && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`/admin/orders/${order.id}/label`} target="_blank" rel="noreferrer">
+                          Download Label
+                        </a>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`/admin/orders/${order.id}/label`} target="_blank" rel="noreferrer">
+                          Print Label
+                        </a>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
               <CreateFedExShipmentForm orderId={order.id} />
             </CardContent>
           </Card>
