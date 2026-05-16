@@ -6,13 +6,11 @@ import { useCart } from "@/hooks/cart-context";
 import { isUploadedAssetPath } from "@/lib/image";
 
 const FREE_SHIPPING_THRESHOLD = 100;
-const SHIPPING_COST = 9.99;
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
 
-  const shipping = totalPrice >= FREE_SHIPPING_THRESHOLD || totalPrice === 0 ? 0 : SHIPPING_COST;
-  const orderTotal = totalPrice + shipping;
+  const qualifiesForFreeShipping = totalPrice >= FREE_SHIPPING_THRESHOLD || totalPrice === 0;
   const toFreeShipping = FREE_SHIPPING_THRESHOLD - totalPrice;
 
   if (items.length === 0) {
@@ -149,9 +147,9 @@ export default function CartPage() {
             <div className="cart-summary-row">
               <span>Shipping</span>
               <span>
-                {shipping === 0
+                {qualifiesForFreeShipping
                   ? <span className="cart-free">Free</span>
-                  : `$${shipping.toFixed(2)}`}
+                  : "Calculated according to distance"}
               </span>
             </div>
           </div>
@@ -159,11 +157,19 @@ export default function CartPage() {
           <div className="cart-summary-divider" />
 
           <div className="cart-summary-total">
-            <span>Total</span>
-            <span>${orderTotal.toFixed(2)}</span>
+            <span>{qualifiesForFreeShipping ? "Total" : "Subtotal Before Shipping"}</span>
+            <span>
+              {qualifiesForFreeShipping
+                ? `$${totalPrice.toFixed(2)}`
+                : `$${totalPrice.toFixed(2)}`}
+            </span>
           </div>
 
-          <p className="cart-summary-note">Taxes and duties calculated at checkout</p>
+          <p className="cart-summary-note">
+            {qualifiesForFreeShipping
+              ? "Taxes and duties calculated at checkout"
+              : "Shipping cost will be calculated according to the delivery distance at checkout."}
+          </p>
 
           <Link href="/checkout" className="cart-checkout-btn">
             Proceed to Checkout
