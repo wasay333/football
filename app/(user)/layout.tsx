@@ -9,7 +9,8 @@ export default function UserLayout({
 }) {
   return (
     <CartProvider>
-      <div className="site-shell">
+      <div className="site-shell" data-release-marker="2026-05-16-a">
+        <span className="sr-only">Foocaps build marker 2026-05-16-a</span>
         <Header />
         <main className="site-main">{children}</main>
         <Footer />
