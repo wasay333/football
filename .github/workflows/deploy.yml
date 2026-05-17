@@ -16,6 +16,7 @@ jobs:
     name: Validate
     runs-on: ubuntu-latest
     env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/football
       JWT_SECRET: ci-build-secret
       NEXT_PUBLIC_APP_URL: https://example.com
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_ci
