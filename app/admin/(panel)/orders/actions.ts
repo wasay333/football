@@ -2,10 +2,13 @@
 
 import { prisma } from '@/prisma'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { z } from 'zod'
+import { ALL_ORDER_STATUSES } from '@/lib/order-workflow'
+import { getAdminSession } from '@/lib/admin-session'
 
 const UpdateStatusSchema = z.object({
-  status: z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED']),
+  status: z.enum(ALL_ORDER_STATUSES),
   note: z.string().optional(),
 })
 
@@ -16,6 +19,10 @@ export async function updateOrderStatusAction(
   _prev: UpdateStatusState,
   formData: FormData,
 ): Promise<UpdateStatusState> {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
   const result = UpdateStatusSchema.safeParse({
     status: formData.get('status'),
     note: formData.get('note') || undefined,

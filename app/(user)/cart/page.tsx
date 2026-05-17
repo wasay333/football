@@ -117,13 +117,13 @@ export default function CartPage() {
                   <div className="cart-item-qty">
                     <button
                       className="cart-qty-btn"
-                      onClick={() => updateQuantity(item.productId, undefined, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                       disabled={item.quantity <= 1}
                     >−</button>
                     <span className="cart-qty-val">{item.quantity}</span>
                     <button
                       className="cart-qty-btn"
-                      onClick={() => updateQuantity(item.productId, undefined, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                     >+</button>
                   </div>
                   <p className="cart-item-price">${(item.price * item.quantity).toFixed(2)}</p>

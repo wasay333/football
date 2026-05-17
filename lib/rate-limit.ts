@@ -23,12 +23,21 @@ const rateLimitStore =
   globalForRateLimit.__foocapsRateLimitStore ??
   (globalForRateLimit.__foocapsRateLimitStore = new Map<string, RateLimitEntry>());
 
+function pruneExpiredEntries(now: number) {
+  for (const [key, entry] of rateLimitStore.entries()) {
+    if (entry.resetAt <= now) {
+      rateLimitStore.delete(key);
+    }
+  }
+}
+
 export function checkRateLimit({
   key,
   limit,
   windowMs,
 }: RateLimitOptions): RateLimitResult {
   const now = Date.now();
+  pruneExpiredEntries(now);
   const current = rateLimitStore.get(key);
 
   if (!current || current.resetAt <= now) {
@@ -60,4 +69,8 @@ export function checkRateLimit({
     remaining: Math.max(limit - current.count, 0),
     resetAt: current.resetAt,
   };
+}
+
+export function resetRateLimit(key: string) {
+  rateLimitStore.delete(key);
 }

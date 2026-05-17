@@ -18,8 +18,16 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import type { ProductStatus } from '@prisma/client'
 import { DeleteProductButton } from './_components/delete-product-button'
+import { PaginationControls } from '@/components/pagination-controls'
 
 export const metadata = { title: 'Products' }
+
+const PRODUCTS_PER_PAGE = 50
+
+function normalizePage(value?: string) {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1
+}
 
 const statusVariant: Record<ProductStatus, 'default' | 'secondary' | 'outline'> = {
   ACTIVE: 'default',
@@ -27,9 +35,21 @@ const statusVariant: Record<ProductStatus, 'default' | 'secondary' | 'outline'> 
   ARCHIVED: 'outline',
 }
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
+  const params = await searchParams
+  const requestedPage = normalizePage(params.page)
+  const totalProducts = await prisma.product.count()
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PRODUCTS_PER_PAGE))
+  const currentPage = Math.min(requestedPage, totalPages)
+
   const products = await prisma.product.findMany({
     orderBy: { createdAt: 'desc' },
+    skip: (currentPage - 1) * PRODUCTS_PER_PAGE,
+    take: PRODUCTS_PER_PAGE,
     include: {
       footballer: { select: { name: true } },
       category: { select: { name: true } },
@@ -51,6 +71,7 @@ export default async function ProductsPage() {
       </header>
 
       <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
+        <PaginationControls basePath="/admin/products" currentPage={currentPage} totalPages={totalPages} />
         {products.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <p className="text-sm text-muted-foreground">No products yet.</p>

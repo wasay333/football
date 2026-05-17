@@ -4,10 +4,9 @@ import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { updateOrderStatusAction, type UpdateStatusState } from '../../actions'
 import type { OrderStatus } from '@prisma/client'
+import { ALL_ORDER_STATUSES } from '@/lib/order-workflow'
 
-const ALL_STATUSES: OrderStatus[] = [
-  'PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED',
-]
+const ALL_STATUSES: OrderStatus[] = [...ALL_ORDER_STATUSES]
 
 function SubmitButton() {
   const { pending } = useFormStatus()

@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  startTransition,
   ReactNode,
 } from "react";
 
@@ -15,7 +16,6 @@ export type CartItem = {
   price: number;
   image: string;
   quantity: number;
-  size?: string;
   stock: number;
   allowPreorder: boolean;
 };
@@ -23,8 +23,8 @@ export type CartItem = {
 type CartContextType = {
   items: CartItem[];
   addToCart: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
-  removeFromCart: (productId: string, size?: string) => void;
-  updateQuantity: (productId: string, size: string | undefined, newQty: number) => void;
+  removeFromCart: (productId: string) => void;
+  updateQuantity: (productId: string, newQty: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -32,8 +32,37 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | null>(null);
 
-function itemKey(productId: string, size?: string) {
-  return `${productId}__${size ?? ""}`;
+function itemKey(productId: string) {
+  return productId;
+}
+
+function normalizeCartItems(items: CartItem[]) {
+  const merged = new Map<string, CartItem>();
+
+  for (const item of items) {
+    const key = itemKey(item.productId);
+    const existing = merged.get(key);
+
+    if (existing) {
+      merged.set(key, {
+        ...existing,
+        quantity: existing.quantity + item.quantity,
+      });
+      continue;
+    }
+
+    merged.set(key, {
+      productId: item.productId,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      quantity: item.quantity,
+      stock: item.stock,
+      allowPreorder: item.allowPreorder,
+    });
+  }
+
+  return Array.from(merged.values());
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -42,11 +71,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Load from localStorage on mount
   useEffect(() => {
+    let nextItems: CartItem[] | null = null;
+
     try {
       const stored = localStorage.getItem("lc_cart");
-      if (stored) setItems(JSON.parse(stored));
+      if (stored) {
+        nextItems = normalizeCartItems(JSON.parse(stored) as CartItem[]);
+      }
     } catch {}
-    setHydrated(true);
+
+    startTransition(() => {
+      if (nextItems) {
+        setItems(nextItems);
+      }
+      setHydrated(true);
+    });
   }, []);
 
   // Persist to localStorage whenever items change (after hydration)
@@ -59,12 +98,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = useCallback(
     (item: Omit<CartItem, "quantity"> & { quantity?: number }) => {
       const qty = item.quantity ?? 1;
-      const key = itemKey(item.productId, item.size);
+      const key = itemKey(item.productId);
       setItems((prev) => {
-        const existing = prev.find((i) => itemKey(i.productId, i.size) === key);
+        const existing = prev.find((i) => itemKey(i.productId) === key);
         if (existing) {
           return prev.map((i) =>
-            itemKey(i.productId, i.size) === key
+            itemKey(i.productId) === key
               ? { ...i, quantity: i.quantity + qty }
               : i
           );
@@ -75,18 +114,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const removeFromCart = useCallback((productId: string, size?: string) => {
-    const key = itemKey(productId, size);
-    setItems((prev) => prev.filter((i) => itemKey(i.productId, i.size) !== key));
+  const removeFromCart = useCallback((productId: string) => {
+    const key = itemKey(productId);
+    setItems((prev) => prev.filter((i) => itemKey(i.productId) !== key));
   }, []);
 
   const updateQuantity = useCallback(
-    (productId: string, size: string | undefined, newQty: number) => {
+    (productId: string, newQty: number) => {
       if (newQty < 1) return;
-      const key = itemKey(productId, size);
+      const key = itemKey(productId);
       setItems((prev) =>
         prev.map((i) =>
-          itemKey(i.productId, i.size) === key ? { ...i, quantity: newQty } : i
+          itemKey(i.productId) === key ? { ...i, quantity: newQty } : i
         )
       );
     },

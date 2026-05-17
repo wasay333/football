@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import type { OrderStatus } from '@prisma/client'
+import { getShipmentAvailability } from '@/lib/order-workflow'
 import { UpdateStatusForm } from './_components/update-status-form'
 import { CreateFedExShipmentForm } from './_components/create-fedex-shipment-form'
 
@@ -24,6 +25,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   PENDING: 'secondary',
+  AWAITING_STOCK: 'secondary',
+  READY_TO_SHIP: 'outline',
   CONFIRMED: 'default',
   PROCESSING: 'default',
   SHIPPED: 'default',
@@ -32,8 +35,15 @@ const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'outline' | '
   REFUNDED: 'destructive',
 }
 
-export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function OrderDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ liveTracking?: string }>
+}) {
   const { id } = await params
+  const query = await searchParams
 
   const order = await prisma.order.findUnique({
     where: { id },
@@ -49,7 +59,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const legacyLabelUrl = extractFedExLabelUrlFromNotes(order.statusHistory.map((entry) => entry.note))
   const hasFedExLabel = hasStoredFedExLabel || Boolean(legacyLabelUrl)
   const shipmentAlreadyCreated = Boolean(order.trackingNumber || hasFedExLabel)
-  const liveTracking = order.trackingNumber
+  const shipmentAvailability = getShipmentAvailability(order)
+  const shouldLoadLiveTracking = query.liveTracking === '1'
+  const liveTracking = order.trackingNumber && shouldLoadLiveTracking
     ? await trackFedExShipment(order.trackingNumber).catch(() => null)
     : null
 
@@ -176,12 +188,28 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   )}
                 </div>
               )}
-              <CreateFedExShipmentForm orderId={order.id} shipmentAlreadyCreated={shipmentAlreadyCreated} />
+              {!shipmentAlreadyCreated && shipmentAvailability.canCreateShipment && (
+                <CreateFedExShipmentForm orderId={order.id} shipmentAlreadyCreated={shipmentAlreadyCreated} />
+              )}
+              {!shipmentAlreadyCreated && !shipmentAvailability.canCreateShipment && shipmentAvailability.reason && (
+                <p className="text-sm text-muted-foreground">{shipmentAvailability.reason}</p>
+              )}
             </CardContent>
           </Card>
         </div>
 
         <div className="grid gap-6">
+          {order.trackingNumber && !shouldLoadLiveTracking && (
+            <Card>
+              <CardHeader><CardTitle className="text-sm">Live FedEx Tracking</CardTitle></CardHeader>
+              <CardContent>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/admin/orders/${order.id}?liveTracking=1`}>Load Live Tracking</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           {liveTracking && <TrackingSummary snapshot={liveTracking} />}
 
           {/* Status history */}

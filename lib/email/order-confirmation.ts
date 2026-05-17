@@ -1,6 +1,5 @@
 type Item = {
   productName: string;
-  size?: string | null;
   quantity: number;
   unitPrice: number;
   isPreorder: boolean;
@@ -26,7 +25,7 @@ export function buildOrderConfirmationEmail(p: Props): string {
       const preorderBadge = item.isPreorder
         ? `<span style="margin-left:8px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;">Pre-order</span>`
         : "";
-      const sizeQty = `Qty: ${item.quantity}`;
+      const qtyLabel = `Qty: ${item.quantity}`;
       const lineTotal = (item.unitPrice * item.quantity).toFixed(2);
       const eachNote =
         item.quantity > 1
@@ -37,7 +36,7 @@ export function buildOrderConfirmationEmail(p: Props): string {
         <tr>
           <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
             <p style="margin:0;color:#111111;font-size:15px;font-weight:600;">${item.productName}${preorderBadge}</p>
-            <p style="margin:4px 0 0;color:#888;font-size:13px;">${sizeQty}</p>
+            <p style="margin:4px 0 0;color:#888;font-size:13px;">${qtyLabel}</p>
           </td>
           <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;white-space:nowrap;">
             <p style="margin:0;color:#111111;font-size:15px;font-weight:600;">$${lineTotal}</p>

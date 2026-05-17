@@ -1,15 +1,19 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { Resend } from 'resend'
 import {
   createFedExShipment,
   getConfiguredFedExServiceType,
   selectCheapestFedExRateForItems,
 } from '@/lib/fedex-shipping'
+import { getOptionalServerEnv } from '@/lib/env.server'
 import { buildShipmentCreatedEmail } from '@/lib/email/shipment-created'
+import { getShipmentAvailability } from '@/lib/order-workflow'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/prisma'
+import { getAdminSession } from '@/lib/admin-session'
 
 export type CreateFedExShipmentState =
   | {
@@ -25,6 +29,10 @@ export async function createFedExShipmentAction(
 ): Promise<CreateFedExShipmentState> {
   void _prevState
 
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { items: true },
@@ -32,6 +40,11 @@ export async function createFedExShipmentAction(
 
   if (!order) {
     return { error: 'Order not found.' }
+  }
+
+  const shipmentAvailability = getShipmentAvailability(order)
+  if (!shipmentAvailability.canCreateShipment) {
+    return { error: shipmentAvailability.reason }
   }
 
   if (order.status === 'CANCELLED' || order.status === 'REFUNDED') {
@@ -45,8 +58,8 @@ export async function createFedExShipmentAction(
   let hasDownloadableLabel = false
 
   try {
-    let recipientStateOrProvinceCode = ''
-    if (order.paymentIntentId) {
+    let recipientStateOrProvinceCode = order.stateOrProvinceCode?.trim().toUpperCase() ?? ''
+    if (!recipientStateOrProvinceCode && order.paymentIntentId) {
       try {
         const paymentIntent = await stripe.paymentIntents.retrieve(order.paymentIntentId)
         recipientStateOrProvinceCode =
@@ -62,15 +75,23 @@ export async function createFedExShipmentAction(
       return { error: 'This order is missing a recipient state / province code, so FedEx cannot create the shipment yet.' }
     }
 
+    const persistedServiceType = order.shippingServiceType?.trim()
+    const persistedServiceName = order.shippingServiceName?.trim()
     const configuredServiceType = getConfiguredFedExServiceType()
-    const selectedRate = configuredServiceType
+    const selectedRate = persistedServiceType
       ? {
-          serviceType: configuredServiceType,
-          serviceName: configuredServiceType,
+          serviceType: persistedServiceType,
+          serviceName: persistedServiceName || persistedServiceType,
         }
-      : await selectCheapestFedExRateForItems({
+      : configuredServiceType
+        ? {
+            serviceType: configuredServiceType,
+            serviceName: configuredServiceType,
+          }
+        : await selectCheapestFedExRateForItems({
           recipient: {
             city: order.city,
+            stateOrProvinceCode: recipientStateOrProvinceCode || undefined,
             postalCode: order.postalCode,
             countryCode: order.country,
             streetLines: [order.address],
@@ -80,7 +101,6 @@ export async function createFedExShipmentAction(
             name: item.productName,
             price: Number(item.unitPrice),
             quantity: item.quantity,
-            size: item.size,
             image: item.productImage,
             isPreorder: item.isPreorder,
           })),
@@ -98,6 +118,9 @@ export async function createFedExShipmentAction(
       data: {
         trackingNumber: shipment.trackingNumber,
         shippingLabelBase64: shipment.encodedLabel || undefined,
+        stateOrProvinceCode: recipientStateOrProvinceCode || order.stateOrProvinceCode || undefined,
+        shippingServiceType: selectedRate.serviceType,
+        shippingServiceName: selectedRate.serviceName,
       },
     })
 
@@ -152,8 +175,8 @@ async function sendShipmentCreatedEmail({
   trackingNumber: string
   serviceName: string
 }) {
-  const resendApiKey = process.env.RESEND_API_KEY
-  const resendFromEmail = process.env.RESEND_FROM_EMAIL ?? 'Foocaps <onboarding@resend.dev>'
+  const resendApiKey = getOptionalServerEnv('RESEND_API_KEY')
+  const resendFromEmail = getOptionalServerEnv('RESEND_FROM_EMAIL') ?? 'Foocaps <onboarding@resend.dev>'
 
   if (!resendApiKey) {
     console.error(`FedEx shipment created for ${orderNumber}, but RESEND_API_KEY is missing so no shipment email was sent.`)

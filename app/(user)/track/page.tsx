@@ -1,11 +1,19 @@
 import { TrackingSummary } from '@/components/tracking-summary'
 import { trackFedExShipment } from '@/lib/fedex-tracking'
+import { getClientIpFromHeaders } from '@/lib/request-client'
+import { checkRateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/prisma'
+import { headers } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Track Order',
+}
+
+const TRACK_ORDER_RATE_LIMIT = {
+  limit: 10,
+  windowMs: 15 * 60 * 1000,
 }
 
 function normalizeOrderNumber(value?: string) {
@@ -22,6 +30,8 @@ export default async function TrackOrderPage({
   searchParams: Promise<{ order?: string; email?: string }>
 }) {
   const params = await searchParams
+  const requestHeaders = await headers()
+  const clientIp = getClientIpFromHeaders(requestHeaders)
   const orderNumber = normalizeOrderNumber(params.order)
   const email = normalizeEmail(params.email)
 
@@ -44,6 +54,15 @@ export default async function TrackOrderPage({
     if (!orderNumber || !email) {
       errorMessage = 'Enter both your order number and the email used at checkout.'
     } else {
+      const rateLimit = checkRateLimit({
+        key: `track-order:${clientIp}`,
+        limit: TRACK_ORDER_RATE_LIMIT.limit,
+        windowMs: TRACK_ORDER_RATE_LIMIT.windowMs,
+      })
+
+      if (!rateLimit.allowed) {
+        errorMessage = 'Too many tracking attempts. Please wait a few minutes and try again.'
+      } else {
       order = await prisma.order.findFirst({
         where: {
           orderNumber,
@@ -77,6 +96,7 @@ export default async function TrackOrderPage({
               ? error.message
               : 'We could not fetch live FedEx tracking details right now.'
         }
+      }
       }
     }
   }

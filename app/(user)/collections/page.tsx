@@ -4,10 +4,13 @@ import ProductCarousel from "@/components/product-carousel";
 
 export const dynamic = "force-dynamic";
 
+const COLLECTION_PAGE_LIMIT = 24
+
 const ProductsPage = async () => {
   const [available, preorders] = await Promise.all([
     prisma.product.findMany({
       where: { status: "ACTIVE", stock: { gt: 0 } },
+      take: COLLECTION_PAGE_LIMIT,
       orderBy: { createdAt: "desc" },
       select: {
         id: true, name: true, price: true, mannequinImage: true,
@@ -18,6 +21,7 @@ const ProductsPage = async () => {
     }),
     prisma.product.findMany({
       where: { status: "ACTIVE", stock: 0, allowPreorder: true },
+      take: COLLECTION_PAGE_LIMIT,
       orderBy: { createdAt: "desc" },
       select: {
         id: true, name: true, price: true, mannequinImage: true,

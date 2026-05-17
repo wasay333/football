@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import { isUploadedAssetPath } from '@/lib/image'
 
@@ -16,6 +16,7 @@ export default function CapGallery({
 }) {
   const [active, setActive] = useState(0)
   const [lens, setLens] = useState<{ x: number; y: number } | null>(null)
+  const [bounds, setBounds] = useState({ width: 280, height: 280 })
   const wrapRef = useRef<HTMLDivElement>(null)
 
   const onMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -32,10 +33,29 @@ export default function CapGallery({
 
   const onLeave = useCallback(() => setLens(null), [])
 
-  if (!images.length) return null
+  useEffect(() => {
+    if (!images.length) return
 
-  const w = wrapRef.current?.offsetWidth ?? 280
-  const h = wrapRef.current?.offsetHeight ?? 280
+    const el = wrapRef.current
+    if (!el) return
+
+    const updateBounds = () => {
+      const rect = el.getBoundingClientRect()
+      setBounds({
+        width: rect.width || 280,
+        height: rect.height || 280,
+      })
+    }
+
+    updateBounds()
+
+    const observer = new ResizeObserver(updateBounds)
+    observer.observe(el)
+
+    return () => observer.disconnect()
+  }, [active, images.length])
+
+  if (!images.length) return null
 
   return (
     <div className="pdp-cap-section">
@@ -65,7 +85,7 @@ export default function CapGallery({
               left: lens.x,
               top: lens.y,
               backgroundImage: `url(${images[active]})`,
-              backgroundSize: `${w * ZOOM}px ${h * ZOOM}px`,
+              backgroundSize: `${bounds.width * ZOOM}px ${bounds.height * ZOOM}px`,
               backgroundPosition: `${-(lens.x * ZOOM - LENS / 2)}px ${-(lens.y * ZOOM - LENS / 2)}px`,
             }}
           />

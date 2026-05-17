@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '@/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { getAdminSession } from '@/lib/admin-session'
 
 function slugify(text: string) {
   return text
@@ -30,6 +31,10 @@ export async function createCategoryAction(
   _prev: CategoryFormState,
   formData: FormData,
 ): Promise<CategoryFormState> {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
   const raw = {
     name: formData.get('name'),
     slug: formData.get('slug') || slugify(String(formData.get('name') ?? '')),
@@ -55,6 +60,10 @@ export async function updateCategoryAction(
   _prev: CategoryFormState,
   formData: FormData,
 ): Promise<CategoryFormState> {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
   const raw = {
     name: formData.get('name'),
     slug: formData.get('slug') || slugify(String(formData.get('name') ?? '')),
@@ -76,6 +85,10 @@ export async function updateCategoryAction(
 }
 
 export async function deleteCategoryAction(id: string): Promise<{ error?: string }> {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
   try {
     await prisma.category.delete({ where: { id } })
   } catch (e: unknown) {

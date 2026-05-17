@@ -5,6 +5,7 @@ import { prisma } from '@/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { saveUploadedFile, deleteUploadedFile } from '@/lib/upload'
+import { getAdminSession } from '@/lib/admin-session'
 
 const FootballerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -13,8 +14,6 @@ const FootballerSchema = z.object({
   nationality: z.string().optional(),
   bio: z.string().optional(),
   profileImage: z.string().optional(),
-  videoUrl: z.string().optional(),
-  videoThumbnail: z.string().optional(),
 })
 
 export type FootballerFormState = {
@@ -28,56 +27,54 @@ export async function createFootballerAction(
   _prevState: FootballerFormState,
   formData: FormData,
 ): Promise<FootballerFormState> {
-  // Save any uploaded files (all optional)
-  let profileImage: string | undefined
-  let videoUrl: string | undefined
-  let videoThumbnail: string | undefined
-
-  try {
-    const fProfile = formData.get('profileImage') as File | null
-    const fVideo   = formData.get('videoUrl') as File | null
-    const fThumb   = formData.get('videoThumbnail') as File | null
-
-    if (fProfile?.size) profileImage   = await saveUploadedFile(fProfile, 'footballers/images')
-    if (fVideo?.size)   videoUrl       = await saveUploadedFile(fVideo,   'footballers/videos')
-    if (fThumb?.size)   videoThumbnail = await saveUploadedFile(fThumb,   'footballers/images')
-  } catch {
-    return { errors: { form: ['Failed to save uploaded files. Please try again.'] } }
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
   }
 
-  const raw = {
+  const textResult = FootballerSchema.omit({
+    profileImage: true,
+  }).safeParse({
     name: formData.get('name'),
     position: formData.get('position') || undefined,
     club: formData.get('club') || undefined,
     nationality: formData.get('nationality') || undefined,
     bio: formData.get('bio') || undefined,
-    profileImage,
-    videoUrl,
-    videoThumbnail,
+  })
+
+  if (!textResult.success) {
+    return { errors: textResult.error.flatten().fieldErrors }
   }
 
-  const result = FootballerSchema.safeParse(raw)
-  if (!result.success) {
-    return { errors: result.error.flatten().fieldErrors }
+  let profileImage: string | undefined
+  const newlyUploaded: string[] = []
+
+  try {
+    const fProfile = formData.get('profileImage') as File | null
+
+    if (fProfile?.size) { profileImage = await saveUploadedFile(fProfile, 'footballers/images'); newlyUploaded.push(profileImage) }
+  } catch {
+    await Promise.all(newlyUploaded.map(deleteUploadedFile))
+    return { errors: { form: ['Failed to save uploaded files. Please try again.'] } }
   }
 
   try {
     await prisma.footballer.create({
       data: {
-        name: result.data.name,
-        position: result.data.position ?? null,
-        club: result.data.club ?? null,
-        nationality: result.data.nationality ?? null,
-        bio: result.data.bio ?? null,
-        profileImage: result.data.profileImage ?? null,
+        name: textResult.data.name,
+        position: textResult.data.position ?? null,
+        club: textResult.data.club ?? null,
+        nationality: textResult.data.nationality ?? null,
+        bio: textResult.data.bio ?? null,
+        profileImage: profileImage ?? null,
         image1: null,
         image2: null,
         image3: null,
-        videoUrl: result.data.videoUrl ?? null,
-        videoThumbnail: result.data.videoThumbnail ?? null,
+        videoUrl: null,
+        videoThumbnail: null,
       },
     })
   } catch (e) {
+    await Promise.all(newlyUploaded.map(deleteUploadedFile))
     if (process.env.NODE_ENV === 'development') console.error('[createFootballerAction]', e)
     return { errors: { form: ['Failed to create footballer. Please try again.'] } }
   }
@@ -91,70 +88,65 @@ export async function updateFootballerAction(
   _prevState: FootballerFormState,
   formData: FormData,
 ): Promise<FootballerFormState> {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
   // Fetch current file paths so we can delete replaced files afterwards
   const existing = await prisma.footballer.findUnique({
     where: { id },
     select: { profileImage: true, image1: true, image2: true, image3: true, videoUrl: true, videoThumbnail: true },
   })
 
-  let profileImage: string | undefined
-  let videoUrl: string | undefined
-  let videoThumbnail: string | undefined
-  const filesToDelete: (string | null | undefined)[] = []
-
-  try {
-    const fProfile = formData.get('profileImage') as File | null
-    const fVideo   = formData.get('videoUrl') as File | null
-    const fThumb   = formData.get('videoThumbnail') as File | null
-
-    if (fProfile?.size) { profileImage   = await saveUploadedFile(fProfile, 'footballers/images'); filesToDelete.push(existing?.profileImage) }
-    else                { profileImage   = formData.get('profileImage_existing') as string || undefined }
-
-    if (fVideo?.size)   { videoUrl       = await saveUploadedFile(fVideo,   'footballers/videos'); filesToDelete.push(existing?.videoUrl) }
-    else                { videoUrl       = formData.get('videoUrl_existing') as string || undefined }
-
-    if (fThumb?.size)   { videoThumbnail = await saveUploadedFile(fThumb,   'footballers/images'); filesToDelete.push(existing?.videoThumbnail) }
-    else                { videoThumbnail = formData.get('videoThumbnail_existing') as string || undefined }
-
-    filesToDelete.push(existing?.image1, existing?.image2, existing?.image3)
-  } catch {
-    return { errors: { form: ['Failed to save uploaded files. Please try again.'] } }
-  }
-
-  const raw = {
+  const textResult = FootballerSchema.omit({
+    profileImage: true,
+  }).safeParse({
     name: formData.get('name'),
     position: formData.get('position') || undefined,
     club: formData.get('club') || undefined,
     nationality: formData.get('nationality') || undefined,
     bio: formData.get('bio') || undefined,
-    profileImage,
-    videoUrl,
-    videoThumbnail,
+  })
+
+  if (!textResult.success) {
+    return { errors: textResult.error.flatten().fieldErrors }
   }
 
-  const result = FootballerSchema.safeParse(raw)
-  if (!result.success) {
-    return { errors: result.error.flatten().fieldErrors }
+  let profileImage: string | undefined
+  const newlyUploaded: string[] = []
+  const filesToDelete: (string | null | undefined)[] = []
+
+  try {
+    const fProfile = formData.get('profileImage') as File | null
+
+    if (fProfile?.size) { profileImage = await saveUploadedFile(fProfile, 'footballers/images'); newlyUploaded.push(profileImage); filesToDelete.push(existing?.profileImage) }
+    else                { profileImage = existing?.profileImage ?? undefined }
+
+    filesToDelete.push(existing?.image1, existing?.image2, existing?.image3, existing?.videoUrl, existing?.videoThumbnail)
+  } catch {
+    await Promise.all(newlyUploaded.map(deleteUploadedFile))
+    return { errors: { form: ['Failed to save uploaded files. Please try again.'] } }
   }
 
   try {
     await prisma.footballer.update({
       where: { id },
       data: {
-        name: result.data.name,
-        position: result.data.position ?? null,
-        club: result.data.club ?? null,
-        nationality: result.data.nationality ?? null,
-        bio: result.data.bio ?? null,
-        profileImage: result.data.profileImage ?? null,
+        name: textResult.data.name,
+        position: textResult.data.position ?? null,
+        club: textResult.data.club ?? null,
+        nationality: textResult.data.nationality ?? null,
+        bio: textResult.data.bio ?? null,
+        profileImage: profileImage ?? null,
         image1: null,
         image2: null,
         image3: null,
-        videoUrl: result.data.videoUrl ?? null,
-        videoThumbnail: result.data.videoThumbnail ?? null,
+        videoUrl: null,
+        videoThumbnail: null,
       },
     })
   } catch (e) {
+    await Promise.all(newlyUploaded.map(deleteUploadedFile))
     if (process.env.NODE_ENV === 'development') console.error('[updateFootballerAction]', e)
     return { errors: { form: ['Failed to update footballer. Please try again.'] } }
   }
@@ -167,6 +159,10 @@ export async function updateFootballerAction(
 }
 
 export async function deleteFootballerAction(id: string): Promise<{ error?: string }> {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
   // Fetch file paths before deleting the record
   const existing = await prisma.footballer.findUnique({
     where: { id },

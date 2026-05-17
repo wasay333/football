@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { createProductAction, updateProductAction, type ProductFormState } from '../actions'
@@ -36,60 +36,6 @@ function FormSection({ title, children }: { title: string; children: React.React
         {title}
       </h3>
       {children}
-    </div>
-  )
-}
-
-function SizesInput({ defaultSizes }: { defaultSizes: string[] }) {
-  const [sizes, setSizes] = useState<string[]>(defaultSizes)
-  const [input, setInput] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  function add() {
-    const val = input.trim().toUpperCase()
-    if (!val || sizes.includes(val)) { setInput(''); return }
-    setSizes((prev) => [...prev, val])
-    setInput('')
-    inputRef.current?.focus()
-  }
-
-  function remove(s: string) {
-    setSizes((prev) => prev.filter((x) => x !== s))
-  }
-
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-1.5">
-        {sizes.map((s) => (
-          <span key={s} className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-            {s}
-            <button type="button" onClick={() => remove(s)} className="text-muted-foreground hover:text-foreground">×</button>
-          </span>
-        ))}
-        {sizes.length === 0 && (
-          <span className="text-xs text-muted-foreground">No sizes added — product will be one-size</span>
-        )}
-      </div>
-      <div className="flex gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
-          placeholder="e.g. S/M"
-          className="w-28 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <button
-          type="button"
-          onClick={add}
-          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm hover:bg-muted"
-        >
-          Add
-        </button>
-      </div>
-      {/* Hidden field carries the JSON array to the server action */}
-      <input type="hidden" name="sizes" value={JSON.stringify(sizes)} />
     </div>
   )
 }
@@ -267,11 +213,11 @@ export function ProductForm({
         </div>
 
         <div className="space-y-1.5">
-          <Label>
-            Sizes
-            <span className="ml-1 text-xs font-normal text-muted-foreground">— leave empty for one-size products</span>
-          </Label>
-          <SizesInput defaultSizes={(product as unknown as { sizes?: string[] })?.sizes ?? []} />
+          <Label>Size</Label>
+          <Input value="One size" disabled readOnly />
+          <p className="text-xs text-muted-foreground">
+            All products use a single size across the storefront and checkout.
+          </p>
         </div>
       </FormSection>
 

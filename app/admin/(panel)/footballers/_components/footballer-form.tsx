@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { FileImageInput } from '@/app/admin/_components/file-image-input'
-import { FileVideoInput } from '@/app/admin/_components/file-video-input'
 import type { Footballer } from '@prisma/client'
 
 function FieldError({ message }: { message?: string }) {
@@ -100,30 +99,9 @@ export function FootballerForm({ footballer }: { footballer?: Footballer | null 
         <div className="space-y-1.5">
           <Label>
             Profile photo
-            <span className="ml-1 text-xs font-normal text-muted-foreground">- used in admin lists and as an image fallback (optional)</span>
+            <span className="ml-1 text-xs font-normal text-muted-foreground">- used across admin, search, and the product page hero background (optional)</span>
           </Label>
           <FileImageInput name="profileImage" existingUrl={footballer?.profileImage} />
-        </div>
-      </FormSection>
-
-      <FormSection
-        title="Featured Video (optional)"
-        description={
-          isEdit
-            ? 'Current video shown below. Pick a new file to replace it.'
-            : 'One featured video shown on the product page.'
-        }
-      >
-        <div className="space-y-1.5">
-          <Label>Video file</Label>
-          <FileVideoInput name="videoUrl" existingUrl={footballer?.videoUrl} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>
-            Video thumbnail
-            <span className="ml-1 text-xs font-normal text-muted-foreground">- preview image for the product page video (optional)</span>
-          </Label>
-          <FileImageInput name="videoThumbnail" existingUrl={footballer?.videoThumbnail} />
         </div>
       </FormSection>
 

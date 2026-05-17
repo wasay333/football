@@ -2,10 +2,18 @@
 
 import { stripe } from "@/lib/stripe";
 import { syncOrderFromPaymentIntent } from "@/lib/stripe-order-sync";
+import { z } from "zod";
+
+const paymentIntentIdSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(255)
+  .regex(/^pi_[A-Za-z0-9]+$/, "Invalid payment intent id.");
 
 export async function verifyPayment(paymentIntentId: string) {
   try {
-    const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const pi = await stripe.paymentIntents.retrieve(paymentIntentIdSchema.parse(paymentIntentId));
     if (pi.status === "succeeded") {
       const result = await syncOrderFromPaymentIntent(pi);
       if (!result.ok) {

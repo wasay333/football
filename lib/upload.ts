@@ -1,17 +1,62 @@
-import { writeFile, mkdir, unlink } from 'fs/promises'
+import { randomUUID } from 'crypto'
+import { mkdir, unlink, writeFile } from 'fs/promises'
 import path from 'path'
+
+const uploadConfigs = {
+  'products/images': {
+    allowedExtensions: new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']),
+    allowedMimeTypes: new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']),
+    maxBytes: 10 * 1024 * 1024,
+  },
+  'footballers/images': {
+    allowedExtensions: new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']),
+    allowedMimeTypes: new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']),
+    maxBytes: 10 * 1024 * 1024,
+  },
+} as const
+
+type UploadSubfolder = keyof typeof uploadConfigs
+
+function resolveManagedUploadPath(urlPath: string): string | null {
+  if (!urlPath.startsWith('/assets/')) {
+    return null
+  }
+
+  const publicRoot = path.resolve(process.cwd(), 'public')
+  const assetsRoot = path.resolve(publicRoot, 'assets')
+  const absolutePath = path.resolve(publicRoot, `.${urlPath}`)
+
+  if (absolutePath !== assetsRoot && !absolutePath.startsWith(`${assetsRoot}${path.sep}`)) {
+    return null
+  }
+
+  return absolutePath
+}
 
 /**
  * Saves an uploaded File to public/assets/<subfolder> and returns the public URL path.
- * subfolder examples: 'products/images', 'products/videos', 'footballers/images', 'footballers/videos'
  */
-export async function saveUploadedFile(file: File, subfolder: string): Promise<string> {
+export async function saveUploadedFile(file: File, subfolder: UploadSubfolder): Promise<string> {
+  const config = uploadConfigs[subfolder]
+  const ext = path.extname(file.name).toLowerCase()
+  const mimeType = file.type.toLowerCase()
+
+  if (file.size <= 0) {
+    throw new Error('Uploaded file is empty')
+  }
+
+  if (file.size > config.maxBytes) {
+    throw new Error('Uploaded file is too large')
+  }
+
+  if (!config.allowedExtensions.has(ext) || !config.allowedMimeTypes.has(mimeType)) {
+    throw new Error('Uploaded file type is not allowed')
+  }
+
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
-
-  const ext = path.extname(file.name) || ''
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`
-  const dir = path.join(process.cwd(), 'public', 'assets', subfolder)
+  const filename = `${randomUUID()}${ext}`
+  const dir = path.resolve(process.cwd(), 'public', 'assets', subfolder)
 
   await mkdir(dir, { recursive: true })
   await writeFile(path.join(dir, filename), buffer)
@@ -25,9 +70,13 @@ export async function saveUploadedFile(file: File, subfolder: string): Promise<s
  */
 export async function deleteUploadedFile(urlPath: string | null | undefined): Promise<void> {
   if (!urlPath) return
+
+  const managedPath = resolveManagedUploadPath(urlPath)
+  if (!managedPath) return
+
   try {
-    await unlink(path.join(process.cwd(), 'public', urlPath))
+    await unlink(managedPath)
   } catch {
-    // Ignore — file may already be missing
+    // Ignore missing files.
   }
 }

@@ -1,5 +1,7 @@
 import { prisma } from "@/prisma";
 
+const REVIEW_LIST_LIMIT = 20;
+
 function timeAgo(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
   if (seconds < 60) return "just now";
@@ -15,20 +17,31 @@ function timeAgo(date: Date): string {
 }
 
 export default async function ReviewList({ productId }: { productId: string }) {
-  const reviews = await prisma.review.findMany({
-    where: { productId },
-    orderBy: { createdAt: "desc" },
-  });
+  const [reviews, stats, groupedRatings] = await Promise.all([
+    prisma.review.findMany({
+      where: { productId },
+      orderBy: { createdAt: "desc" },
+      take: REVIEW_LIST_LIMIT,
+    }),
+    prisma.review.aggregate({
+      where: { productId },
+      _avg: { rating: true },
+      _count: { _all: true },
+    }),
+    prisma.review.groupBy({
+      by: ["rating"],
+      where: { productId },
+      _count: { rating: true },
+    }),
+  ]);
 
-  const count = reviews.length;
-  const avg = count
-    ? (reviews.reduce((s, r) => s + r.rating, 0) / count).toFixed(1)
-    : null;
+  const count = stats._count._all;
+  const avg = stats._avg.rating ? stats._avg.rating.toFixed(1) : null;
 
-  // Rating distribution
+  const ratingCounts = new Map(groupedRatings.map((entry) => [entry.rating, entry._count.rating]));
   const dist = [5, 4, 3, 2, 1].map((star) => ({
     star,
-    count: reviews.filter((r) => r.rating === star).length,
+    count: ratingCounts.get(star) ?? 0,
   }));
 
   return (
@@ -99,6 +112,11 @@ export default async function ReviewList({ productId }: { productId: string }) {
             </div>
           ))}
         </div>
+      )}
+      {count > reviews.length && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Showing the latest {reviews.length} of {count} reviews.
+        </p>
       )}
     </div>
   );

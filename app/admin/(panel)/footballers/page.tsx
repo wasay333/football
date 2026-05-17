@@ -16,12 +16,32 @@ import {
 } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
 import { DeleteFootballerButton } from './_components/delete-footballer-button'
+import { PaginationControls } from '@/components/pagination-controls'
 
 export const metadata = { title: 'Footballers' }
 
-export default async function FootballersPage() {
+const FOOTBALLERS_PER_PAGE = 50
+
+function normalizePage(value?: string) {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1
+}
+
+export default async function FootballersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
+  const params = await searchParams
+  const requestedPage = normalizePage(params.page)
+  const totalFootballers = await prisma.footballer.count()
+  const totalPages = Math.max(1, Math.ceil(totalFootballers / FOOTBALLERS_PER_PAGE))
+  const currentPage = Math.min(requestedPage, totalPages)
+
   const footballers = await prisma.footballer.findMany({
     orderBy: { name: 'asc' },
+    skip: (currentPage - 1) * FOOTBALLERS_PER_PAGE,
+    take: FOOTBALLERS_PER_PAGE,
     include: { _count: { select: { products: true } } },
   })
 
@@ -40,6 +60,7 @@ export default async function FootballersPage() {
       </header>
 
       <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
+        <PaginationControls basePath="/admin/footballers" currentPage={currentPage} totalPages={totalPages} />
         {footballers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <p className="text-sm text-muted-foreground">No footballers yet.</p>

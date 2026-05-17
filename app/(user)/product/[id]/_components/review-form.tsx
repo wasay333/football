@@ -9,6 +9,7 @@ export default function ReviewForm({ productId }: { productId: string }) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [startedAt] = useState(() => Date.now());
   const formRef = useRef<HTMLFormElement>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -72,6 +73,15 @@ export default function ReviewForm({ productId }: { productId: string }) {
       ) : (
         <form ref={formRef} onSubmit={handleSubmit} className="review-form">
           <input type="hidden" name="productId" value={productId} />
+          <input type="hidden" name="startedAt" value={startedAt} />
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{ position: "absolute", left: "-9999px", opacity: 0, pointerEvents: "none" }}
+          />
 
           <input
             name="name"

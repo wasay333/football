@@ -1,0 +1,5 @@
+ALTER TABLE "Order"
+ADD COLUMN IF NOT EXISTS "trackingNumber" TEXT,
+ADD COLUMN IF NOT EXISTS "upsShipmentId" TEXT,
+ADD COLUMN IF NOT EXISTS "pickupConfirmation" TEXT,
+ADD COLUMN IF NOT EXISTS "shippingLabelBase64" TEXT;

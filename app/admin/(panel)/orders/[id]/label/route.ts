@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getAdminSession } from '@/lib/admin-session'
 import { extractFedExLabelUrlFromNotes, getFedExLabelFileExtension, getFedExLabelMimeType } from '@/lib/fedex-label'
 import { prisma } from '@/prisma'
 
@@ -6,6 +7,10 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (!(await getAdminSession())) {
+    return new NextResponse('Unauthorized', { status: 401 })
+  }
+
   const { id } = await params
 
   const order = await prisma.order.findUnique({

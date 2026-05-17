@@ -14,42 +14,31 @@ type Props = { params: Promise<{ id: string }> };
 const SingleProductPage = async ({ params }: Props) => {
   const { id } = await params;
 
-  const [product, reviews] = await Promise.all([
+  const [product, reviewStats] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
       include: { footballer: true, category: true },
     }),
-    prisma.review.findMany({
+    prisma.review.aggregate({
       where: { productId: id },
-      select: { rating: true },
+      _avg: { rating: true },
+      _count: { _all: true },
     }),
   ]);
 
   if (!product) notFound();
 
-  const reviewCount = reviews.length;
-  const avgRating = reviewCount
-    ? reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / reviewCount
-    : 0;
+  const reviewCount = reviewStats._count._all;
+  const avgRating = reviewStats._avg.rating ?? 0;
 
   const { footballer } = product;
-  const heroImage = footballer.videoThumbnail || footballer.profileImage || null;
+  const heroImage = footballer.profileImage || null;
 
   return (
     <div className="pdp">
       {/* 1. Footballer hero */}
       <div className="pdp-hero">
-        {footballer.videoUrl ? (
-          <video
-            className="pdp-hero-media"
-            src={footballer.videoUrl}
-            poster={footballer.videoThumbnail ?? undefined}
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
-        ) : heroImage ? (
+        {heroImage ? (
           <Image
             src={heroImage}
             alt={footballer.name}
@@ -57,17 +46,9 @@ const SingleProductPage = async ({ params }: Props) => {
             sizes="100vw"
             unoptimized={isUploadedAssetPath(heroImage)}
             className="pdp-hero-media"
-            style={{ objectFit: "cover", objectPosition: "top center" }}
+            priority
           />
         ) : null}
-
-        {footballer.videoUrl && (
-          <div className="pdp-hero-play">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-        )}
 
         <div className="pdp-hero-fade" />
       </div>

@@ -31,11 +31,13 @@ export default function SearchBar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const router = useRouter();
+  const trimmedQuery = query.trim();
 
   const close = useCallback(() => {
     setOpen(false);
     setQuery("");
     setProducts([]);
+    setLoading(false);
   }, []);
 
   const goToFootballer = useCallback(
@@ -53,28 +55,26 @@ export default function SearchBar() {
     setTimeout(() => inputRef.current?.focus(), 30);
     if (footballers.length === 0) {
       fetch("/api/search")
-        .then((r) => r.json())
-        .then((data) => setFootballers(data.footballers ?? []));
+        .then(async (r) => (r.ok ? r.json() : { footballers: [] }))
+        .then((data) => setFootballers(data.footballers ?? []))
+        .catch(() => setFootballers([]));
     }
   }, [open, footballers.length]);
 
   // Debounced product search
   useEffect(() => {
     clearTimeout(debounceRef.current);
-    if (!query.trim()) {
-      setProducts([]);
-      setLoading(false);
+    if (!trimmedQuery) {
       return;
     }
-    setLoading(true);
     debounceRef.current = setTimeout(async () => {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}`);
-      const data = await res.json();
+      const res = await fetch(`/api/search?q=${encodeURIComponent(trimmedQuery)}`);
+      const data = res.ok ? await res.json() : { products: [] };
       setProducts(data.products ?? []);
       setLoading(false);
     }, 280);
     return () => clearTimeout(debounceRef.current);
-  }, [query]);
+  }, [trimmedQuery]);
 
   // Close on Escape or outside click
   useEffect(() => {
@@ -91,7 +91,7 @@ export default function SearchBar() {
     };
   }, [open, close]);
 
-  const showDropdown = open && (query.trim() ? true : footballers.length > 0);
+  const showDropdown = open && (trimmedQuery ? true : footballers.length > 0);
 
   return (
     <div ref={wrapRef} className={`search-wrap ${open ? "search-wrap--open" : ""}`}>
@@ -124,7 +124,16 @@ export default function SearchBar() {
             type="text"
             placeholder="Search products…"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              const nextQuery = e.target.value;
+              setQuery(nextQuery);
+              if (!nextQuery.trim()) {
+                setProducts([]);
+                setLoading(false);
+              } else {
+                setLoading(true);
+              }
+            }}
             autoComplete="off"
           />
           <button className="search-field-close" onClick={close} aria-label="Close">✕</button>
@@ -134,7 +143,7 @@ export default function SearchBar() {
       {/* Dropdown */}
       {showDropdown && (
         <div className="search-dropdown">
-          {query.trim() ? (
+          {trimmedQuery ? (
             loading ? (
               <p className="search-drop-status">Searching…</p>
             ) : products.length > 0 ? (

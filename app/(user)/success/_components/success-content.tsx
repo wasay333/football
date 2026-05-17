@@ -6,18 +6,17 @@ import Link from "next/link";
 import { useCart } from "@/hooks/cart-context";
 import { verifyPayment } from "../_actions/verify-payment";
 
-type PaymentStatus = "loading" | "succeeded" | "processing" | "failed" | "unknown";
+type PaymentStatus = "succeeded" | "processing" | "failed";
 
 export default function SuccessContent() {
   const searchParams = useSearchParams();
   const { clearCart } = useCart();
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("loading");
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
 
   const paymentIntentId = searchParams.get("payment_intent");
 
   useEffect(() => {
     if (!paymentIntentId) {
-      setPaymentStatus("unknown");
       return;
     }
 
@@ -34,11 +33,25 @@ export default function SuccessContent() {
     });
   }, [paymentIntentId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (paymentStatus === "loading") {
+  if (!paymentIntentId) {
     return (
       <div className="success-page">
         <div className="success-card">
-          <p className="success-sub">Confirming your payment…</p>
+          <h1 className="success-title">Something went wrong</h1>
+          <p className="success-sub">We couldn&apos;t verify your payment. Please contact support.</p>
+          <div className="success-actions">
+            <Link href="/" className="success-btn-secondary">Back to Home</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (paymentStatus === null) {
+    return (
+      <div className="success-page">
+        <div className="success-card">
+          <p className="success-sub">Confirming your payment...</p>
         </div>
       </div>
     );
@@ -67,22 +80,8 @@ export default function SuccessContent() {
         <div className="success-card">
           <h1 className="success-title">Payment Processing</h1>
           <p className="success-sub">
-            Your payment is being confirmed. We&apos;ll email you once your order is placed — this usually takes a few minutes.
+            Your payment is being confirmed. We&apos;ll email you once your order is placed and follow up when your cap ships.
           </p>
-          <div className="success-actions">
-            <Link href="/" className="success-btn-secondary">Back to Home</Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (paymentStatus === "unknown") {
-    return (
-      <div className="success-page">
-        <div className="success-card">
-          <h1 className="success-title">Something went wrong</h1>
-          <p className="success-sub">We couldn&apos;t verify your payment. Please contact support.</p>
           <div className="success-actions">
             <Link href="/" className="success-btn-secondary">Back to Home</Link>
           </div>
@@ -94,7 +93,6 @@ export default function SuccessContent() {
   return (
     <div className="success-page">
       <div className="success-card">
-        {/* Animated checkmark */}
         <div className="success-icon">
           <svg viewBox="0 0 52 52" fill="none">
             <circle className="success-circle" cx="26" cy="26" r="25" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -108,11 +106,9 @@ export default function SuccessContent() {
           Thank you for your purchase. We&apos;ll send a confirmation to your email shortly and notify you when your cap ships.
         </p>
 
-        {paymentIntentId && (
-          <p className="success-ref">
-            Reference: <span>{paymentIntentId.slice(-8).toUpperCase()}</span>
-          </p>
-        )}
+        <p className="success-ref">
+          Reference: <span>{paymentIntentId.slice(-8).toUpperCase()}</span>
+        </p>
 
         <div className="success-actions">
           <Link href="/product" className="success-btn-primary">Continue Shopping</Link>

@@ -46,10 +46,6 @@ const BestsellingSection = ({
     : products;
 
   useEffect(() => {
-    setPage((current) => Math.min(current, Math.max(pageCount - 1, 0)));
-  }, [pageCount]);
-
-  useEffect(() => {
     const section = sectionRef.current;
     const heading = headingRef.current;
     const cards = cardRefs.current.filter(Boolean);
@@ -154,7 +150,7 @@ const BestsellingSection = ({
             <button
               type="button"
               className="bestselling-control-btn"
-              onClick={() => setPage((current) => Math.max(current - 1, 0))}
+              onClick={() => setPage(Math.max(safePage - 1, 0))}
               disabled={safePage === 0}
               aria-label={`Previous ${title.toLowerCase()} ${highlight.toLowerCase()} products`}
             >
@@ -168,7 +164,7 @@ const BestsellingSection = ({
             <button
               type="button"
               className="bestselling-control-btn"
-              onClick={() => setPage((current) => Math.min(current + 1, pageCount - 1))}
+              onClick={() => setPage(Math.min(safePage + 1, pageCount - 1))}
               disabled={safePage === pageCount - 1}
               aria-label={`Next ${title.toLowerCase()} ${highlight.toLowerCase()} products`}
             >

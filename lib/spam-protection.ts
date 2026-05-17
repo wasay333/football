@@ -1,3 +1,5 @@
+import { getOptionalServerEnv } from '@/lib/env.server'
+
 const DISPOSABLE_EMAIL_DOMAINS = new Set([
   '10minutemail.com',
   'dispostable.com',
@@ -88,9 +90,13 @@ export async function verifyTurnstileToken({
   token: string
   remoteIp?: string
 }): Promise<TurnstileVerificationResult> {
-  const secretKey = process.env.TURNSTILE_SECRET_KEY?.trim()
+  const secretKey = getOptionalServerEnv('TURNSTILE_SECRET_KEY')
 
   if (!secretKey) {
+    if (process.env.NODE_ENV === 'production') {
+      return { success: false, errorCodes: ['missing-input-secret'] }
+    }
+
     return { success: true, errorCodes: [] }
   }
 
@@ -121,8 +127,9 @@ export async function verifyTurnstileToken({
       }
     }
 
-    const expectedHostname = process.env.NEXT_PUBLIC_APP_URL
-      ? normalizeHostname(new URL(process.env.NEXT_PUBLIC_APP_URL).hostname)
+    const appUrl = getOptionalServerEnv('NEXT_PUBLIC_APP_URL')
+    const expectedHostname = appUrl
+      ? normalizeHostname(new URL(appUrl).hostname)
       : undefined
     const responseHostname = result.hostname ? normalizeHostname(result.hostname) : undefined
 

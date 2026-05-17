@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose'
+import { requireServerEnv } from '@/lib/env.server'
 
-if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET env variable is not set')
-const secret = new TextEncoder().encode(process.env.JWT_SECRET)
+const secret = new TextEncoder().encode(requireServerEnv('JWT_SECRET'))
 
 export interface AdminTokenPayload {
   id: string

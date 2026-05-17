@@ -25,25 +25,97 @@ type FedExRequestInit = Omit<RequestInit, 'body' | 'headers'> & {
   headers?: HeadersInit
 }
 
+import { getOptionalServerEnv, requireServerEnv } from '@/lib/env.server'
+
 const FEDEX_SANDBOX_BASE_URL = 'https://apis-sandbox.fedex.com'
 const FEDEX_PRODUCTION_BASE_URL = 'https://apis.fedex.com'
 const TOKEN_REFRESH_BUFFER_MS = 60 * 1000
+const FEDEX_REQUEST_TIMEOUT_MS = 15_000
+const FEDEX_REQUEST_MAX_RETRIES = 2
+const FEDEX_RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504])
 
 const globalForFedEx = globalThis as typeof globalThis & {
   __foocapsFedExTokens?: Partial<Record<FedExScope, CachedFedExToken>>
 }
 
 function readEnv(name: string) {
-  return process.env[name]?.trim()
+  return getOptionalServerEnv(name as Parameters<typeof getOptionalServerEnv>[0])
 }
 
 function requireEnv(name: string) {
-  const value = readEnv(name)
-  if (!value) {
-    throw new Error(`${name} is not set`)
+  return requireServerEnv(name as Parameters<typeof requireServerEnv>[0])
+}
+
+function readPositiveIntEnv(name: string, fallback: number) {
+  const value = Number(readEnv(name))
+  return Number.isInteger(value) && value > 0 ? value : fallback
+}
+
+function getFedExRequestTimeoutMs() {
+  return readPositiveIntEnv('FEDEX_REQUEST_TIMEOUT_MS', FEDEX_REQUEST_TIMEOUT_MS)
+}
+
+function getFedExRequestMaxRetries() {
+  return readPositiveIntEnv('FEDEX_REQUEST_MAX_RETRIES', FEDEX_REQUEST_MAX_RETRIES)
+}
+
+function buildTimedSignal(signal?: AbortSignal) {
+  const timeoutSignal = AbortSignal.timeout(getFedExRequestTimeoutMs())
+  return signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal
+}
+
+function isRetryableFetchError(error: unknown) {
+  return (
+    (error instanceof Error &&
+      (error.name === 'AbortError' || error.name === 'TimeoutError' || error instanceof TypeError)) ||
+    false
+  )
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function parseFedExResponse<T>(response: Response) {
+  const text = await response.text()
+  if (!text) {
+    return {} as T & FedExErrorResponse
   }
 
-  return value
+  try {
+    return JSON.parse(text) as T & FedExErrorResponse
+  } catch {
+    throw new Error(`FedEx returned a non-JSON response with status ${response.status}.`)
+  }
+}
+
+async function performFedExFetch(
+  url: string,
+  init: RequestInit,
+  operationLabel: string,
+) {
+  const maxRetries = getFedExRequestMaxRetries()
+
+  for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        ...init,
+        signal: buildTimedSignal(init.signal ?? undefined),
+      })
+
+      if (!FEDEX_RETRYABLE_STATUS_CODES.has(response.status) || attempt === maxRetries) {
+        return response
+      }
+    } catch (error) {
+      if (!isRetryableFetchError(error) || attempt === maxRetries) {
+        throw error
+      }
+    }
+
+    await delay(250 * (attempt + 1))
+  }
+
+  throw new Error(`FedEx ${operationLabel} request failed after multiple attempts.`)
 }
 
 export function getFedExBaseUrl(scope: FedExScope = 'shipping') {
@@ -105,16 +177,16 @@ export async function getFedExAccessToken(scope: FedExScope = 'shipping') {
     body.append('child_secret', childSecret)
   }
 
-  const response = await fetch(`${baseUrl}/oauth/token`, {
+  const response = await performFedExFetch(`${baseUrl}/oauth/token`, {
     method: 'POST',
     headers: {
       'content-type': 'application/x-www-form-urlencoded',
     },
     body,
     cache: 'no-store',
-  })
+  }, `auth:${scope}`)
 
-  const payload = (await response.json()) as FedExAccessTokenResponse & FedExErrorResponse
+  const payload = await parseFedExResponse<FedExAccessTokenResponse>(response)
 
   if (!response.ok || !payload.access_token) {
     const message =
@@ -155,14 +227,14 @@ export async function fedexRequest<T>(
     body = JSON.stringify(init.body)
   }
 
-  const response = await fetch(`${baseUrl}${path}`, {
+  const response = await performFedExFetch(`${baseUrl}${path}`, {
     ...init,
     headers,
     body,
     cache: 'no-store',
-  })
+  }, `${scope}:${path}`)
 
-  const payload = (await response.json()) as T & FedExErrorResponse
+  const payload = await parseFedExResponse<T>(response)
 
   if (!response.ok) {
     const message =

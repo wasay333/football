@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { prisma } from '@/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { allocateWaitingPreordersForProduct } from '@/lib/preorder-allocation'
 import { saveUploadedFile, deleteUploadedFile } from '@/lib/upload'
+import { getAdminSession } from '@/lib/admin-session'
 
 const ProductSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -20,12 +22,6 @@ const ProductSchema = z.object({
   status: z.enum(['DRAFT', 'ACTIVE', 'ARCHIVED']),
   categoryId: z.string().nullable().optional(),
   footballerId: z.string().min(1, 'Footballer is required'),
-  sizes: z
-    .string()
-    .transform((val) => {
-      try { return JSON.parse(val) as string[] } catch { return [] }
-    })
-    .pipe(z.array(z.string().min(1))),
   mannequinImage: z.string().optional(),
   capImage1: z.string().optional(),
   capImage2: z.string().optional(),
@@ -53,6 +49,10 @@ export async function createProductAction(
   _prevState: ProductFormState,
   formData: FormData,
 ): Promise<ProductFormState> {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
   // Validate text fields first — no point uploading files if they fail
   const textResult = ProductSchema.omit({ mannequinImage: true, capImage1: true, capImage2: true, capImage3: true }).safeParse({
     name: formData.get('name'),
@@ -65,7 +65,6 @@ export async function createProductAction(
     status: formData.get('status'),
     categoryId: formData.get('categoryId') || null,
     footballerId: formData.get('footballerId'),
-    sizes: formData.get('sizes') || '[]',
   })
   if (!textResult.success) {
     return { errors: textResult.error.flatten().fieldErrors }
@@ -76,17 +75,19 @@ export async function createProductAction(
   let capImage1: string | null = null
   let capImage2: string | null = null
   let capImage3: string | null = null
+  const newlyUploaded: string[] = []
 
   try {
     const fm = formData.get('mannequinImage') as File | null
     const f1 = formData.get('capImage1') as File | null
     const f2 = formData.get('capImage2') as File | null
     const f3 = formData.get('capImage3') as File | null
-    if (fm?.size) mannequinImage = await saveUploadedFile(fm, 'products/images')
-    if (f1?.size) capImage1 = await saveUploadedFile(f1, 'products/images')
-    if (f2?.size) capImage2 = await saveUploadedFile(f2, 'products/images')
-    if (f3?.size) capImage3 = await saveUploadedFile(f3, 'products/images')
+    if (fm?.size) { mannequinImage = await saveUploadedFile(fm, 'products/images'); newlyUploaded.push(mannequinImage) }
+    if (f1?.size) { capImage1 = await saveUploadedFile(f1, 'products/images'); newlyUploaded.push(capImage1) }
+    if (f2?.size) { capImage2 = await saveUploadedFile(f2, 'products/images'); newlyUploaded.push(capImage2) }
+    if (f3?.size) { capImage3 = await saveUploadedFile(f3, 'products/images'); newlyUploaded.push(capImage3) }
   } catch {
+    await Promise.all(newlyUploaded.map(deleteUploadedFile))
     return { errors: { form: ['Failed to save uploaded images. Please try again.'] } }
   }
 
@@ -103,7 +104,7 @@ export async function createProductAction(
         status: textResult.data.status,
         footballerId: textResult.data.footballerId,
         categoryId: textResult.data.categoryId ?? null,
-        sizes: textResult.data.sizes,
+        sizes: [],
         mannequinImage,
         capImage1,
         capImage2,
@@ -111,6 +112,7 @@ export async function createProductAction(
       },
     })
   } catch (e: unknown) {
+    await Promise.all(newlyUploaded.map(deleteUploadedFile))
     const err = e as { code?: string }
     if (err?.code === 'P2002') {
       return { errors: { slug: ['A product with this slug already exists'] } }
@@ -127,10 +129,14 @@ export async function updateProductAction(
   _prevState: ProductFormState,
   formData: FormData,
 ): Promise<ProductFormState> {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
   // Fetch current image paths so we can delete replaced files afterwards
   const existing = await prisma.product.findUnique({
     where: { id },
-    select: { mannequinImage: true, capImage1: true, capImage2: true, capImage3: true },
+    select: { mannequinImage: true, capImage1: true, capImage2: true, capImage3: true, stock: true },
   })
 
   // Validate text fields before uploading anything
@@ -145,7 +151,6 @@ export async function updateProductAction(
     status: formData.get('status'),
     categoryId: formData.get('categoryId') || null,
     footballerId: formData.get('footballerId'),
-    sizes: formData.get('sizes') || '[]',
   })
   if (!textResult.success) {
     return { errors: textResult.error.flatten().fieldErrors }
@@ -165,43 +170,50 @@ export async function updateProductAction(
     const f3 = formData.get('capImage3') as File | null
 
     if (fm?.size) { mannequinImage = await saveUploadedFile(fm, 'products/images'); newlyUploaded.push(mannequinImage); filesToDelete.push(existing?.mannequinImage) }
-    else          { mannequinImage = (formData.get('mannequinImage_existing') as string) || null }
+    else          { mannequinImage = existing?.mannequinImage ?? null }
 
     if (f1?.size) { capImage1 = await saveUploadedFile(f1, 'products/images'); newlyUploaded.push(capImage1); filesToDelete.push(existing?.capImage1) }
-    else          { capImage1 = (formData.get('capImage1_existing') as string) || null }
+    else          { capImage1 = existing?.capImage1 ?? null }
 
     if (f2?.size) { capImage2 = await saveUploadedFile(f2, 'products/images'); newlyUploaded.push(capImage2); filesToDelete.push(existing?.capImage2) }
-    else          { capImage2 = (formData.get('capImage2_existing') as string) || null }
+    else          { capImage2 = existing?.capImage2 ?? null }
 
     if (f3?.size) { capImage3 = await saveUploadedFile(f3, 'products/images'); newlyUploaded.push(capImage3); filesToDelete.push(existing?.capImage3) }
-    else          { capImage3 = (formData.get('capImage3_existing') as string) || null }
+    else          { capImage3 = existing?.capImage3 ?? null }
   } catch {
     await Promise.all(newlyUploaded.map(deleteUploadedFile))
     return { errors: { form: ['Failed to save uploaded images. Please try again.'] } }
   }
 
   try {
-    await prisma.product.update({
-      where: { id },
-      data: {
-        name: textResult.data.name,
-        slug: textResult.data.slug,
-        description: textResult.data.description,
-        price: textResult.data.price,
-        stock: textResult.data.stock,
-        lowStockThreshold: textResult.data.lowStockThreshold,
-        allowPreorder: textResult.data.allowPreorder,
-        status: textResult.data.status,
-        footballerId: textResult.data.footballerId,
-        categoryId: textResult.data.categoryId ?? null,
-        sizes: textResult.data.sizes,
-        mannequinImage,
-        capImage1,
-        capImage2,
-        capImage3,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.product.update({
+        where: { id },
+        data: {
+          name: textResult.data.name,
+          slug: textResult.data.slug,
+          description: textResult.data.description,
+          price: textResult.data.price,
+          stock: textResult.data.stock,
+          lowStockThreshold: textResult.data.lowStockThreshold,
+          allowPreorder: textResult.data.allowPreorder,
+          status: textResult.data.status,
+          footballerId: textResult.data.footballerId,
+          categoryId: textResult.data.categoryId ?? null,
+          sizes: [],
+          mannequinImage,
+          capImage1,
+          capImage2,
+          capImage3,
+        },
+      })
+
+      if (existing && textResult.data.stock > existing.stock) {
+        await allocateWaitingPreordersForProduct(tx, id)
+      }
     })
   } catch (e: unknown) {
+    await Promise.all(newlyUploaded.map(deleteUploadedFile))
     const err = e as { code?: string }
     if (err?.code === 'P2002') {
       return { errors: { slug: ['A product with this slug already exists'] } }
@@ -220,11 +232,19 @@ export async function updateProductStatusAction(
   id: string,
   status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED',
 ) {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
   await prisma.product.update({ where: { id }, data: { status } })
   revalidatePath('/admin/products')
 }
 
 export async function deleteProductAction(id: string): Promise<{ error?: string }> {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
   // Fetch image paths before deleting the record
   const existing = await prisma.product.findUnique({
     where: { id },

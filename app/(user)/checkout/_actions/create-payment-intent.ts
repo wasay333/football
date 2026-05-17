@@ -1,6 +1,7 @@
 "use server";
 
 import Stripe from 'stripe'
+import { z } from 'zod'
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/prisma";
 import { selectCheapestFedExRateForItems } from '@/lib/fedex-shipping'
@@ -8,7 +9,6 @@ import { selectCheapestFedExRateForItems } from '@/lib/fedex-shipping'
 export type CartLineInput = {
   productId: string;
   quantity: number;
-  size?: string;
 };
 
 // Shape stored in PaymentIntent metadata — prices come from DB, not the client
@@ -17,7 +17,6 @@ export type TrustedLineItem = {
   name: string;
   price: number;
   quantity: number;
-  size?: string | null;
   image: string;
   isPreorder: boolean;
 };
@@ -44,12 +43,64 @@ export type CheckoutShippingQuote = {
 
 const FREE_SHIPPING_THRESHOLD = 100
 
+const paymentIntentIdSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(255)
+  .regex(/^pi_[A-Za-z0-9]+$/, 'Invalid checkout session.')
+
+const cartLineInputSchema = z.object({
+  productId: z.string().uuid(),
+  quantity: z.number().int().min(1).max(50),
+})
+
+const cartLineInputsSchema = z.array(cartLineInputSchema).min(1).max(25)
+
+const trustedLineItemSchema = z.object({
+  productId: z.string().uuid(),
+  name: z.string().min(1).max(255),
+  price: z.number().finite().nonnegative(),
+  quantity: z.number().int().min(1).max(50),
+  image: z.string().max(2048),
+  isPreorder: z.boolean(),
+})
+
+const customerDetailsSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  email: z.string().trim().email().max(254),
+  phone: z.string().trim().max(30).optional().or(z.literal('')),
+  address: z.string().trim().min(1).max(200),
+  city: z.string().trim().min(1).max(100),
+  state: z.string().trim().max(50).optional().or(z.literal('')),
+  postalCode: z.string().trim().min(1).max(20),
+  country: z.string().trim().length(2).regex(/^[A-Za-z]{2}$/),
+})
+
+function normalizeCartLines(inputs: CartLineInput[]) {
+  const parsed = cartLineInputsSchema.safeParse(inputs)
+  if (!parsed.success) return null
+
+  const byProduct = new Map<string, number>()
+  for (const line of parsed.data) {
+    byProduct.set(line.productId, (byProduct.get(line.productId) ?? 0) + line.quantity)
+  }
+
+  const normalized = Array.from(byProduct.entries()).map(([productId, quantity]) => ({
+    productId,
+    quantity,
+  }))
+
+  return cartLineInputsSchema.safeParse(normalized).success ? normalized : null
+}
+
 export async function createPaymentIntent(inputs: CartLineInput[]) {
-  if (!inputs.length) return { error: "Cart is empty" };
+  const normalizedInputs = normalizeCartLines(inputs)
+  if (!normalizedInputs?.length) return { error: "Cart is empty or invalid" };
 
   // Fetch all products in one query — server is the source of truth for price
   const products = await prisma.product.findMany({
-    where: { id: { in: inputs.map((i) => i.productId) } },
+    where: { id: { in: normalizedInputs.map((i) => i.productId) } },
     select: {
       id: true,
       name: true,
@@ -64,7 +115,7 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
 
   const lines: TrustedLineItem[] = [];
 
-  for (const input of inputs) {
+  for (const input of normalizedInputs) {
     const product = products.find((p) => p.id === input.productId);
 
     if (!product || product.status !== "ACTIVE") {
@@ -84,7 +135,6 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
       name: product.name,
       price: Number(product.price),
       quantity: input.quantity,
-      size: input.size ?? null,
       image: product.mannequinImage ?? product.capImage1 ?? "",
       isPreorder: product.stock === 0 && product.allowPreorder,
     });
@@ -114,27 +164,48 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
 }
 
 function normalizeCustomerDetails(customer: CheckoutCustomerDetails) {
+  const parsed = customerDetailsSchema.safeParse(customer)
+  if (!parsed.success) {
+    throw new Error('Missing customer details for checkout.')
+  }
+
   return {
-    name: customer.name.trim(),
-    email: customer.email.trim(),
-    phone: customer.phone?.trim() ?? "",
-    address: customer.address.trim(),
-    city: customer.city.trim(),
-    state: customer.state?.trim().toUpperCase() ?? "",
-    postalCode: customer.postalCode.trim(),
-    country: customer.country.trim().toUpperCase(),
+    name: parsed.data.name,
+    email: parsed.data.email,
+    phone: parsed.data.phone?.trim() ?? "",
+    address: parsed.data.address,
+    city: parsed.data.city,
+    state: parsed.data.state?.trim().toUpperCase() ?? "",
+    postalCode: parsed.data.postalCode,
+    country: parsed.data.country.toUpperCase(),
   };
 }
 
 async function getTrustedLineItemsFromPaymentIntent(paymentIntentId: string) {
-  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
-  const items: TrustedLineItem[] = JSON.parse(paymentIntent.metadata.items ?? '[]')
+  const parsedPaymentIntentId = paymentIntentIdSchema.safeParse(paymentIntentId)
+  if (!parsedPaymentIntentId.success) {
+    throw new Error('Checkout session was not found.')
+  }
 
-  if (!items.length) {
+  const paymentIntent = await stripe.paymentIntents.retrieve(parsedPaymentIntentId.data)
+
+  let rawItems: unknown
+  try {
+    rawItems = JSON.parse(paymentIntent.metadata.items ?? '[]')
+  } catch {
+    throw new Error('Checkout session data is invalid.')
+  }
+
+  const parsedItems = z.array(trustedLineItemSchema).safeParse(rawItems)
+  if (!parsedItems.success) {
+    throw new Error('Checkout session data is invalid.')
+  }
+
+  if (!parsedItems.data.length) {
     throw new Error('No items were found for this checkout session.')
   }
 
-  return { paymentIntent, items }
+  return { paymentIntent, items: parsedItems.data as TrustedLineItem[] }
 }
 
 function buildCustomerShippingMetadata(normalized: ReturnType<typeof normalizeCustomerDetails>) {
@@ -171,7 +242,12 @@ export async function quoteFedExShippingForPaymentIntent(
   paymentIntentId: string,
   customer: CheckoutCustomerDetails
 ) {
-  const normalized = normalizeCustomerDetails(customer)
+  let normalized: ReturnType<typeof normalizeCustomerDetails>
+  try {
+    normalized = normalizeCustomerDetails(customer)
+  } catch {
+    return { error: "Missing customer details for checkout." };
+  }
 
   if (
     !paymentIntentId.trim() ||
@@ -274,7 +350,12 @@ export async function updatePaymentIntentCustomerDetails(
   paymentIntentId: string,
   customer: CheckoutCustomerDetails
 ) {
-  const normalized = normalizeCustomerDetails(customer)
+  let normalized: ReturnType<typeof normalizeCustomerDetails>
+  try {
+    normalized = normalizeCustomerDetails(customer)
+  } catch {
+    return { error: "Missing customer details for checkout." };
+  }
 
   if (
     !paymentIntentId.trim() ||
@@ -294,7 +375,7 @@ export async function updatePaymentIntentCustomerDetails(
 
   let paymentIntent: Stripe.PaymentIntent
   try {
-    paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+    paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentIdSchema.parse(paymentIntentId))
   } catch {
     return { error: 'Checkout session was not found.' }
   }

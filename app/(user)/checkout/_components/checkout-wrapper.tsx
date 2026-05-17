@@ -30,9 +30,9 @@ export default function CheckoutWrapper() {
       return;
     }
 
-    // Send only productId + quantity + size — backend fetches trusted prices from DB
+    // Send only productId + quantity — backend fetches trusted prices from DB
     createPaymentIntent(
-      items.map((i) => ({ productId: i.productId, quantity: i.quantity, size: i.size }))
+      items.map((i) => ({ productId: i.productId, quantity: i.quantity }))
     ).then((res) => {
       if (res.error) {
         setError(res.error);

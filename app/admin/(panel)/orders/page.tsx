@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@/prisma'
 import { Badge } from '@/components/ui/badge'
+import { PaginationControls } from '@/components/pagination-controls'
 
 export const dynamic = "force-dynamic";
 import { Separator } from '@/components/ui/separator'
@@ -18,8 +19,17 @@ import type { OrderStatus } from '@prisma/client'
 
 export const metadata = { title: 'Orders' }
 
+const ORDERS_PER_PAGE = 50
+
+function normalizePage(value?: string) {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1
+}
+
 const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   PENDING: 'secondary',
+  AWAITING_STOCK: 'secondary',
+  READY_TO_SHIP: 'outline',
   CONFIRMED: 'default',
   PROCESSING: 'default',
   SHIPPED: 'default',
@@ -28,9 +38,22 @@ const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'outline' | '
   REFUNDED: 'destructive',
 }
 
-export default async function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
+  const params = await searchParams
+  const requestedPage = normalizePage(params.page)
+
+  const totalOrders = await prisma.order.count()
+  const totalPages = Math.max(1, Math.ceil(totalOrders / ORDERS_PER_PAGE))
+  const currentPage = Math.min(requestedPage, totalPages)
+
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: 'desc' },
+    skip: (currentPage - 1) * ORDERS_PER_PAGE,
+    take: ORDERS_PER_PAGE,
     include: {
       items: { select: { quantity: true } },
     },
@@ -45,6 +68,7 @@ export default async function OrdersPage() {
       </header>
 
       <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
+        <PaginationControls basePath="/admin/orders" currentPage={currentPage} totalPages={totalPages} />
         {orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <p className="text-sm text-muted-foreground">No orders yet.</p>
@@ -145,8 +169,10 @@ export default async function OrdersPage() {
                         </TableCell>
 
                         <TableCell>
-                          {order.isPreorder && (
+                          {order.isPreorder ? (
                             <Badge variant="outline">Pre-order</Badge>
+                          ) : (
+                            <span>Standard</span>
                           )}
                         </TableCell>
 

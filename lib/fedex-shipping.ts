@@ -308,6 +308,7 @@ function buildShipmentPartyFromOrder(order: Order): FedExShipmentParty {
     address: normalizeAddress({
       streetLines: [order.address],
       city: order.city,
+      stateOrProvinceCode: order.stateOrProvinceCode ?? undefined,
       postalCode: order.postalCode,
       countryCode: order.country,
     }),

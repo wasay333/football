@@ -7,6 +7,7 @@ import {
   buildQuoteRequestAdminEmail,
   buildQuoteRequestConfirmationEmail,
 } from '@/lib/email/quote-request'
+import { getOptionalServerEnv } from '@/lib/env.server'
 import { checkRateLimit } from '@/lib/rate-limit'
 import {
   getEmailDomain,
@@ -15,6 +16,7 @@ import {
   looksLikeSeoSpam,
   verifyTurnstileToken,
 } from '@/lib/spam-protection'
+import { getClientIpFromHeaders } from '@/lib/request-client'
 
 const requestTypeOptions = [
   'Bulk Team Order',
@@ -60,23 +62,17 @@ export type QuoteRequestState = {
   }
 } | null
 
-function getClientIp(requestHeaders: Headers) {
-  const forwardedFor = requestHeaders.get('x-forwarded-for')
-  if (forwardedFor) {
-    return forwardedFor.split(',')[0]?.trim() || 'unknown'
-  }
-
-  return requestHeaders.get('x-real-ip') ?? requestHeaders.get('cf-connecting-ip') ?? 'unknown'
-}
-
 export async function submitQuoteAction(
   prevState: QuoteRequestState,
   formData: FormData,
 ): Promise<QuoteRequestState> {
+  void prevState
+
   const requestHeaders = await headers()
-  const clientIp = getClientIp(requestHeaders)
+  const clientIp = getClientIpFromHeaders(requestHeaders)
+  const userAgent = requestHeaders.get('user-agent')?.trim().slice(0, 160) || 'unknown'
   const rateLimit = checkRateLimit({
-    key: `quote-request:${clientIp}`,
+    key: `quote-request:${clientIp}:${userAgent}`,
     limit: 3,
     windowMs: 60 * 60 * 1000,
   })
@@ -152,10 +148,16 @@ export async function submitQuoteAction(
   })
 
   if (!turnstileResult.success) {
+    const isConfigurationIssue = turnstileResult.errorCodes.includes('missing-input-secret')
+
     return {
       success: false,
       errors: {
-        form: ['Please complete the spam check and submit the form again.'],
+        form: [
+          isConfigurationIssue
+            ? 'Quote requests are temporarily unavailable. Please try again shortly.'
+            : 'Please complete the spam check and submit the form again.',
+        ],
       },
     }
   }
@@ -194,9 +196,9 @@ export async function submitQuoteAction(
     }
   }
 
-  const resendApiKey = process.env.RESEND_API_KEY
-  const resendFromEmail = process.env.RESEND_FROM_EMAIL ?? 'Foocaps <onboarding@resend.dev>'
-  const quoteToEmail = process.env.QUOTE_REQUEST_TO_EMAIL ?? 'info@foocaps.com'
+  const resendApiKey = getOptionalServerEnv('RESEND_API_KEY')
+  const resendFromEmail = getOptionalServerEnv('RESEND_FROM_EMAIL') ?? 'Foocaps <onboarding@resend.dev>'
+  const quoteToEmail = getOptionalServerEnv('QUOTE_REQUEST_TO_EMAIL') ?? 'info@foocaps.com'
 
   if (!resendApiKey) {
     console.error('[quote-request] RESEND_API_KEY missing')
