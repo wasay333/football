@@ -235,10 +235,11 @@ async function sendOrderEmails({
   }
 
   try {
+    const hasPreorderItems = items.some((item) => item.isPreorder);
     await resend.emails.send({
       from: resendFromEmail,
       to: customerEmail,
-      subject: `Order Confirmed - ${orderNumber}`,
+      subject: `${hasPreorderItems ? "Pre-order Confirmed" : "Order Confirmed"} - ${orderNumber}`,
       html: buildOrderConfirmationEmail({
         orderNumber,
         customerName,

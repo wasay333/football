@@ -20,6 +20,10 @@ type Props = {
 };
 
 export function buildOrderConfirmationEmail(p: Props): string {
+  const hasPreorderItems = p.items.some((item) => item.isPreorder);
+  const hasInStockItems = p.items.some((item) => !item.isPreorder);
+  const isPreorderOnlyOrder = hasPreorderItems && !hasInStockItems;
+
   const itemRows = p.items
     .map((item) => {
       const preorderBadge = item.isPreorder
@@ -47,13 +51,19 @@ export function buildOrderConfirmationEmail(p: Props): string {
     .join("");
 
   const shippingDisplay = p.shippingCost === 0 ? "Free" : `$${p.shippingCost.toFixed(2)}`;
+  const emailTitle = isPreorderOnlyOrder ? "Pre-order Confirmed" : "Order Confirmed";
+  const introCopy = isPreorderOnlyOrder
+    ? "Thanks for your pre-order! We&apos;ve received your payment and reserved your order. This item is currently on pre-order, so it will ship once stock is available. We&apos;ll send you another email with your FedEx tracking link as soon as your shipment is created."
+    : hasPreorderItems
+      ? "Thanks for your order! We&apos;ve received your payment. Your order includes pre-order items, so we&apos;ll email you again as soon as everything is ready to ship and a FedEx shipment has been created."
+      : "Thanks for your order! We&apos;ve received your payment and your cap is on its way to being packed. We&apos;ll send you another email with your tracking link as soon as your FedEx shipment is created.";
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Order Confirmed — ${p.orderNumber}</title>
+  <title>${emailTitle} - ${p.orderNumber}</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 0;">
@@ -61,21 +71,18 @@ export function buildOrderConfirmationEmail(p: Props): string {
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
         <tbody>
 
-          <!-- Header -->
           <tr>
             <td style="background:#111111;border-radius:8px 8px 0 0;padding:32px 40px;text-align:center;">
               <p style="margin:0;color:#c9a84c;font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;">Foocaps</p>
-              <h1 style="margin:12px 0 0;color:#fff;font-size:26px;font-weight:700;">Order Confirmed</h1>
+              <h1 style="margin:12px 0 0;color:#fff;font-size:26px;font-weight:700;">${emailTitle}</h1>
             </td>
           </tr>
 
-          <!-- Greeting -->
           <tr>
             <td style="background:#fff;padding:32px 40px 0;">
               <p style="margin:0;color:#111111;font-size:16px;">Hi ${p.customerName},</p>
               <p style="margin:12px 0 0;color:#555;font-size:15px;line-height:1.6;">
-                Thanks for your order! We&apos;ve received your payment and your cap is on its way to being packed.
-                We&apos;ll send you another email with your tracking link as soon as your FedEx shipment is created.
+                ${introCopy}
               </p>
               <p style="margin:16px 0 0;color:#888;font-size:13px;">
                 Order reference: <strong style="color:#111111;">${p.orderNumber}</strong>
@@ -83,10 +90,8 @@ export function buildOrderConfirmationEmail(p: Props): string {
             </td>
           </tr>
 
-          <!-- Divider -->
           <tr><td style="background:#fff;padding:24px 40px 0;"><hr style="border:none;border-top:1px solid #e5e7eb;margin:0;"/></td></tr>
 
-          <!-- Items -->
           <tr>
             <td style="background:#fff;padding:24px 40px 0;">
               <p style="margin:0 0 16px;color:#111111;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Items Ordered</p>
@@ -94,7 +99,6 @@ export function buildOrderConfirmationEmail(p: Props): string {
             </td>
           </tr>
 
-          <!-- Totals -->
           <tr>
             <td style="background:#fff;padding:20px 40px 0;">
               <table width="100%" cellpadding="0" cellspacing="0">
@@ -117,10 +121,8 @@ export function buildOrderConfirmationEmail(p: Props): string {
             </td>
           </tr>
 
-          <!-- Divider -->
           <tr><td style="background:#fff;padding:24px 40px 0;"><hr style="border:none;border-top:1px solid #e5e7eb;margin:0;"/></td></tr>
 
-          <!-- Shipping address -->
           <tr>
             <td style="background:#fff;padding:24px 40px 32px;">
               <p style="margin:0 0 10px;color:#111111;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Shipping To</p>
@@ -133,7 +135,6 @@ export function buildOrderConfirmationEmail(p: Props): string {
             </td>
           </tr>
 
-          <!-- Footer -->
           <tr>
             <td style="background:#111111;border-radius:0 0 8px 8px;padding:24px 40px;text-align:center;">
               <p style="margin:0;color:#888;font-size:12px;line-height:1.6;">
