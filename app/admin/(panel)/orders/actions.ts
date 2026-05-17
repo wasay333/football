@@ -12,7 +12,13 @@ const UpdateStatusSchema = z.object({
   note: z.string().optional(),
 })
 
+const DELETE_ALL_ORDERS_CONFIRMATION = 'DELETE ALL ORDERS'
+const DeleteAllOrdersSchema = z.object({
+  confirmation: z.string().trim().min(1),
+})
+
 export type UpdateStatusState = { error?: string } | null
+export type DeleteAllOrdersState = { error?: string } | null
 
 export async function updateOrderStatusAction(
   orderId: string,
@@ -51,4 +57,30 @@ export async function updateOrderStatusAction(
   revalidatePath(`/admin/orders/${orderId}`)
   revalidatePath('/admin/orders')
   return null
+}
+
+export async function deleteAllOrdersAction(
+  _prev: DeleteAllOrdersState,
+  formData: FormData,
+): Promise<DeleteAllOrdersState> {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
+  const result = DeleteAllOrdersSchema.safeParse({
+    confirmation: formData.get('confirmation'),
+  })
+
+  if (!result.success || result.data.confirmation !== DELETE_ALL_ORDERS_CONFIRMATION) {
+    return { error: `Type "${DELETE_ALL_ORDERS_CONFIRMATION}" to confirm deleting every order.` }
+  }
+
+  try {
+    await prisma.order.deleteMany()
+  } catch {
+    return { error: 'Failed to delete all orders.' }
+  }
+
+  revalidatePath('/admin/orders')
+  redirect('/admin/orders')
 }

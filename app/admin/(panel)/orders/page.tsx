@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { prisma } from '@/prisma'
 import { Badge } from '@/components/ui/badge'
 import { PaginationControls } from '@/components/pagination-controls'
+import { DeleteAllOrdersForm } from './_components/delete-all-orders-form'
 
 export const dynamic = "force-dynamic";
 import { Separator } from '@/components/ui/separator'
@@ -68,6 +69,18 @@ export default async function OrdersPage({
       </header>
 
       <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
+        <Card className="border-destructive/30">
+          <CardContent className="space-y-4 p-4 sm:p-5">
+            <div className="space-y-1">
+              <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
+              <p className="text-sm text-muted-foreground">
+                Use this only when you intentionally want to wipe every order from the system.
+              </p>
+            </div>
+            <DeleteAllOrdersForm />
+          </CardContent>
+        </Card>
+
         <PaginationControls basePath="/admin/orders" currentPage={currentPage} totalPages={totalPages} />
         {orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
