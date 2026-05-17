@@ -1428,8 +1428,9 @@ main {
 .pdp-hero {
   position: relative;
   width: 100%;
-  height: 70vh;
-  min-height: 520px;
+  height: 74vh;
+  min-height: 580px;
+  --pdp-hero-focus-y: 18%;
   overflow: hidden;
 }
 
@@ -1440,7 +1441,7 @@ main {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center center;
+  object-position: center var(--pdp-hero-focus-y);
 }
 
 /* Gradient fade at hero bottom into cream */
@@ -2407,8 +2408,9 @@ main {
   }
 
   .pdp-hero {
-    height: 55vh;
-    min-height: 320px;
+    height: 60vh;
+    min-height: 360px;
+    --pdp-hero-focus-y: 14%;
   }
 
   .pdp-hero-overlay {
@@ -2462,7 +2464,7 @@ main {
 }
 
 @media (max-width: 480px) {
-  .pdp-hero         { min-height: 260px; }
+  .pdp-hero         { min-height: 300px; --pdp-hero-focus-y: 16%; }
   .pdp-product-name { font-size: 1.6rem; letter-spacing: 2px; }
   .pdp-price        { font-size: 1.5rem; }
   .pdp-btns         { flex-direction: column; }
