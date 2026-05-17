@@ -1,7 +1,9 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { requireServerEnv } from '@/lib/env.server'
 
-const secret = new TextEncoder().encode(requireServerEnv('JWT_SECRET'))
+function getJwtSecret() {
+  return new TextEncoder().encode(requireServerEnv('JWT_SECRET'))
+}
 
 export interface AdminTokenPayload {
   id: string
@@ -14,11 +16,11 @@ export async function signToken(payload: AdminTokenPayload): Promise<string> {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('8h')
-    .sign(secret)
+    .sign(getJwtSecret())
 }
 
 export async function verifyToken(token: string): Promise<AdminTokenPayload> {
-  const { payload } = await jwtVerify(token, secret)
+  const { payload } = await jwtVerify(token, getJwtSecret())
   return payload as unknown as AdminTokenPayload
 }
 
