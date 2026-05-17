@@ -25,14 +25,14 @@ const Loader = () => {
     tl.fromTo(
       textRef.current,
       { opacity: 0, y: 30, scale: 0.9 },
-      { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out" }
+      { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "power3.out" }
     );
 
     tl.to(
       progressRef.current,
       {
         width: "100%",
-        duration: 2,
+        duration: 0.6,
         ease: "power2.inOut",
         onUpdate: function () {
           if (counterRef.current) {
@@ -44,18 +44,18 @@ const Loader = () => {
       "-=0.3"
     );
 
-    tl.to({}, { duration: 0.3 });
+    tl.to({}, { duration: 0.05 });
 
     tl.to(textRef.current, {
       opacity: 0,
       y: -20,
-      duration: 0.4,
+      duration: 0.2,
       ease: "power2.in",
     });
 
     tl.to(
       overlayTopRef.current,
-      { yPercent: -100, duration: 1, ease: "power4.inOut" },
+      { yPercent: -100, duration: 0.45, ease: "power4.inOut" },
       "-=0.1"
     );
 
@@ -63,7 +63,7 @@ const Loader = () => {
       overlayBottomRef.current,
       {
         yPercent: 100,
-        duration: 1,
+        duration: 0.45,
         ease: "power4.inOut",
         onComplete: () => setVisible(false),
       },

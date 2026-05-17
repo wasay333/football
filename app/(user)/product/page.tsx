@@ -2,7 +2,7 @@ import { prisma } from "@/prisma";
 import AllProductsGrid from "@/components/all-products-grid";
 import { PaginationControls } from "@/components/pagination-controls";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 180;
 
 const PRODUCTS_PER_PAGE = 24;
 

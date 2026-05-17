@@ -17,12 +17,15 @@ const envSchemas = {
   FEDEX_TRACK_SECRET_KEY: z.string().trim().min(1).optional(),
   FEDEX_API_BASE_URL: z.string().trim().min(1).optional(),
   FEDEX_TRACK_API_BASE_URL: z.string().trim().min(1).optional(),
+  FEDEX_ACCOUNT_NUMBER: z.string().trim().min(1).optional(),
   FEDEX_GRANT_TYPE: z.string().trim().min(1).optional(),
   FEDEX_TRACK_GRANT_TYPE: z.string().trim().min(1).optional(),
   FEDEX_CHILD_KEY: z.string().trim().min(1).optional(),
   FEDEX_CHILD_SECRET: z.string().trim().min(1).optional(),
   FEDEX_TRACK_CHILD_KEY: z.string().trim().min(1).optional(),
   FEDEX_TRACK_CHILD_SECRET: z.string().trim().min(1).optional(),
+  FEDEX_REQUEST_TIMEOUT_MS: z.string().trim().min(1).optional(),
+  FEDEX_REQUEST_MAX_RETRIES: z.string().trim().min(1).optional(),
 } as const
 
 type EnvKey = keyof typeof envSchemas

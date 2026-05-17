@@ -5,6 +5,7 @@ import { prisma } from '@/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { allocateWaitingPreordersForProduct } from '@/lib/preorder-allocation'
+import { revalidateStorefront } from '@/lib/storefront-revalidate'
 import { saveUploadedFile, deleteUploadedFile } from '@/lib/upload'
 import { getAdminSession } from '@/lib/admin-session'
 
@@ -121,6 +122,7 @@ export async function createProductAction(
   }
 
   revalidatePath('/admin/products')
+  revalidateStorefront()
   redirect('/admin/products')
 }
 
@@ -225,6 +227,7 @@ export async function updateProductAction(
   await Promise.all(filesToDelete.map(deleteUploadedFile))
 
   revalidatePath('/admin/products')
+  revalidateStorefront([id])
   redirect('/admin/products')
 }
 
@@ -238,6 +241,7 @@ export async function updateProductStatusAction(
 
   await prisma.product.update({ where: { id }, data: { status } })
   revalidatePath('/admin/products')
+  revalidateStorefront([id])
 }
 
 export async function deleteProductAction(id: string): Promise<{ error?: string }> {
@@ -269,5 +273,6 @@ export async function deleteProductAction(id: string): Promise<{ error?: string 
   }
 
   revalidatePath('/admin/products')
+  revalidateStorefront([id])
   redirect('/admin/products')
 }

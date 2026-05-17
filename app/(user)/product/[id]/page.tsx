@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { isUploadedAssetPath } from "@/lib/image";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 import ProductActions from "./_components/product-actions";
 import CapGallery from "./_components/cap-gallery";
 import ReviewList from "./_components/review-list";

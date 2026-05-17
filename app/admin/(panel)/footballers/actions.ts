@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { saveUploadedFile, deleteUploadedFile } from '@/lib/upload'
 import { getAdminSession } from '@/lib/admin-session'
+import { revalidateStorefront } from '@/lib/storefront-revalidate'
 
 const FootballerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -80,6 +81,7 @@ export async function createFootballerAction(
   }
 
   revalidatePath('/admin/footballers')
+  revalidateStorefront()
   redirect('/admin/footballers')
 }
 
@@ -95,7 +97,15 @@ export async function updateFootballerAction(
   // Fetch current file paths so we can delete replaced files afterwards
   const existing = await prisma.footballer.findUnique({
     where: { id },
-    select: { profileImage: true, image1: true, image2: true, image3: true, videoUrl: true, videoThumbnail: true },
+    select: {
+      profileImage: true,
+      image1: true,
+      image2: true,
+      image3: true,
+      videoUrl: true,
+      videoThumbnail: true,
+      products: { select: { id: true } },
+    },
   })
 
   const textResult = FootballerSchema.omit({
@@ -155,6 +165,7 @@ export async function updateFootballerAction(
   await Promise.all(filesToDelete.map(deleteUploadedFile))
 
   revalidatePath('/admin/footballers')
+  revalidateStorefront(existing?.products.map((product) => product.id) ?? [])
   redirect('/admin/footballers')
 }
 
@@ -166,7 +177,15 @@ export async function deleteFootballerAction(id: string): Promise<{ error?: stri
   // Fetch file paths before deleting the record
   const existing = await prisma.footballer.findUnique({
     where: { id },
-    select: { profileImage: true, image1: true, image2: true, image3: true, videoUrl: true, videoThumbnail: true },
+    select: {
+      profileImage: true,
+      image1: true,
+      image2: true,
+      image3: true,
+      videoUrl: true,
+      videoThumbnail: true,
+      products: { select: { id: true } },
+    },
   })
 
   try {
@@ -188,5 +207,6 @@ export async function deleteFootballerAction(id: string): Promise<{ error?: stri
   }
 
   revalidatePath('/admin/footballers')
+  revalidateStorefront(existing?.products.map((product) => product.id) ?? [])
   redirect('/admin/footballers')
 }

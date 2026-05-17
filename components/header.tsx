@@ -20,6 +20,7 @@ const navLinks = [
 ];
 
 const Header = () => {
+  const homeIntroDelaySeconds = 1.4;
   const headerRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -32,7 +33,7 @@ const Header = () => {
     gsap.fromTo(
       headerRef.current,
       { y: needsDelay ? -80 : 0, opacity: 0 },
-      { y: 0, opacity: 1, duration: needsDelay ? 0.8 : 0.3, ease: "power3.out", delay: needsDelay ? 3.8 : 0 }
+      { y: 0, opacity: 1, duration: needsDelay ? 0.45 : 0.25, ease: "power3.out", delay: needsDelay ? homeIntroDelaySeconds : 0 }
     );
   }, [pathname]);
 

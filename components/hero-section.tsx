@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
 const HeroSection = () => {
+  const homeIntroDelaySeconds = 1.4;
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -18,7 +19,7 @@ const HeroSection = () => {
   }, []);
 
   useEffect(() => {
-    const tl = gsap.timeline({ delay: 3.8 });
+    const tl = gsap.timeline({ delay: homeIntroDelaySeconds });
 
     tl.fromTo(
       titleRef.current,
@@ -47,6 +48,8 @@ const HeroSection = () => {
         muted
         loop
         playsInline
+        preload="metadata"
+        poster="/search-preview.png"
         src="/football1.mp4"
       />
       <div className="hero-overlay" />

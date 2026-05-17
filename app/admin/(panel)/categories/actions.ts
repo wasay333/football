@@ -5,6 +5,7 @@ import { prisma } from '@/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getAdminSession } from '@/lib/admin-session'
+import { revalidateStorefront } from '@/lib/storefront-revalidate'
 
 function slugify(text: string) {
   return text
@@ -52,6 +53,7 @@ export async function createCategoryAction(
   }
 
   revalidatePath('/admin/categories')
+  revalidateStorefront()
   redirect('/admin/categories')
 }
 
@@ -80,7 +82,13 @@ export async function updateCategoryAction(
     return { errors: { form: ['Failed to update category.'] } }
   }
 
+  const productIds = await prisma.product.findMany({
+    where: { categoryId: id },
+    select: { id: true },
+  })
+
   revalidatePath('/admin/categories')
+  revalidateStorefront(productIds.map((product) => product.id))
   redirect('/admin/categories')
 }
 
@@ -88,6 +96,11 @@ export async function deleteCategoryAction(id: string): Promise<{ error?: string
   if (!(await getAdminSession())) {
     redirect('/admin/auth/login')
   }
+
+  const productIds = await prisma.product.findMany({
+    where: { categoryId: id },
+    select: { id: true },
+  })
 
   try {
     await prisma.category.delete({ where: { id } })
@@ -98,5 +111,6 @@ export async function deleteCategoryAction(id: string): Promise<{ error?: string
   }
 
   revalidatePath('/admin/categories')
+  revalidateStorefront(productIds.map((product) => product.id))
   redirect('/admin/categories')
 }

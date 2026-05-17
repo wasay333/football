@@ -6,6 +6,7 @@ import { buildLowStockAlertEmail } from "@/lib/email/low-stock-alert";
 import { buildOrderConfirmationEmail } from "@/lib/email/order-confirmation";
 import { getOptionalServerEnv } from "@/lib/env.server";
 import { getInitialOrderStatus, getInitialOrderStatusNote } from "@/lib/order-workflow";
+import { revalidateStorefront } from "@/lib/storefront-revalidate";
 import { prisma } from "@/prisma";
 
 type SyncOrderResult =
@@ -162,6 +163,8 @@ export async function syncOrderFromPaymentIntent(pi: Stripe.PaymentIntent): Prom
     shippingCost,
     total,
   });
+
+  revalidateStorefront(items.map((item) => item.productId))
 
   return { ok: true, orderNumber, created: true };
 }
