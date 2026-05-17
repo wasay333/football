@@ -73,8 +73,11 @@ export async function allocateWaitingPreordersForProduct(
       return (stockByProductId.get(productId) ?? 0) >= requirement.quantity
     })
 
+    // Skip blocked orders and keep checking later waiting pre-orders.
+    // This lets fully coverable orders move to READY_TO_SHIP even if an
+    // earlier order still depends on some other out-of-stock pre-order item.
     if (!canAllocateEntireOrder) {
-      break
+      continue
     }
 
     for (const [productId, requirement] of requiredByProduct.entries()) {
