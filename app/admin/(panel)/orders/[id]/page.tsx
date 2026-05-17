@@ -15,6 +15,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import type { OrderStatus } from '@prisma/client'
 import { getShipmentAvailability } from '@/lib/order-workflow'
 import { UpdateStatusForm } from './_components/update-status-form'
+import { AllocatePreorderForm } from './_components/allocate-preorder-form'
 import { CreateFedExShipmentForm } from './_components/create-fedex-shipment-form'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -152,6 +153,25 @@ export default async function OrderDetailPage({
             </div>
           </CardContent>
         </Card>
+
+        {order.isPreorder && (
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Inventory Allocation</CardTitle></CardHeader>
+            <CardContent>
+              {order.status === 'AWAITING_STOCK' ? (
+                <AllocatePreorderForm orderId={order.id} />
+              ) : order.status === 'READY_TO_SHIP' ? (
+                <p className="text-sm text-muted-foreground">
+                  Inventory has already been allocated for this pre-order. You can create the FedEx shipment now.
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Manual allocation is only available while this pre-order is in AWAITING_STOCK.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Update status */}

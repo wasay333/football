@@ -4,7 +4,6 @@ import { z } from 'zod'
 import { prisma } from '@/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { allocateWaitingPreordersForProduct } from '@/lib/preorder-allocation'
 import { revalidateStorefront } from '@/lib/storefront-revalidate'
 import { saveUploadedFile, deleteUploadedFile } from '@/lib/upload'
 import { getAdminSession } from '@/lib/admin-session'
@@ -188,31 +187,25 @@ export async function updateProductAction(
   }
 
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.product.update({
-        where: { id },
-        data: {
-          name: textResult.data.name,
-          slug: textResult.data.slug,
-          description: textResult.data.description,
-          price: textResult.data.price,
-          stock: textResult.data.stock,
-          lowStockThreshold: textResult.data.lowStockThreshold,
-          allowPreorder: textResult.data.allowPreorder,
-          status: textResult.data.status,
-          footballerId: textResult.data.footballerId,
-          categoryId: textResult.data.categoryId ?? null,
-          sizes: [],
-          mannequinImage,
-          capImage1,
-          capImage2,
-          capImage3,
-        },
-      })
-
-      if (existing && textResult.data.stock > existing.stock) {
-        await allocateWaitingPreordersForProduct(tx, id)
-      }
+    await prisma.product.update({
+      where: { id },
+      data: {
+        name: textResult.data.name,
+        slug: textResult.data.slug,
+        description: textResult.data.description,
+        price: textResult.data.price,
+        stock: textResult.data.stock,
+        lowStockThreshold: textResult.data.lowStockThreshold,
+        allowPreorder: textResult.data.allowPreorder,
+        status: textResult.data.status,
+        footballerId: textResult.data.footballerId,
+        categoryId: textResult.data.categoryId ?? null,
+        sizes: [],
+        mannequinImage,
+        capImage1,
+        capImage2,
+        capImage3,
+      },
     })
   } catch (e: unknown) {
     await Promise.all(newlyUploaded.map(deleteUploadedFile))

@@ -11,9 +11,17 @@ import {
 import { getOptionalServerEnv } from '@/lib/env.server'
 import { buildShipmentCreatedEmail } from '@/lib/email/shipment-created'
 import { getShipmentAvailability } from '@/lib/order-workflow'
+import { allocatePreorderOrder, PreorderAllocationError } from '@/lib/preorder-allocation'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/prisma'
 import { getAdminSession } from '@/lib/admin-session'
+
+export type AllocatePreorderState =
+  | {
+      error?: string
+      success?: string
+    }
+  | null
 
 export type CreateFedExShipmentState =
   | {
@@ -22,6 +30,42 @@ export type CreateFedExShipmentState =
       labelPath?: string
     }
   | null
+
+export async function allocatePreorderInventoryAction(
+  orderId: string,
+  _prevState: AllocatePreorderState,
+): Promise<AllocatePreorderState> {
+  void _prevState
+
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await allocatePreorderOrder(tx, orderId)
+    })
+  } catch (error) {
+    const message =
+      error instanceof PreorderAllocationError
+        ? error.message
+        : error instanceof Error
+          ? error.message
+          : 'Failed to allocate inventory for this pre-order.'
+
+    return { error: message }
+  }
+
+  revalidatePath(`/admin/orders/${orderId}`)
+  revalidatePath('/admin/orders')
+  revalidatePath('/product')
+  revalidatePath('/collections')
+  revalidatePath('/')
+
+  return {
+    success: 'Inventory allocated successfully. This pre-order is now ready for FedEx shipment creation.',
+  }
+}
 
 export async function createFedExShipmentAction(
   orderId: string,
