@@ -3,7 +3,7 @@ import { prisma } from "@/prisma";
 import HeroSection from "@/components/hero-section";
 import Loader from "@/components/loader";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 import PromoBanner from "@/components/promo-banner";
 import BentoBannerSection from "@/components/bento-banner-section";
 import LegendSection from "@/components/legend-section";

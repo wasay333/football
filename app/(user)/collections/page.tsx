@@ -2,7 +2,7 @@ import { prisma } from "@/prisma";
 import ShopHero from "@/components/shop-hero";
 import ProductCarousel from "@/components/product-carousel";
 
-export const revalidate = 180;
+export const dynamic = "force-dynamic";
 
 const COLLECTION_PAGE_LIMIT = 24
 
