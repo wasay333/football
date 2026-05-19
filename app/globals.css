@@ -3830,6 +3830,18 @@ main {
   color: var(--color-navy);
 }
 
+.shop-card-image-cta {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  z-index: 2;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--color-white);
+  letter-spacing: 0.4px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
 /* Card body */
 .shop-card-body {
   padding: 18px 18px 20px;
@@ -6359,6 +6371,7 @@ main {
   .shop-card-name       { font-size: 0.72rem; }
   .shop-card-price      { font-size: 0.82rem; }
   .shop-card-cta        { font-size: 0.65rem; }
+  .shop-card-image-cta  { left: 12px; bottom: 12px; font-size: 0.72rem; }
   .shop-card-body       { padding: 12px 12px 14px; }
 
   /* Section headings */

@@ -65,6 +65,8 @@ export default function AllProductsGrid({
                         {isPreorder && <span className="shop-badge shop-badge--pre">Pre-order</span>}
                         {isSoldOut && <span className="shop-badge shop-badge--sold">Sold out</span>}
                       </div>
+
+                      {isPreorder && <span className="shop-card-image-cta">{ctaLabel}</span>}
                     </div>
 
                     <div className="shop-card-body">
@@ -75,7 +77,7 @@ export default function AllProductsGrid({
 
                       <div className="shop-card-footer">
                         <span className="shop-card-price">${product.price.toFixed(2)}</span>
-                        <span className="shop-card-cta">{ctaLabel}</span>
+                        {!isPreorder && <span className="shop-card-cta">{ctaLabel}</span>}
                       </div>
                     </div>
                   </Link>
