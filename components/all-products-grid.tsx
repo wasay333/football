@@ -62,11 +62,14 @@ export default function AllProductsGrid({
                       )}
 
                       <div className="shop-card-badges">
-                        {isPreorder && <span className="shop-badge shop-badge--pre">Pre-order</span>}
                         {isSoldOut && <span className="shop-badge shop-badge--sold">Sold out</span>}
                       </div>
 
-                      {isPreorder && <span className="shop-card-image-cta">{ctaLabel}</span>}
+                      {isPreorder && (
+                        <span className="shop-badge shop-badge--pre shop-badge--image-bottom">
+                          {ctaLabel}
+                        </span>
+                      )}
                     </div>
 
                     <div className="shop-card-body">
