@@ -82,7 +82,7 @@ export default function ProductActions({
 
       {allowPreorder && stock === 0 && (
         <p className="pdp-preorder-note">
-          This item is available for pre-order. Ships when in stock.
+          Pre-order item. Delivery starts from July 10, 2026.
         </p>
       )}
     </div>

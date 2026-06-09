@@ -43,7 +43,7 @@ export default function AllProductsGrid({
               {products.map((product) => {
                 const isPreorder = product.stock === 0 && product.allowPreorder;
                 const isSoldOut = product.stock === 0 && !product.allowPreorder;
-                const ctaLabel = isPreorder ? "Pre-order now" : isSoldOut ? "View details" : "Shop now";
+                const ctaLabel = isPreorder ? "Pre-order" : isSoldOut ? "View details" : "Shop now";
 
                 return (
                   <Link key={product.id} href={`/product/${product.id}`} className="shop-card">
@@ -80,7 +80,7 @@ export default function AllProductsGrid({
 
                       <div className="shop-card-footer">
                         <span className="shop-card-price">${product.price.toFixed(2)}</span>
-                        {!isPreorder && <span className="shop-card-cta">{ctaLabel}</span>}
+                        <span className="shop-card-cta">{ctaLabel}</span>
                       </div>
                     </div>
                   </Link>

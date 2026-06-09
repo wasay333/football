@@ -23,6 +23,7 @@ type Props = {
   products: Product[];
   title?: string;
   highlight?: string;
+  notice?: string;
   variant?: "default" | "preorder";
 };
 
@@ -30,6 +31,7 @@ const BestsellingSection = ({
   products,
   title = "BEST",
   highlight = "SELLING",
+  notice,
   variant = "default",
 }: Props) => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -141,9 +143,12 @@ const BestsellingSection = ({
       className={`bestselling-section ${variant === "preorder" ? "bestselling-section--preorder" : ""}`}
     >
       <div className="bestselling-header-row">
-        <h2 ref={headingRef} className="bestselling-heading">
-          {title} <span>{highlight}</span>
-        </h2>
+        <div className="bestselling-heading-wrap">
+          <h2 ref={headingRef} className="bestselling-heading">
+            {title} <span>{highlight}</span>
+          </h2>
+          {notice && <p className="bestselling-notice">{notice}</p>}
+        </div>
 
         {shouldUseCarousel && pageCount > 1 && (
           <div className="bestselling-controls">

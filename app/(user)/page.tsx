@@ -152,6 +152,7 @@ const LandingPage = async () => {
       <BestsellingSection
         title="PRE"
         highlight="ORDER"
+        notice="Pre-order delivery starts from July 10, 2026."
         variant="preorder"
         products={preorders.map((p) => ({ ...p, price: Number(p.price) }))}
       />
