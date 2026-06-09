@@ -1316,18 +1316,18 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 118px;
-  min-height: 38px;
-  padding: 10px 18px;
-  background: var(--color-navy);
-  color: var(--color-white);
-  font-size: 0.72rem;
+  min-width: 148px;
+  min-height: 52px;
+  padding: 14px 28px;
+  background: var(--color-gold);
+  color: #050505;
+  font-size: 0.82rem;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 1.4px;
-  border-radius: 10px;
-  border: 2px solid var(--color-gold);
-  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  letter-spacing: 2px;
+  border-radius: 999px;
+  border: 2px solid #050505;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
   z-index: 2;
   white-space: nowrap;
 }
@@ -1335,9 +1335,8 @@ main {
 .legend-card-wrapper:hover .legend-buy-now,
 .legend-card-wrapper:focus-visible .legend-buy-now {
   transform: translateX(-50%) translateY(-3px);
-  background: var(--color-gold);
-  color: var(--color-navy);
-  border-color: var(--color-navy);
+  background: #050505;
+  color: var(--color-gold);
 }
 
 /* Name label below card */
@@ -4392,21 +4391,32 @@ main {
   align-items: center;
   justify-content: center;
   min-height: 30px;
-  padding: 8px 12px;
+  padding: 8px 16px;
   border-radius: 999px;
-  background: var(--color-gold);
-  color: var(--color-navy);
+  background: #111;
+  color: var(--color-white);
   font-size: 0.62rem;
   font-weight: 900;
-  letter-spacing: 0.8px;
+  letter-spacing: 1.2px;
   line-height: 1;
   text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease, color 0.2s ease;
   white-space: nowrap;
 }
 
 .psc-card:hover .psc-card-cta,
 .psc-card:focus-visible .psc-card-cta {
-  background: var(--color-white);
+  opacity: 1;
+  transform: translateY(0);
+  background: #111;
+  color: var(--color-white);
+}
+
+.psc-card:hover .psc-card-cta:hover {
+  background: var(--color-gold);
+  color: var(--color-navy);
 }
 
 /* Mobile: stack title above carousel */
@@ -4491,6 +4501,8 @@ main {
     width: 100%;
     padding: 6px 8px;
     font-size: 0.55rem;
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -5022,10 +5034,10 @@ main {
   }
 
   .legend-buy-now {
-    min-width: 108px;
-    min-height: 34px;
-    padding: 9px 15px;
-    font-size: 0.64rem;
+    min-width: 130px;
+    min-height: 46px;
+    padding: 12px 22px;
+    font-size: 0.74rem;
   }
 
   .legend-card-label {
@@ -5434,10 +5446,11 @@ main {
 
   .legend-buy-now {
     bottom: 12px;
-    min-width: 94px;
-    min-height: 30px;
-    padding: 8px 12px;
-    font-size: 0.56rem;
+    min-width: 112px;
+    min-height: 38px;
+    padding: 9px 16px;
+    font-size: 0.62rem;
+    letter-spacing: 1.4px;
   }
 
   .legend-card-label {
@@ -5887,11 +5900,11 @@ main {
 
   .legend-buy-now {
     bottom: 9px;
-    min-width: 76px;
-    min-height: 26px;
-    padding: 6px 9px;
-    font-size: 0.48rem;
-    letter-spacing: 0.7px;
+    min-width: 94px;
+    min-height: 32px;
+    padding: 7px 12px;
+    font-size: 0.52rem;
+    letter-spacing: 1px;
   }
 
   .legend-card-label {

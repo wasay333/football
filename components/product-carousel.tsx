@@ -146,6 +146,7 @@ export default function ProductCarousel({
           <div ref={trackRef} className="psc-track">
             {products.map((product) => {
               const inStock = product.stock > 0 || product.allowPreorder;
+              const ctaLabel = variant === "preorder" ? "Pre-order" : "Shop Now";
               return (
                 <Link key={product.id} href={`/product/${product.id}`} className="psc-card">
                   <div className="psc-card-img">
@@ -171,7 +172,7 @@ export default function ProductCarousel({
                     <h3 className="psc-card-name">{product.name}</h3>
                     <div className="psc-card-purchase">
                       <span className="psc-card-price">${product.price.toFixed(2)}</span>
-                      <span className="psc-card-cta">Buy Now</span>
+                      <span className="psc-card-cta">{ctaLabel}</span>
                     </div>
                   </div>
                 </Link>
