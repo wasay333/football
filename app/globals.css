@@ -262,6 +262,28 @@ main {
   align-items: center;
 }
 
+.header-shop-now {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 9px 22px;
+  border-radius: 999px;
+  background: var(--color-gold);
+  color: var(--color-navy);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.header-shop-now:hover {
+  background: var(--color-white);
+}
+
 .header-cart {
   display: flex;
   align-items: center;
@@ -314,6 +336,10 @@ main {
 }
 
 .mobile-header-actions {
+  display: none;
+}
+
+.mobile-shop-now {
   display: none;
 }
 
@@ -1256,6 +1282,10 @@ main {
   transform: rotateY(180deg);
 }
 
+.legend-card-wrapper:focus-visible .legend-card {
+  transform: rotateY(180deg);
+}
+
 /* Front face */
 .legend-card-front {
   position: absolute;
@@ -1278,23 +1308,26 @@ main {
   background: #111;
 }
 
-.legend-view-btn {
-  display: inline-block;
-  padding: 10px 28px;
+.legend-buy-now {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 132px;
+  padding: 12px 22px;
   background: var(--color-gold);
   color: var(--color-navy);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  border-radius: 24px;
-  transition: all 0.3s ease;
-  margin-top: auto;
-}
-
-.legend-view-btn:hover {
-  background: var(--color-gold-light);
-  transform: scale(1.05);
+  letter-spacing: 1.2px;
+  border-radius: 999px;
+  border: 2px solid var(--color-navy);
+  z-index: 2;
+  white-space: nowrap;
 }
 
 /* Name label below card */
@@ -4323,6 +4356,36 @@ main {
   color: var(--color-gold);
 }
 
+.psc-card-purchase {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.psc-card-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--color-gold);
+  color: var(--color-navy);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.psc-card:hover .psc-card-cta,
+.psc-card:focus-visible .psc-card-cta {
+  background: var(--color-white);
+}
+
 /* Mobile: stack title above carousel */
 @media (max-width: 768px) {
   .psc-section {
@@ -4391,6 +4454,20 @@ main {
 
   .psc-card-price {
     font-size: 0.7rem;
+  }
+
+  .psc-card-purchase {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 5px;
+  }
+
+  .psc-card-cta {
+    min-height: 26px;
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 0.55rem;
   }
 }
 
@@ -4629,28 +4706,64 @@ main {
   color: var(--color-gold);
 }
 
+.bestselling-card-purchase {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bestselling-card-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--color-gold);
+  color: var(--color-navy);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.bestselling-card-link:hover .bestselling-card-cta,
+.bestselling-card-link:focus-visible .bestselling-card-cta {
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+.bestselling-section--preorder .bestselling-card-link:hover .bestselling-card-cta,
+.bestselling-section--preorder .bestselling-card-link:focus-visible .bestselling-card-cta {
+  background: var(--color-white);
+  color: var(--color-navy-dark);
+}
+
 /* ========== FOOTER ========== */
 
 .site-footer {
   background: var(--color-cream);
-  padding: 60px 60px 0;
+  padding: 42px 60px 0;
   border-top: 1px solid var(--color-cream-dark);
 }
 
 .footer-inner {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   max-width: 1200px;
   margin: 0 auto;
-  gap: 40px;
+  gap: 32px;
 }
 
 /* Left column */
 .footer-left {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   flex: 1;
 }
 
@@ -4729,10 +4842,12 @@ main {
 /* Center column — nav */
 .footer-nav {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  flex: 0.6;
-  padding-top: 10px;
+  flex: 1;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px 24px;
+  padding-top: 0;
 }
 
 .footer-nav-link {
@@ -4765,8 +4880,8 @@ main {
 /* Bottom bar */
 .footer-bottom {
   text-align: center;
-  padding: 24px 0;
-  margin-top: 40px;
+  padding: 18px 0;
+  margin-top: 28px;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -4793,6 +4908,11 @@ main {
   .header-cart {
     padding: 8px 18px;
     font-size: 0.8rem;
+  }
+
+  .header-shop-now {
+    padding: 8px 16px;
+    font-size: 0.75rem;
   }
 
   .hero-content {
@@ -4878,9 +4998,10 @@ main {
     gap: 28px;
   }
 
-  .legend-view-btn {
-    padding: 8px 22px;
-    font-size: 0.75rem;
+  .legend-buy-now {
+    min-width: 116px;
+    padding: 10px 18px;
+    font-size: 0.7rem;
   }
 
   .legend-card-label {
@@ -4904,7 +5025,7 @@ main {
   }
 
   .site-footer {
-    padding: 50px 32px 0;
+    padding: 42px 32px 0;
   }
 
   .footer-logo {
@@ -4927,7 +5048,28 @@ main {
   .mobile-header-actions {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
+  }
+
+  .mobile-shop-now {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--color-gold);
+    color: var(--color-navy);
+    font-size: 0.74rem;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .mobile-header-actions .search-wrap--open + .mobile-shop-now {
+    display: none;
   }
 
   .site-header {
@@ -5266,9 +5408,11 @@ main {
     transform: none;
   }
 
-  .legend-view-btn {
-    padding: 8px 18px;
-    font-size: 0.7rem;
+  .legend-buy-now {
+    bottom: 14px;
+    min-width: 104px;
+    padding: 9px 14px;
+    font-size: 0.62rem;
   }
 
   .legend-card-label {
@@ -5366,6 +5510,25 @@ main {
     margin-top: 3px;
   }
 
+  .bestselling-card-purchase {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 5px;
+  }
+
+  .bestselling-card-price {
+    text-align: left;
+  }
+
+  .bestselling-card-cta {
+    min-height: 24px;
+    width: 100%;
+    padding: 6px 5px;
+    font-size: 0.48rem;
+    letter-spacing: 0.4px;
+  }
+
   .bestselling-card-meta {
     margin-bottom: 1px;
   }
@@ -5390,7 +5553,8 @@ main {
   }
 
   .footer-nav {
-    gap: 16px;
+    justify-content: center;
+    gap: 12px 18px;
     align-items: center;
   }
 
@@ -5416,6 +5580,22 @@ main {
 
   .site-header {
     padding: 10px 16px;
+  }
+
+  .mobile-header-actions {
+    gap: 6px;
+  }
+
+  .mobile-shop-now {
+    min-height: 32px;
+    padding: 7px 10px;
+    font-size: 0.68rem;
+  }
+
+  .mobile-header-actions .search-field {
+    min-width: 0;
+    width: 40vw;
+    max-width: 150px;
   }
 
   .header-logo a {
@@ -5680,9 +5860,12 @@ main {
     aspect-ratio: 3 / 4;
   }
 
-  .legend-view-btn {
-    padding: 5px 12px;
-    font-size: 0.58rem;
+  .legend-buy-now {
+    bottom: 10px;
+    min-width: 82px;
+    padding: 7px 10px;
+    font-size: 0.52rem;
+    letter-spacing: 0.8px;
   }
 
   .legend-card-label {
@@ -5754,6 +5937,12 @@ main {
 
   .bestselling-card-price {
     font-size: 1.15rem;
+  }
+
+  .bestselling-card-cta {
+    min-height: 32px;
+    padding: 9px 14px;
+    font-size: 0.66rem;
   }
 
   /* Footer */
@@ -6353,12 +6542,14 @@ main {
   .psc-card-player  { font-size: 0.44rem; letter-spacing: 0.6px; }
   .psc-card-name    { font-size: 0.58rem; }
   .psc-card-price   { font-size: 0.62rem; }
+  .psc-card-cta     { min-height: 22px; font-size: 0.48rem; padding: 5px 6px; }
   .psc-card-info    { padding: 4px 2px 0; gap: 1px; }
 
   /* Bestselling cards */
   .bestselling-card-player          { font-size: 0.42rem; }
   .bestselling-card-info h4         { font-size: 0.52rem; }
   .bestselling-card-price           { font-size: 0.6rem; }
+  .bestselling-card-cta             { min-height: 22px; font-size: 0.42rem; padding: 5px 4px; }
   .bestselling-card-info            { padding: 5px 7px 8px; }
 
   /* Shop grid cards */

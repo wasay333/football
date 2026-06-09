@@ -124,6 +124,7 @@ const LegendSection = ({ footballers }: { footballers: LegendFootballer[] }) => 
                     unoptimized={isUploadedAssetPath(footballer.products[0]?.mannequinImage)}
                     style={{ objectFit: "cover", objectPosition: "center center" }}
                   />
+                  <span className="legend-buy-now">Buy Now</span>
                 </div>
               </div>
 

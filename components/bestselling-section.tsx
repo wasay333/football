@@ -196,7 +196,10 @@ const BestsellingSection = ({
                 </div>
                 <h4>{item.name}</h4>
                 <p className="bestselling-card-desc">{item.description}</p>
-                <div className="bestselling-card-price">${Number(item.price).toFixed(2)}</div>
+                <div className="bestselling-card-purchase">
+                  <div className="bestselling-card-price">${Number(item.price).toFixed(2)}</div>
+                  <span className="bestselling-card-cta">Buy Now</span>
+                </div>
               </div>
             </div>
           </Link>

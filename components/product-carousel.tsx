@@ -169,7 +169,10 @@ export default function ProductCarousel({
                       <span className="psc-card-player">{product.footballer.name}</span>
                     )}
                     <h3 className="psc-card-name">{product.name}</h3>
-                    <span className="psc-card-price">${product.price.toFixed(2)}</span>
+                    <div className="psc-card-purchase">
+                      <span className="psc-card-price">${product.price.toFixed(2)}</span>
+                      <span className="psc-card-cta">Buy Now</span>
+                    </div>
                   </div>
                 </Link>
               );

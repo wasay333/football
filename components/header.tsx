@@ -80,6 +80,9 @@ const Header = () => {
       </nav>
 
       <div className="header-actions">
+        <Link href="/collections" className="header-shop-now">
+          Shop Now
+        </Link>
         <SearchBar />
         <Link href="/cart" className="header-cart" aria-label="Cart">
           <span className="header-cart-icon-wrap">

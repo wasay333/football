@@ -59,6 +59,9 @@ const MobileNav = () => {
     <>
       <div className="mobile-header-actions">
         <SearchBar />
+        <Link href="/collections" className="mobile-shop-now">
+          Shop Now
+        </Link>
         <button
           className={`hamburger ${open ? "open" : ""}`}
           onClick={() => setOpen(!open)}
