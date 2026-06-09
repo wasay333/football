@@ -4393,30 +4393,22 @@ main {
   min-height: 30px;
   padding: 8px 16px;
   border-radius: 999px;
-  background: #111;
-  color: var(--color-white);
+  background: var(--color-gold);
+  color: #050505;
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 1.2px;
   line-height: 1;
   text-transform: uppercase;
-  opacity: 0;
-  transform: translateY(6px);
   transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease, color 0.2s ease;
   white-space: nowrap;
 }
 
 .psc-card:hover .psc-card-cta,
 .psc-card:focus-visible .psc-card-cta {
-  opacity: 1;
-  transform: translateY(0);
-  background: #111;
-  color: var(--color-white);
-}
-
-.psc-card:hover .psc-card-cta:hover {
-  background: var(--color-gold);
-  color: var(--color-navy);
+  transform: translateY(-2px);
+  background: #050505;
+  color: var(--color-gold);
 }
 
 /* Mobile: stack title above carousel */
@@ -4501,8 +4493,6 @@ main {
     width: 100%;
     padding: 6px 8px;
     font-size: 0.55rem;
-    opacity: 1;
-    transform: none;
   }
 }
 
