@@ -1311,23 +1311,33 @@ main {
 .legend-buy-now {
   position: absolute;
   left: 50%;
-  bottom: 18px;
+  bottom: 16px;
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 132px;
-  padding: 12px 22px;
-  background: var(--color-gold);
-  color: var(--color-navy);
-  font-size: 0.78rem;
+  min-width: 118px;
+  min-height: 38px;
+  padding: 10px 18px;
+  background: var(--color-navy);
+  color: var(--color-white);
+  font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
-  border-radius: 999px;
-  border: 2px solid var(--color-navy);
+  letter-spacing: 1.4px;
+  border-radius: 10px;
+  border: 2px solid var(--color-gold);
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   z-index: 2;
   white-space: nowrap;
+}
+
+.legend-card-wrapper:hover .legend-buy-now,
+.legend-card-wrapper:focus-visible .legend-buy-now {
+  transform: translateX(-50%) translateY(-3px);
+  background: var(--color-gold);
+  color: var(--color-navy);
+  border-color: var(--color-navy);
 }
 
 /* Name label below card */
@@ -3901,6 +3911,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 14px;
   margin-top: auto;
   padding-top: 14px;
 }
@@ -3912,15 +3923,27 @@ main {
 }
 
 .shop-card-cta {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--color-gold);
-  letter-spacing: 0.5px;
-  transition: transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--color-navy);
+  color: var(--color-white);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  line-height: 1;
+  text-transform: uppercase;
+  transition: background 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
 }
 
-.shop-card:hover .shop-card-cta {
-  transform: translateX(4px);
+.shop-card:hover .shop-card-cta,
+.shop-card:focus-visible .shop-card-cta {
+  background: var(--color-gold);
+  color: var(--color-navy);
 }
 
 /* Responsive */
@@ -4999,9 +5022,10 @@ main {
   }
 
   .legend-buy-now {
-    min-width: 116px;
-    padding: 10px 18px;
-    font-size: 0.7rem;
+    min-width: 108px;
+    min-height: 34px;
+    padding: 9px 15px;
+    font-size: 0.64rem;
   }
 
   .legend-card-label {
@@ -5409,10 +5433,11 @@ main {
   }
 
   .legend-buy-now {
-    bottom: 14px;
-    min-width: 104px;
-    padding: 9px 14px;
-    font-size: 0.62rem;
+    bottom: 12px;
+    min-width: 94px;
+    min-height: 30px;
+    padding: 8px 12px;
+    font-size: 0.56rem;
   }
 
   .legend-card-label {
@@ -5861,11 +5886,12 @@ main {
   }
 
   .legend-buy-now {
-    bottom: 10px;
-    min-width: 82px;
-    padding: 7px 10px;
-    font-size: 0.52rem;
-    letter-spacing: 0.8px;
+    bottom: 9px;
+    min-width: 76px;
+    min-height: 26px;
+    padding: 6px 9px;
+    font-size: 0.48rem;
+    letter-spacing: 0.7px;
   }
 
   .legend-card-label {
@@ -6556,7 +6582,7 @@ main {
   .shop-card-footballer { font-size: 0.55rem; }
   .shop-card-name       { font-size: 0.72rem; }
   .shop-card-price      { font-size: 0.82rem; }
-  .shop-card-cta              { font-size: 0.65rem; }
+  .shop-card-cta              { min-height: 28px; padding: 7px 10px; font-size: 0.55rem; letter-spacing: 0.4px; }
   .shop-badge--image-bottom   { left: 12px; bottom: 12px; font-size: 0.56rem; padding: 4px 8px; letter-spacing: 1px; }
   .shop-card-body             { padding: 12px 12px 14px; }
 
