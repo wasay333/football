@@ -5,6 +5,7 @@ let _stripe: Stripe | null = null;
 
 export function getStripe(): Stripe {
   if (!_stripe) {
+    // Keep the Stripe client singleton stable across requests.
     _stripe = new Stripe(requireServerEnv("STRIPE_SECRET_KEY"), {
       apiVersion: "2026-02-25.clover",
     });
