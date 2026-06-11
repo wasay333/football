@@ -12,7 +12,7 @@ export function getStripe(): Stripe {
   return _stripe;
 }
 
-// Keep named export for backwards compatibility
+// Keep named  for backwards compatibility
 export const stripe = new Proxy({} as Stripe, {
   get(_target, prop) {
     return getStripe()[prop as keyof Stripe];
