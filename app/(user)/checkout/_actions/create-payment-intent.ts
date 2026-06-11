@@ -12,7 +12,7 @@ export type CartLineInput = {
   quantity: number;
 };
 
-// Shape stored  PaymentIntent metadata — prices come from DB, not the client
+// Shape stored in  PaymentIntent metadata — prices come from DB, not the client
 export type TrustedLineItem = {
   productId: string;
   name: string;
