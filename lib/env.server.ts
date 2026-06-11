@@ -5,6 +5,7 @@ import { z } from 'zod'
 const envSchemas = {
   JWT_SECRET: z.string().trim().min(1),
   STRIPE_SECRET_KEY: z.string().trim().min(1),
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().trim().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().trim().min(1).optional(),
   RESEND_API_KEY: z.string().trim().min(1).optional(),
   RESEND_FROM_EMAIL: z.string().trim().min(1).optional(),

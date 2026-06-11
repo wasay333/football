@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
+import type { Stripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { useCart } from "@/hooks/cart-context";
 import { createPaymentIntent } from "../_actions/create-payment-intent";
 import CheckoutForm from "./checkout-form";
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export type TrustedTotals = {
   subtotal: number;
@@ -21,6 +20,7 @@ export default function CheckoutWrapper() {
   const router = useRouter();
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
   const [trustedTotals, setTrustedTotals] = useState<TrustedTotals | null>(null);
   const [error, setError] = useState("");
 
@@ -36,9 +36,10 @@ export default function CheckoutWrapper() {
     ).then((res) => {
       if (res.error) {
         setError(res.error);
-      } else if (res.paymentIntentId && res.clientSecret && res.totals) {
+      } else if (res.paymentIntentId && res.clientSecret && res.publishableKey && res.totals) {
         setPaymentIntentId(res.paymentIntentId);
         setClientSecret(res.clientSecret);
+        setStripePromise(loadStripe(res.publishableKey));
         setTrustedTotals(res.totals);
       }
     });
@@ -52,7 +53,7 @@ export default function CheckoutWrapper() {
     );
   }
 
-  if (!paymentIntentId || !clientSecret || !trustedTotals) {
+  if (!paymentIntentId || !clientSecret || !stripePromise || !trustedTotals) {
     return (
       <div className="checkout-state">
         <span className="checkout-spinner checkout-spinner--dark" />

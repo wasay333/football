@@ -3,6 +3,7 @@
 import Stripe from 'stripe'
 import { z } from 'zod'
 import { stripe } from "@/lib/stripe";
+import { requireServerEnv } from "@/lib/env.server";
 import { prisma } from "@/prisma";
 import { selectCheapestFedExRateForItems } from '@/lib/fedex-shipping'
 
@@ -97,6 +98,7 @@ function normalizeCartLines(inputs: CartLineInput[]) {
 export async function createPaymentIntent(inputs: CartLineInput[]) {
   const normalizedInputs = normalizeCartLines(inputs)
   if (!normalizedInputs?.length) return { error: "Cart is empty or invalid" };
+  const publishableKey = requireServerEnv("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY");
 
   // Fetch all products in one query — server is the source of truth for price
   const products = await prisma.product.findMany({
@@ -159,6 +161,7 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
   return {
     paymentIntentId: paymentIntent.id,
     clientSecret: paymentIntent.client_secret ?? "",
+    publishableKey,
     totals: { subtotal, shipping: 0, total: subtotal },
   };
 }
