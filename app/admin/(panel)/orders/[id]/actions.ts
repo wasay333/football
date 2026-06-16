@@ -194,6 +194,7 @@ export async function createFedExShipmentAction(
     hasDownloadableLabel = Boolean(shipment.encodedLabel || shipment.labelUrl)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create FedEx shipment.'
+    console.error('FedEx shipment error:', error)
     return { error: message }
   }
 
