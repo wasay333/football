@@ -303,7 +303,7 @@ function buildShipmentPartyFromOrder(order: Order): FedExShipmentParty {
   return {
     contact: {
       name: order.customerName,
-      phone: order.customerPhone ?? "0000000000",
+      phone: order.customerPhone ?? "2025550100"
     },
     address: normalizeAddress({
       streetLines: [order.address],
