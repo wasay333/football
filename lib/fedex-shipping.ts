@@ -339,6 +339,8 @@ export async function createFedExShipment({
   if (['US', 'CA'].includes(recipient.address.countryCode) && !recipient.address.stateOrProvinceCode) {
     throw new Error('Recipient state / province code is required for US/CA shipments.')
   }
+  console.error('FedEx recipient phone:', recipient.contact?.phone)
+  console.error('FedEx shipper phone:', shipper.contact?.phone)
   const response = await fedexRequest<FedExShipReply>('/ship/v1/shipments', {
     method: 'POST',
     body: {
