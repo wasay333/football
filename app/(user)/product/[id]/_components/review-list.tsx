@@ -121,6 +121,7 @@ export default async function ReviewList({ productId }: { productId: string }) {
                       width={320}
                       height={320}
                       loading="lazy"
+                      unoptimized
                     />
                   ))}
                 </div>

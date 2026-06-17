@@ -13,9 +13,13 @@ const MAX_REVIEW_IMAGES = 3;
 
 const ReviewSchema = z.object({
   productId: z.string().min(1),
-  name: z.string().trim().min(2).max(80),
-  rating: z.coerce.number().int().min(1).max(5),
-  body: z.string().trim().min(20).max(1000),
+  name: z.string().trim().min(2, "Name must be at least 2 characters.").max(80),
+  rating: z.coerce.number().int().min(1, "Please select a star rating.").max(5),
+  body: z
+    .string()
+    .trim()
+    .min(20, "Review text must be at least 20 characters.")
+    .max(1000, "Review text must be 1000 characters or less."),
   website: z.string().max(0).optional().or(z.literal("")),
 });
 
@@ -37,7 +41,7 @@ export async function submitReview(formData: FormData) {
   });
 
   if (!result.success) {
-    return { error: "Please fill in all fields and select a rating." };
+    return { error: result.error.issues[0]?.message ?? "Please fill in all fields and select a rating." };
   }
 
   if (imageEntries.length !== imageFiles.length) {
