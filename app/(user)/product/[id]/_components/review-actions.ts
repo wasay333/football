@@ -18,7 +18,7 @@ const ReviewSchema = z.object({
   body: z
     .string()
     .trim()
-    .min(20, "Review text must be at least 20 characters.")
+    .min(2, "Please enter your review.")
     .max(1000, "Review text must be 1000 characters or less."),
   website: z.string().max(0).optional().or(z.literal("")),
 });

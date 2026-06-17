@@ -23,6 +23,15 @@ export default async function ReviewList({ productId }: { productId: string }) {
       where: { productId },
       orderBy: { createdAt: "desc" },
       take: REVIEW_LIST_LIMIT,
+      select: {
+        id: true,
+        productId: true,
+        name: true,
+        rating: true,
+        body: true,
+        images: true,
+        createdAt: true,
+      },
     }),
     prisma.review.aggregate({
       where: { productId },
@@ -113,16 +122,24 @@ export default async function ReviewList({ productId }: { productId: string }) {
               {r.images.length > 0 && (
                 <div className="pdp-review-images">
                   {r.images.map((image, index) => (
-                    <Image
+                    <a
                       key={`${r.id}-${image}`}
-                      src={image}
-                      alt={`Review photo ${index + 1} from ${r.name}`}
-                      className="pdp-review-image"
-                      width={320}
-                      height={320}
-                      loading="lazy"
-                      unoptimized
-                    />
+                      href={image}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="pdp-review-image-link"
+                      aria-label={`Open review photo ${index + 1} from ${r.name}`}
+                    >
+                      <Image
+                        src={image}
+                        alt={`Review photo ${index + 1} from ${r.name}`}
+                        className="pdp-review-image"
+                        width={320}
+                        height={320}
+                        loading="lazy"
+                        unoptimized
+                      />
+                    </a>
                   ))}
                 </div>
               )}

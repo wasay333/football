@@ -1,13 +1,16 @@
-import { Package, ShoppingCart, DollarSign, Users } from 'lucide-react'
+import Link from 'next/link'
+import { Package, ShoppingCart, DollarSign, Users, BarChart3, ExternalLink } from 'lucide-react'
 
 export const dynamic = "force-dynamic";
 
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { prisma } from '@/prisma'
@@ -23,6 +26,7 @@ export default async function DashboardPage() {
   ])
 
   const revenue = Number(revenueResult._sum.total ?? 0)
+  const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() ?? ''
 
   const stats = [
     {
@@ -78,6 +82,41 @@ export default async function DashboardPage() {
             </Card>
           ))}
         </div>
+
+        <Card>
+          <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="size-4" />
+                Google Analytics
+              </CardTitle>
+              <CardDescription>
+                Track visitors, sessions, top pages, and traffic sources from the public store.
+              </CardDescription>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href="https://analytics.google.com/" target="_blank" rel="noreferrer">
+                Open Analytics
+                <ExternalLink className="size-4" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <p className="text-sm font-medium">
+                Status: {gaMeasurementId ? 'Connected' : 'Setup needed'}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {gaMeasurementId
+                  ? `Measurement ID: ${gaMeasurementId}`
+                  : 'Add NEXT_PUBLIC_GA_MEASUREMENT_ID to your environment to start collecting visitor data.'}
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Visitor numbers will appear in Google Analytics, not in VPS bandwidth charts. Admin page visits are excluded from storefront tracking.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </>
   )

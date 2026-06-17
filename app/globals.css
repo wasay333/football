@@ -2014,6 +2014,16 @@ main {
   background: rgba(0, 0, 0, 0.04);
 }
 
+.pdp-review-image-link {
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.pdp-review-image-link:hover .pdp-review-image {
+  opacity: 0.92;
+}
+
 /* Write review form */
 .review-form-wrap {
   background: var(--color-white);
