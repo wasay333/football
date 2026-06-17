@@ -1998,6 +1998,22 @@ main {
   line-height: 1.7;
 }
 
+.pdp-review-images {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.pdp-review-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.04);
+}
+
 /* Write review form */
 .review-form-wrap {
   background: var(--color-white);
@@ -2077,6 +2093,62 @@ main {
   min-height: 110px;
 }
 
+.review-upload-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.review-upload-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.review-file-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px dashed rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: var(--color-navy);
+  background: var(--color-cream);
+}
+
+.review-file-input::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-navy);
+  color: var(--color-white);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.review-upload-help {
+  font-size: 0.76rem;
+  color: rgba(0, 0, 0, 0.58);
+}
+
+.review-upload-preview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.review-upload-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.04);
+}
+
 .review-error {
   font-size: 0.8rem;
   color: #d33;
@@ -2150,6 +2222,13 @@ main {
 .pdp-reviews-btn:hover {
   background: var(--color-navy);
   color: var(--color-white);
+}
+
+@media (max-width: 640px) {
+  .pdp-review-images,
+  .review-upload-preview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* PDP responsive */

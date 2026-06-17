@@ -117,6 +117,7 @@ model Review {
   name      String
   rating    Int      // 1–5
   body      String
+  images    String[] @default([])
   createdAt DateTime @default(now())
 
   @@index([productId, createdAt])

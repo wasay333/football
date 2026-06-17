@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { prisma } from "@/prisma";
 
 const REVIEW_LIST_LIMIT = 20;
@@ -109,6 +110,21 @@ export default async function ReviewList({ productId }: { productId: string }) {
                 </div>
               </div>
               <p className="pdp-review-body">{r.body}</p>
+              {r.images.length > 0 && (
+                <div className="pdp-review-images">
+                  {r.images.map((image, index) => (
+                    <Image
+                      key={`${r.id}-${image}`}
+                      src={image}
+                      alt={`Review photo ${index + 1} from ${r.name}`}
+                      className="pdp-review-image"
+                      width={320}
+                      height={320}
+                      loading="lazy"
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
