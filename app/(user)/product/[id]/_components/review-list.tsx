@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { prisma } from "@/prisma";
+import ReviewImageGallery from "./review-image-gallery";
 
 const REVIEW_LIST_LIMIT = 20;
 
@@ -120,28 +120,7 @@ export default async function ReviewList({ productId }: { productId: string }) {
               </div>
               <p className="pdp-review-body">{r.body}</p>
               {r.images.length > 0 && (
-                <div className="pdp-review-images">
-                  {r.images.map((image, index) => (
-                    <a
-                      key={`${r.id}-${image}`}
-                      href={image}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="pdp-review-image-link"
-                      aria-label={`Open review photo ${index + 1} from ${r.name}`}
-                    >
-                      <Image
-                        src={image}
-                        alt={`Review photo ${index + 1} from ${r.name}`}
-                        className="pdp-review-image"
-                        width={320}
-                        height={320}
-                        loading="lazy"
-                        unoptimized
-                      />
-                    </a>
-                  ))}
-                </div>
+                <ReviewImageGallery images={r.images} reviewerName={r.name} />
               )}
             </div>
           ))}
