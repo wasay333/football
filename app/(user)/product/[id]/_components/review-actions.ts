@@ -7,6 +7,9 @@ import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIpFromHeaders } from "@/lib/request-client";
 import { hasMinimumFillTime, looksLikeSeoSpam } from "@/lib/spam-protection";
+import { deleteUploadedFile, saveUploadedFile } from "@/lib/upload";
+
+const MAX_REVIEW_IMAGES = 3;
 
 const ReviewSchema = z.object({
   productId: z.string().min(1),
@@ -20,6 +23,10 @@ export async function submitReview(formData: FormData) {
   const requestHeaders = await headers();
   const clientIp = getClientIpFromHeaders(requestHeaders);
   const userAgent = requestHeaders.get("user-agent")?.trim().slice(0, 160) || "unknown";
+  const imageEntries = formData.getAll("images");
+  const imageFiles = imageEntries.filter(
+    (entry): entry is File => entry instanceof File && entry.size > 0,
+  );
 
   const result = ReviewSchema.safeParse({
     productId: formData.get("productId"),
@@ -31,6 +38,14 @@ export async function submitReview(formData: FormData) {
 
   if (!result.success) {
     return { error: "Please fill in all fields and select a rating." };
+  }
+
+  if (imageEntries.length !== imageFiles.length) {
+    return { error: "Please upload valid image files only." };
+  }
+
+  if (imageFiles.length > MAX_REVIEW_IMAGES) {
+    return { error: `You can upload up to ${MAX_REVIEW_IMAGES} review photos.` };
   }
 
   if (result.data.website || !hasMinimumFillTime(formData.get("startedAt"), 2000)) {
@@ -60,14 +75,31 @@ export async function submitReview(formData: FormData) {
     return { error: "This product is not available for reviews right now." };
   }
 
-  await prisma.review.create({
-    data: {
-      productId: result.data.productId,
-      name: result.data.name,
-      rating: result.data.rating,
-      body: result.data.body,
-    },
-  });
+  const uploadedImages: string[] = [];
+
+  try {
+    for (const file of imageFiles) {
+      uploadedImages.push(await saveUploadedFile(file, "reviews/images"));
+    }
+
+    await prisma.review.create({
+      data: {
+        productId: result.data.productId,
+        name: result.data.name,
+        rating: result.data.rating,
+        body: result.data.body,
+        images: uploadedImages,
+      },
+    });
+  } catch (error) {
+    await Promise.all(uploadedImages.map((imagePath) => deleteUploadedFile(imagePath)));
+
+    if (error instanceof Error) {
+      return { error: error.message };
+    }
+
+    return { error: "We couldn't upload your review photos. Please try again." };
+  }
 
   revalidatePath(`/product/${result.data.productId}`);
   return { success: true };

@@ -13,6 +13,11 @@ const uploadConfigs = {
     allowedMimeTypes: new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']),
     maxBytes: 10 * 1024 * 1024,
   },
+  'reviews/images': {
+    allowedExtensions: new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']),
+    allowedMimeTypes: new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']),
+    maxBytes: 5 * 1024 * 1024,
+  },
 } as const
 
 type UploadSubfolder = keyof typeof uploadConfigs

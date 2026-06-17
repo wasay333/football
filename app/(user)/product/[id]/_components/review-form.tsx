@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { submitReview } from "./review-actions";
+
+const MAX_REVIEW_IMAGES = 3;
 
 export default function ReviewForm({ productId }: { productId: string }) {
   const [rating, setRating] = useState(0);
@@ -10,7 +13,44 @@ export default function ReviewForm({ productId }: { productId: string }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [startedAt] = useState(() => Date.now());
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
+
+  function clearSelectedImages() {
+    setPreviewUrls((current) => {
+      current.forEach((url) => URL.revokeObjectURL(url));
+      return [];
+    });
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+
+    if (files.length > MAX_REVIEW_IMAGES) {
+      clearSelectedImages();
+      setErrorMsg(`You can upload up to ${MAX_REVIEW_IMAGES} review photos.`);
+      setStatus("error");
+      return;
+    }
+
+    setErrorMsg("");
+    setStatus("idle");
+    setPreviewUrls((current) => {
+      current.forEach((url) => URL.revokeObjectURL(url));
+      return files.map((file) => URL.createObjectURL(file));
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -19,6 +59,14 @@ export default function ReviewForm({ productId }: { productId: string }) {
       setStatus("error");
       return;
     }
+
+    const selectedFiles = fileInputRef.current?.files;
+    if (selectedFiles && selectedFiles.length > MAX_REVIEW_IMAGES) {
+      setErrorMsg(`You can upload up to ${MAX_REVIEW_IMAGES} review photos.`);
+      setStatus("error");
+      return;
+    }
+
     setStatus("loading");
     const fd = new FormData(e.currentTarget);
     fd.set("rating", String(rating));
@@ -30,6 +78,7 @@ export default function ReviewForm({ productId }: { productId: string }) {
       setStatus("success");
       setRating(0);
       formRef.current?.reset();
+      clearSelectedImages();
       setTimeout(() => { setOpen(false); setStatus("idle"); }, 2000);
     }
   }
@@ -100,6 +149,38 @@ export default function ReviewForm({ productId }: { productId: string }) {
             rows={4}
           />
 
+          <label className="review-upload-field">
+            <span className="review-upload-label">Add up to 3 photos</span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              name="images"
+              accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+              multiple
+              className="review-file-input"
+              onChange={handleImageChange}
+            />
+            <span className="review-upload-help">
+              JPG, PNG, WebP, AVIF, or GIF. Max 5MB each.
+            </span>
+          </label>
+
+          {previewUrls.length > 0 && (
+            <div className="review-upload-preview">
+              {previewUrls.map((url, index) => (
+                <Image
+                  key={url}
+                  src={url}
+                  alt={`Selected review photo ${index + 1}`}
+                  className="review-upload-thumb"
+                  width={160}
+                  height={160}
+                  unoptimized
+                />
+              ))}
+            </div>
+          )}
+
           {status === "error" && (
             <p className="review-error">{errorMsg}</p>
           )}
@@ -108,7 +189,13 @@ export default function ReviewForm({ productId }: { productId: string }) {
             <button
               type="button"
               className="review-cancel-btn"
-              onClick={() => { setOpen(false); setStatus("idle"); setRating(0); }}
+              onClick={() => {
+                setOpen(false);
+                setStatus("idle");
+                setRating(0);
+                setErrorMsg("");
+                clearSelectedImages();
+              }}
             >
               Cancel
             </button>
