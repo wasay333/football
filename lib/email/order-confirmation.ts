@@ -11,6 +11,8 @@ type Props = {
   customerEmail: string;
   items: Item[];
   subtotal: number;
+  discountAmount: number;
+  discountLabel: string | null;
   shippingCost: number;
   total: number;
   address: string;
@@ -51,6 +53,13 @@ export function buildOrderConfirmationEmail(p: Props): string {
     .join("");
 
   const shippingDisplay = p.shippingCost === 0 ? "Free" : `$${p.shippingCost.toFixed(2)}`;
+  const discountRow = p.discountAmount !== 0
+    ? `
+                  <tr>
+                    <td style="color:#555;font-size:14px;padding:4px 0;">${p.discountLabel || 'Price Rule'}</td>
+                    <td style="color:#111111;font-size:14px;padding:4px 0;text-align:right;">${p.discountAmount > 0 ? `-$${p.discountAmount.toFixed(2)}` : `+$${Math.abs(p.discountAmount).toFixed(2)}`}</td>
+                  </tr>`
+    : '';
   const emailTitle = isPreorderOnlyOrder ? "Pre-order Confirmed" : "Order Confirmed";
   const introCopy = isPreorderOnlyOrder
     ? "Thanks for your pre-order! We&apos;ve received your payment and reserved your order. This item is currently on pre-order, so it will ship once stock is available. We&apos;ll send you another email with your FedEx tracking link as soon as your shipment is created."
@@ -107,6 +116,7 @@ export function buildOrderConfirmationEmail(p: Props): string {
                     <td style="color:#555;font-size:14px;padding:4px 0;">Subtotal</td>
                     <td style="color:#111111;font-size:14px;padding:4px 0;text-align:right;">$${p.subtotal.toFixed(2)}</td>
                   </tr>
+                  ${discountRow}
                   <tr>
                     <td style="color:#555;font-size:14px;padding:4px 0;">Shipping</td>
                     <td style="color:#111111;font-size:14px;padding:4px 0;text-align:right;">${shippingDisplay}</td>

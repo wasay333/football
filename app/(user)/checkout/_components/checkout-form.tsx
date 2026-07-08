@@ -8,10 +8,10 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { useCart } from "@/hooks/cart-context";
-import type { TrustedTotals } from "./checkout-wrapper";
 import {
   quoteFedExShippingForPaymentIntent,
   updatePaymentIntentCustomerDetails,
+  type TrustedTotals,
 } from "../_actions/create-payment-intent";
 
 type CheckoutFormProps = {
@@ -30,8 +30,7 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
   const [shippingStatus, setShippingStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const { subtotal: totalPrice, shipping, total } = totals;
-  const qualifiesForFreeShipping = totalPrice >= 100
+  const { subtotal: totalPrice, discount, discountLabel, shipping, total } = totals;
 
   const [form, setForm] = useState({
     name: "",
@@ -47,7 +46,7 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
 
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (shippingStatus === "ready" && !qualifiesForFreeShipping) {
+    if (shippingStatus === "ready") {
       setShippingStatus("idle");
     }
   };
@@ -58,7 +57,7 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
 
     const result = await quoteFedExShippingForPaymentIntent(paymentIntentId, form);
     if (result.error || !result.totals) {
-      setErrorMsg(result.error ?? "Unable to calculate shipping right now.");
+      setErrorMsg(result.error ?? "Unable to confirm your shipping address right now.");
       setShippingStatus("error");
       return;
     }
@@ -70,8 +69,8 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!stripe || !elements) return;
-    if (!qualifiesForFreeShipping && shippingStatus !== "ready") {
-      setErrorMsg("Please calculate shipping before paying.");
+    if (shippingStatus !== "ready") {
+      setErrorMsg("Please confirm your shipping address before paying.");
       return;
     }
 
@@ -96,6 +95,18 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/success`,
+        receipt_email: form.email.trim(),
+        shipping: {
+          name: form.name.trim(),
+          phone: form.phone.trim() || undefined,
+          address: {
+            line1: form.address.trim(),
+            city: form.city.trim(),
+            state: form.state.trim() || undefined,
+            postal_code: form.postalCode.trim(),
+            country: form.country.trim().toUpperCase(),
+          },
+        },
         payment_method_data: {
           billing_details: {
             name: form.name.trim(),
@@ -210,26 +221,22 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
             </div>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            {!qualifiesForFreeShipping && (
-              <button
-                type="button"
-                className="checkout-pay-btn"
-                onClick={handleQuoteShipping}
-                disabled={shippingStatus === "loading" || status === "loading"}
-              >
-                {shippingStatus === "loading" ? (
-                  <span className="checkout-spinner" />
-                ) : (
-                  "Calculate FedEx Shipping"
-                )}
-              </button>
-            )}
+            <button
+              type="button"
+              className="checkout-pay-btn"
+              onClick={handleQuoteShipping}
+              disabled={shippingStatus === "loading" || status === "loading"}
+            >
+              {shippingStatus === "loading" ? (
+                <span className="checkout-spinner" />
+              ) : (
+                "Confirm Address"
+              )}
+            </button>
             <p className="checkout-secure-note">
-              {qualifiesForFreeShipping
-                ? "This order qualifies for free shipping. No FedEx rate quote is needed before payment."
-                : shippingStatus === "ready"
-                ? "FedEx shipping has been calculated for this address."
-                : "Shipping is quoted live from FedEx after you enter your address."}
+              {shippingStatus === "ready"
+                ? "Your address is confirmed and shipping is free for this order."
+                : "Shipping is free on every order. Confirm your address before paying."}
             </p>
           </div>
           {shippingStatus === "error" && errorMsg && <p className="checkout-error">{errorMsg}</p>}
@@ -257,7 +264,7 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
         <button
           type="submit"
           className="checkout-pay-btn"
-          disabled={!stripe || status === "loading" || (!qualifiesForFreeShipping && shippingStatus !== "ready")}
+          disabled={!stripe || status === "loading" || shippingStatus !== "ready"}
         >
           {status === "loading" ? (
             <span className="checkout-spinner" />
@@ -295,16 +302,18 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
             <span>Subtotal</span>
             <span>${totalPrice.toFixed(2)}</span>
           </div>
+          {discount !== 0 && (
+            <div className="checkout-summary-row">
+              <span>{discountLabel || "Price Rule"}</span>
+              <span>{discount > 0 ? `-$${discount.toFixed(2)}` : `+$${Math.abs(discount).toFixed(2)}`}</span>
+            </div>
+          )}
           <div className="checkout-summary-row">
             <span>Shipping</span>
             <span>
-              {qualifiesForFreeShipping
+              {shippingStatus === "ready" || shipping === 0
                 ? <span className="checkout-free">Free</span>
-                : shippingStatus === "ready"
-                ? shipping === 0
-                  ? <span className="checkout-free">Free</span>
-                  : `$${shipping.toFixed(2)}`
-                : "Calculate shipping"}
+                : "Confirm address"}
             </span>
           </div>
           <div className="checkout-summary-divider" />

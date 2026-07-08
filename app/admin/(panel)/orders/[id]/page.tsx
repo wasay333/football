@@ -143,6 +143,16 @@ export default async function OrderDetailPage({
               <div className="flex justify-between text-muted-foreground">
                 <span>Subtotal</span><span>${Number(order.subtotal).toFixed(2)}</span>
               </div>
+              {Number(order.discountAmount) !== 0 && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{order.discountLabel || 'Price Rule'}</span>
+                  <span>
+                    {Number(order.discountAmount) > 0
+                      ? `-$${Number(order.discountAmount).toFixed(2)}`
+                      : `+$${Math.abs(Number(order.discountAmount)).toFixed(2)}`}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-muted-foreground">
                 <span>Shipping</span>
                 <span>{Number(order.shippingCost) === 0 ? 'Free' : `$${Number(order.shippingCost).toFixed(2)}`}</span>

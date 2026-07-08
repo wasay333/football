@@ -108,6 +108,18 @@ model Product {
   @@index([allowPreorder, stock, createdAt])
 }
 
+model CheckoutDiscountRule {
+  id         String   @id @default(uuid())
+  name       String
+  itemCount  Int      @unique
+  fixedTotal Decimal  @db.Decimal(10, 2)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive, itemCount])
+}
+
 // ─── Reviews ─────────────────────────────────────────────────────────────────
 
 model Review {
@@ -144,6 +156,8 @@ model Order {
   country       String
   // Financials (snapshot at time of order)
   subtotal      Decimal              @db.Decimal(10, 2)
+  discountAmount Decimal             @db.Decimal(10, 2) @default(0)
+  discountLabel String?
   shippingCost  Decimal              @db.Decimal(10, 2) @default(0)
   total         Decimal              @db.Decimal(10, 2)
   shippingServiceType String?

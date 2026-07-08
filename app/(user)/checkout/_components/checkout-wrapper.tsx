@@ -6,14 +6,8 @@ import { loadStripe } from "@stripe/stripe-js";
 import type { Stripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { useCart } from "@/hooks/cart-context";
-import { createPaymentIntent } from "../_actions/create-payment-intent";
+import { createPaymentIntent, type TrustedTotals } from "../_actions/create-payment-intent";
 import CheckoutForm from "./checkout-form";
-
-export type TrustedTotals = {
-  subtotal: number;
-  shipping: number;
-  total: number;
-};
 
 export default function CheckoutWrapper() {
   const { items } = useCart();

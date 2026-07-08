@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Users, Tag, X } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Users, Tag, Percent, X } from 'lucide-react'
 
 import {
   Sidebar,
@@ -27,6 +27,7 @@ const navItems = [
   { title: 'Footballers', url: '/admin/footballers', icon: Users },
   { title: 'Products', url: '/admin/products', icon: Package },
   { title: 'Categories', url: '/admin/categories', icon: Tag },
+  { title: 'Discounts', url: '/admin/discounts', icon: Percent },
   { title: 'Orders', url: '/admin/orders', icon: ShoppingCart },
 ]
 

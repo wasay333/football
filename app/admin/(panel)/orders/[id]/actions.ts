@@ -1,5 +1,4 @@
 'use server'
-
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { Resend } from 'resend'
@@ -8,6 +7,7 @@ import {
   getConfiguredFedExServiceType,
   selectCheapestFedExRateForItems,
 } from '@/lib/fedex-shipping'
+import { normalizeCountryCode } from '@/lib/country-code'
 import { getOptionalServerEnv } from '@/lib/env.server'
 import { buildShipmentCreatedEmail } from '@/lib/email/shipment-created'
 import { getShipmentAvailability } from '@/lib/order-workflow'
@@ -102,21 +102,86 @@ export async function createFedExShipmentAction(
   let hasDownloadableLabel = false
 
   try {
-    let recipientStateOrProvinceCode = order.stateOrProvinceCode?.trim().toUpperCase() ?? ''
-    if (!recipientStateOrProvinceCode && order.paymentIntentId) {
-      try {
-        const paymentIntent = await stripe.paymentIntents.retrieve(order.paymentIntentId)
-        recipientStateOrProvinceCode =
-          paymentIntent.shipping?.address?.state?.trim().toUpperCase() ||
-          paymentIntent.metadata.customerState?.trim().toUpperCase() ||
-          ''
-      } catch {
-        recipientStateOrProvinceCode = ''
-      }
+    let paymentIntent = order.paymentIntentId
+      ? await stripe.paymentIntents.retrieve(order.paymentIntentId).catch(() => null)
+      : null
+    const latestChargeId =
+      typeof paymentIntent?.latest_charge === 'string'
+        ? paymentIntent.latest_charge
+        : paymentIntent?.latest_charge?.id
+    const latestCharge = latestChargeId
+      ? await stripe.charges.retrieve(latestChargeId).catch(() => null)
+      : null
+
+    const paymentIntentCountry = normalizeCountryCode(
+      paymentIntent?.shipping?.address?.country ||
+      paymentIntent?.metadata.customerCountry ||
+      latestCharge?.billing_details?.address?.country,
+    )
+    const recipientCountryCode =
+      normalizeCountryCode(order.country) ||
+      paymentIntentCountry
+    if (!recipientCountryCode) {
+      return { error: 'This order is still missing a destination country from checkout, so FedEx shipment creation cannot continue.' }
     }
 
-    if (['US', 'CA'].includes(order.country.toUpperCase()) && !recipientStateOrProvinceCode) {
+    let recipientStateOrProvinceCode = order.stateOrProvinceCode?.trim().toUpperCase() ?? ''
+    if (!recipientStateOrProvinceCode && paymentIntent) {
+      recipientStateOrProvinceCode =
+        paymentIntent.shipping?.address?.state?.trim().toUpperCase() ||
+        paymentIntent.metadata.customerState?.trim().toUpperCase() ||
+        latestCharge?.billing_details?.address?.state?.trim().toUpperCase() ||
+        ''
+    }
+
+    if (['US', 'CA'].includes(recipientCountryCode) && !recipientStateOrProvinceCode) {
       return { error: 'This order is missing a recipient state / province code, so FedEx cannot create the shipment yet.' }
+    }
+
+    const recipientAddress =
+      order.address ||
+      paymentIntent?.shipping?.address?.line1?.trim() ||
+      paymentIntent?.metadata.customerAddressLine1?.trim() ||
+      latestCharge?.billing_details?.address?.line1?.trim() ||
+      ''
+    const recipientCity =
+      order.city ||
+      paymentIntent?.shipping?.address?.city?.trim() ||
+      paymentIntent?.metadata.customerCity?.trim() ||
+      latestCharge?.billing_details?.address?.city?.trim() ||
+      ''
+    const recipientPostalCode =
+      order.postalCode ||
+      paymentIntent?.shipping?.address?.postal_code?.trim() ||
+      paymentIntent?.metadata.customerPostalCode?.trim() ||
+      latestCharge?.billing_details?.address?.postal_code?.trim() ||
+      ''
+    const recipientName = (order.customerName && order.customerName !== 'Guest'
+      ? order.customerName
+      : paymentIntent?.shipping?.name?.trim() ||
+        paymentIntent?.metadata.customerName?.trim() ||
+        latestCharge?.billing_details?.name?.trim() ||
+        order.customerName)
+    const recipientPhone =
+      order.customerPhone ||
+      paymentIntent?.shipping?.phone?.trim() ||
+      paymentIntent?.metadata.customerPhone?.trim() ||
+      latestCharge?.billing_details?.phone?.trim() ||
+      ''
+
+    if (!recipientAddress || !recipientCity || !recipientPostalCode) {
+      return { error: 'This order is missing checkout address details, so FedEx shipment creation cannot continue yet.' }
+    }
+
+    const shipmentOrder = {
+      ...order,
+      customerName: recipientName,
+      customerPhone: recipientPhone,
+      address: recipientAddress,
+      city: recipientCity,
+      postalCode: recipientPostalCode,
+      country: recipientCountryCode,
+      stateOrProvinceCode: recipientStateOrProvinceCode || order.stateOrProvinceCode,
     }
 
     const persistedServiceType = order.shippingServiceType?.trim()
@@ -134,11 +199,11 @@ export async function createFedExShipmentAction(
           }
         : await selectCheapestFedExRateForItems({
           recipient: {
-            city: order.city,
+            city: recipientCity,
             stateOrProvinceCode: recipientStateOrProvinceCode || undefined,
-            postalCode: order.postalCode,
-            countryCode: order.country,
-            streetLines: [order.address],
+            postalCode: recipientPostalCode,
+            countryCode: recipientCountryCode,
+            streetLines: [recipientAddress],
           },
           items: order.items.map((item) => ({
             productId: item.productId,
@@ -151,7 +216,7 @@ export async function createFedExShipmentAction(
         })
 
     const shipment = await createFedExShipment({
-      order,
+      order: shipmentOrder,
       itemQuantity: order.items.reduce((sum, item) => sum + item.quantity, 0),
       recipientStateOrProvinceCode,
       serviceType: selectedRate.serviceType,
@@ -162,6 +227,12 @@ export async function createFedExShipmentAction(
       data: {
         trackingNumber: shipment.trackingNumber,
         shippingLabelBase64: shipment.encodedLabel || undefined,
+        customerName: recipientName,
+        customerPhone: recipientPhone || undefined,
+        address: recipientAddress,
+        city: recipientCity,
+        postalCode: recipientPostalCode,
+        country: recipientCountryCode,
         stateOrProvinceCode: recipientStateOrProvinceCode || order.stateOrProvinceCode || undefined,
         shippingServiceType: selectedRate.serviceType,
         shippingServiceName: selectedRate.serviceName,

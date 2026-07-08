@@ -85,6 +85,11 @@
     text-decoration: none;
     color: inherit;
   }
+
+  :root {
+    --header-height: 68px;
+    --announcement-height: 36px;
+  }
 }
 
 /* ========== LOADER ========== */
@@ -176,7 +181,7 @@
 
 /* Push all page content below the fixed header */
 main {
-  padding-top: 68px;
+  padding-top: calc(68px + var(--announcement-height));
 }
 
 .site-shell,
@@ -190,6 +195,68 @@ main {
 
 .home-page > * {
   max-width: 100%;
+}
+
+/* ========== ANNOUNCEMENT BAR ========== */
+.announcement-bar {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  width: 100%;
+  min-height: var(--announcement-height);
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: linear-gradient(90deg, #d8b45a 0%, #f5e2a9 50%, #d8b45a 100%);
+  color: var(--color-navy-dark);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.announcement-bar__track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 0;
+  white-space: nowrap;
+  will-change: transform;
+  animation: announcement-scroll 12s linear infinite;
+}
+
+.announcement-bar__text {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 0 0 auto;
+  gap: 18px;
+  margin: 0;
+  padding: 8px 40px;
+  text-align: center;
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.announcement-bar__divider {
+  opacity: 0.7;
+}
+
+@keyframes announcement-scroll {
+  from {
+    transform: translate3d(-33.333%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-bar__track {
+    animation: none;
+  }
 }
 
 /* ========== HEADER ========== */
@@ -5768,6 +5835,22 @@ main {
 
 /* Mobile phones */
 @media (max-width: 480px) {
+  :root {
+    --header-height: 52px;
+    --announcement-height: 44px;
+  }
+
+  .announcement-bar {
+    justify-content: flex-start;
+  }
+
+  .announcement-bar__text {
+    gap: 10px;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    padding: 8px 18px;
+  }
+
   .search-panel {
     top: 56px;
     border-radius: 12px;

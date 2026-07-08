@@ -4,9 +4,11 @@ import { Resend } from "resend";
 import type { TrustedLineItem } from "@/app/(user)/checkout/_actions/create-payment-intent";
 import { buildLowStockAlertEmail } from "@/lib/email/low-stock-alert";
 import { buildOrderConfirmationEmail } from "@/lib/email/order-confirmation";
+import { normalizeCountryCode } from "@/lib/country-code";
 import { getOptionalServerEnv } from "@/lib/env.server";
 import { getInitialOrderStatus, getInitialOrderStatusNote } from "@/lib/order-workflow";
 import { revalidateStorefront } from "@/lib/storefront-revalidate";
+import { stripe } from "@/lib/stripe";
 import { prisma } from "@/prisma";
 
 type SyncOrderResult =
@@ -21,12 +23,25 @@ class InsufficientStockError extends Error {
 }
 
 export async function syncOrderFromPaymentIntent(pi: Stripe.PaymentIntent): Promise<SyncOrderResult> {
+  const customerSnapshot = await extractCustomerSnapshot(pi);
   const existing = await prisma.order.findUnique({
     where: { paymentIntentId: pi.id },
-    select: { orderNumber: true },
+    select: {
+      id: true,
+      orderNumber: true,
+      customerName: true,
+      customerEmail: true,
+      customerPhone: true,
+      address: true,
+      city: true,
+      stateOrProvinceCode: true,
+      postalCode: true,
+      country: true,
+    },
   });
 
   if (existing) {
+    await backfillOrderCustomerSnapshot(existing.id, existing, customerSnapshot)
     return { ok: true, orderNumber: existing.orderNumber, created: false };
   }
 
@@ -36,8 +51,10 @@ export async function syncOrderFromPaymentIntent(pi: Stripe.PaymentIntent): Prom
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discountAmount = Number(pi.metadata.discountAmount || 0);
+  const discountLabel = pi.metadata.discountLabel?.trim() || null;
   const shippingCost = Number(pi.metadata.fedexShippingAmount || 0);
-  const total = subtotal + shippingCost;
+  const total = subtotal - discountAmount + shippingCost;
   const isPreorder = items.some((item) => item.isPreorder);
   const initialStatus = getInitialOrderStatus(isPreorder);
   const orderNumber = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${pi.id.slice(-6).toUpperCase()}`;
@@ -50,17 +67,6 @@ export async function syncOrderFromPaymentIntent(pi: Stripe.PaymentIntent): Prom
     return acc;
   }, {});
 
-  const customerName = firstNonEmpty(shipping?.name, pi.metadata.customerName, "Guest");
-  const customerEmail = firstNonEmpty(pi.receipt_email, pi.metadata.customerEmail);
-  const customerPhone = firstNonEmpty(shipping?.phone, pi.metadata.customerPhone);
-  const address = firstNonEmpty(shipping?.address?.line1, pi.metadata.customerAddressLine1);
-  const city = firstNonEmpty(shipping?.address?.city, pi.metadata.customerCity);
-  const stateOrProvinceCode = firstNonEmpty(
-    shipping?.address?.state,
-    pi.metadata.customerState,
-  ).toUpperCase();
-  const postalCode = firstNonEmpty(shipping?.address?.postal_code, pi.metadata.customerPostalCode);
-  const country = firstNonEmpty(shipping?.address?.country, pi.metadata.customerCountry);
   const shippingServiceType = firstNonEmpty(pi.metadata.fedexServiceType);
   const shippingServiceName = firstNonEmpty(pi.metadata.fedexServiceName);
   const shippingCurrency = firstNonEmpty(pi.metadata.fedexShippingCurrency, shippingCost > 0 ? 'USD' : '');
@@ -91,15 +97,17 @@ export async function syncOrderFromPaymentIntent(pi: Stripe.PaymentIntent): Prom
           status: initialStatus,
           paymentIntentId: pi.id,
           isPreorder,
-          customerName,
-          customerEmail,
-          customerPhone,
-          address,
-          city,
-          stateOrProvinceCode,
-          postalCode,
-          country,
+          customerName: customerSnapshot.customerName,
+          customerEmail: customerSnapshot.customerEmail,
+          customerPhone: customerSnapshot.customerPhone,
+          address: customerSnapshot.address,
+          city: customerSnapshot.city,
+          stateOrProvinceCode: customerSnapshot.stateOrProvinceCode,
+          postalCode: customerSnapshot.postalCode,
+          country: customerSnapshot.country,
           subtotal,
+          discountAmount,
+          discountLabel,
           shippingCost,
           total,
           shippingServiceType,
@@ -153,13 +161,15 @@ export async function syncOrderFromPaymentIntent(pi: Stripe.PaymentIntent): Prom
     pi,
     items,
     orderNumber,
-    customerName,
-    customerEmail,
-    address,
-    city,
-    postalCode,
-    country,
+    customerName: customerSnapshot.customerName,
+    customerEmail: customerSnapshot.customerEmail,
+    address: customerSnapshot.address,
+    city: customerSnapshot.city,
+    postalCode: customerSnapshot.postalCode,
+    country: customerSnapshot.country,
     subtotal,
+    discountAmount,
+    discountLabel,
     shippingCost,
     total,
   });
@@ -167,6 +177,135 @@ export async function syncOrderFromPaymentIntent(pi: Stripe.PaymentIntent): Prom
   revalidateStorefront(items.map((item) => item.productId))
 
   return { ok: true, orderNumber, created: true };
+}
+
+async function extractCustomerSnapshot(pi: Stripe.PaymentIntent) {
+  const shipping = pi.shipping
+  const billing = await extractChargeBillingDetails(pi)
+
+  return {
+    customerName: firstNonEmpty(shipping?.name, pi.metadata.customerName, billing.name, "Guest"),
+    customerEmail: firstNonEmpty(pi.receipt_email, pi.metadata.customerEmail, billing.email),
+    customerPhone: firstNonEmpty(shipping?.phone, pi.metadata.customerPhone, billing.phone),
+    address: firstNonEmpty(shipping?.address?.line1, pi.metadata.customerAddressLine1, billing.address.line1),
+    city: firstNonEmpty(shipping?.address?.city, pi.metadata.customerCity, billing.address.city),
+    stateOrProvinceCode: firstNonEmpty(
+      shipping?.address?.state,
+      pi.metadata.customerState,
+      billing.address.state,
+    ).toUpperCase(),
+    postalCode: firstNonEmpty(
+      shipping?.address?.postal_code,
+      pi.metadata.customerPostalCode,
+      billing.address.postal_code,
+    ),
+    country: normalizeCountryCode(
+      firstNonEmpty(shipping?.address?.country, pi.metadata.customerCountry, billing.address.country),
+    ),
+  }
+}
+
+async function extractChargeBillingDetails(pi: Stripe.PaymentIntent) {
+  const latestChargeId =
+    typeof pi.latest_charge === "string"
+      ? pi.latest_charge
+      : pi.latest_charge?.id
+
+  if (!latestChargeId) {
+    return {
+      name: "",
+      email: "",
+      phone: "",
+      address: {
+        line1: "",
+        city: "",
+        state: "",
+        postal_code: "",
+        country: "",
+      },
+    }
+  }
+
+  try {
+    const charge = await stripe.charges.retrieve(latestChargeId)
+    return {
+      name: firstNonEmpty(charge.billing_details?.name),
+      email: firstNonEmpty(charge.billing_details?.email),
+      phone: firstNonEmpty(charge.billing_details?.phone),
+      address: {
+        line1: firstNonEmpty(charge.billing_details?.address?.line1),
+        city: firstNonEmpty(charge.billing_details?.address?.city),
+        state: firstNonEmpty(charge.billing_details?.address?.state),
+        postal_code: firstNonEmpty(charge.billing_details?.address?.postal_code),
+        country: firstNonEmpty(charge.billing_details?.address?.country),
+      },
+    }
+  } catch (error) {
+    console.error(`Failed to load billing details from latest charge for PaymentIntent ${pi.id}:`, error)
+    return {
+      name: "",
+      email: "",
+      phone: "",
+      address: {
+        line1: "",
+        city: "",
+        state: "",
+        postal_code: "",
+        country: "",
+      },
+    }
+  }
+}
+
+async function backfillOrderCustomerSnapshot(
+  orderId: string,
+  existing: {
+    customerName: string
+    customerEmail: string
+    customerPhone: string | null
+    address: string
+    city: string
+    stateOrProvinceCode: string | null
+    postalCode: string
+    country: string
+  },
+  snapshot: Awaited<ReturnType<typeof extractCustomerSnapshot>>,
+) {
+  const updates: Record<string, string> = {}
+
+  if ((!existing.customerName || existing.customerName === 'Guest') && snapshot.customerName && snapshot.customerName !== 'Guest') {
+    updates.customerName = snapshot.customerName
+  }
+  if (!existing.customerEmail && snapshot.customerEmail) {
+    updates.customerEmail = snapshot.customerEmail
+  }
+  if (!existing.customerPhone && snapshot.customerPhone) {
+    updates.customerPhone = snapshot.customerPhone
+  }
+  if (!existing.address && snapshot.address) {
+    updates.address = snapshot.address
+  }
+  if (!existing.city && snapshot.city) {
+    updates.city = snapshot.city
+  }
+  if (!existing.stateOrProvinceCode && snapshot.stateOrProvinceCode) {
+    updates.stateOrProvinceCode = snapshot.stateOrProvinceCode
+  }
+  if (!existing.postalCode && snapshot.postalCode) {
+    updates.postalCode = snapshot.postalCode
+  }
+  if (!existing.country && snapshot.country) {
+    updates.country = snapshot.country
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return
+  }
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: updates,
+  })
 }
 
 async function sendOrderEmails({
@@ -180,6 +319,8 @@ async function sendOrderEmails({
   postalCode,
   country,
   subtotal,
+  discountAmount,
+  discountLabel,
   shippingCost,
   total,
 }: {
@@ -193,6 +334,8 @@ async function sendOrderEmails({
   postalCode: string;
   country: string;
   subtotal: number;
+  discountAmount: number;
+  discountLabel: string | null;
   shippingCost: number;
   total: number;
 }) {
@@ -251,6 +394,8 @@ async function sendOrderEmails({
           isPreorder: item.isPreorder,
         })),
         subtotal,
+        discountAmount,
+        discountLabel,
         shippingCost,
         total,
         address,

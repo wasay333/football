@@ -58,7 +58,8 @@ async function handlePaymentSuccess(pi: Stripe.PaymentIntent) {
     hasShipping: Boolean(pi.shipping),
   });
 
-  const result = await syncOrderFromPaymentIntent(pi);
+  const latestPaymentIntent = await stripe.paymentIntents.retrieve(pi.id);
+  const result = await syncOrderFromPaymentIntent(latestPaymentIntent);
   if (!result.ok) {
     console.warn(`[stripe-webhook] Unable to create order for PaymentIntent ${pi.id}: ${result.reason}`);
     return;

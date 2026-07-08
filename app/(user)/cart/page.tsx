@@ -5,13 +5,8 @@ import Link from "next/link";
 import { useCart } from "@/hooks/cart-context";
 import { isUploadedAssetPath } from "@/lib/image";
 
-const FREE_SHIPPING_THRESHOLD = 100;
-
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
-
-  const qualifiesForFreeShipping = totalPrice >= FREE_SHIPPING_THRESHOLD || totalPrice === 0;
-  const toFreeShipping = FREE_SHIPPING_THRESHOLD - totalPrice;
 
   if (items.length === 0) {
     return (
@@ -35,7 +30,7 @@ export default function CartPage() {
 
   return (
     <div className="cart-page">
-      {/* ── Hero bar ── */}
+      {/* Hero bar */}
       <div className="cart-hero">
         <div className="cart-hero-inner">
           <div>
@@ -46,36 +41,10 @@ export default function CartPage() {
         </div>
       </div>
 
-      {/* ── Free-shipping progress bar ── */}
-      {totalPrice > 0 && (
-        <div className="cart-progress-bar-wrap">
-          <div className="cart-progress-bar-inner">
-            {toFreeShipping > 0 ? (
-              <p className="cart-progress-label">
-                Add <strong>${toFreeShipping.toFixed(2)}</strong> more for free shipping
-              </p>
-            ) : (
-              <p className="cart-progress-label cart-progress-label--done">
-                ✓ You qualify for free shipping!
-              </p>
-            )}
-            <div className="cart-progress-track">
-              <div
-                className="cart-progress-fill"
-                style={{ width: `${Math.min((totalPrice / FREE_SHIPPING_THRESHOLD) * 100, 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Body ── */}
       <div className="cart-body">
-        {/* Items */}
         <div className="cart-items">
           {items.map((item) => (
             <div key={item.productId} className="cart-item">
-              {/* Image */}
               <div className="cart-item-img">
                 <Image
                   src={item.image}
@@ -87,9 +56,7 @@ export default function CartPage() {
                 />
               </div>
 
-              {/* Content */}
               <div className="cart-item-body">
-                {/* Top row */}
                 <div className="cart-item-top">
                   <div className="cart-item-meta">
                     <p className="cart-item-name">{item.name}</p>
@@ -112,14 +79,13 @@ export default function CartPage() {
                   </button>
                 </div>
 
-                {/* Bottom row */}
                 <div className="cart-item-bottom">
                   <div className="cart-item-qty">
                     <button
                       className="cart-qty-btn"
                       onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                       disabled={item.quantity <= 1}
-                    >−</button>
+                    >-</button>
                     <span className="cart-qty-val">{item.quantity}</span>
                     <button
                       className="cart-qty-btn"
@@ -132,10 +98,9 @@ export default function CartPage() {
             </div>
           ))}
 
-          <Link href="/product" className="cart-continue-link">← Continue Shopping</Link>
+          <Link href="/product" className="cart-continue-link">Back to Shopping</Link>
         </div>
 
-        {/* Summary */}
         <div className="cart-summary">
           <h2 className="cart-summary-title">Order Summary</h2>
 
@@ -146,29 +111,19 @@ export default function CartPage() {
             </div>
             <div className="cart-summary-row">
               <span>Shipping</span>
-              <span>
-                {qualifiesForFreeShipping
-                  ? <span className="cart-free">Free</span>
-                  : "Calculated according to distance"}
-              </span>
+              <span className="cart-free">Free</span>
             </div>
           </div>
 
           <div className="cart-summary-divider" />
 
           <div className="cart-summary-total">
-            <span>{qualifiesForFreeShipping ? "Total" : "Subtotal Before Shipping"}</span>
-            <span>
-              {qualifiesForFreeShipping
-                ? `$${totalPrice.toFixed(2)}`
-                : `$${totalPrice.toFixed(2)}`}
-            </span>
+            <span>Total</span>
+            <span>${totalPrice.toFixed(2)}</span>
           </div>
 
           <p className="cart-summary-note">
-            {qualifiesForFreeShipping
-              ? "Taxes and duties calculated at checkout"
-              : "Shipping cost will be calculated according to the delivery distance at checkout."}
+            Free shipping is included on every order.
           </p>
 
           <Link href="/checkout" className="cart-checkout-btn">

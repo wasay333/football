@@ -4,8 +4,8 @@ import Stripe from 'stripe'
 import { z } from 'zod'
 import { stripe } from "@/lib/stripe";
 import { requireServerEnv } from "@/lib/env.server";
+import { calculateCheckoutTotals } from '@/lib/checkout-discounts';
 import { prisma } from "@/prisma";
-import { selectCheapestFedExRateForItems } from '@/lib/fedex-shipping'
 
 export type CartLineInput = {
   productId: string;
@@ -22,6 +22,14 @@ export type TrustedLineItem = {
   isPreorder: boolean;
 };
 
+export type TrustedTotals = {
+  subtotal: number;
+  discount: number;
+  shipping: number;
+  total: number;
+  discountLabel: string | null;
+};
+
 export type CheckoutCustomerDetails = {
   name: string;
   email: string;
@@ -32,17 +40,6 @@ export type CheckoutCustomerDetails = {
   postalCode: string;
   country: string;
 };
-
-export type CheckoutShippingQuote = {
-  serviceType: string
-  serviceName: string
-  amount: number
-  currency: string
-  deliveryTimestamp?: string
-  transitTime?: string
-}
-
-const FREE_SHIPPING_THRESHOLD = 100
 
 const paymentIntentIdSchema = z
   .string()
@@ -142,10 +139,8 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
     });
   }
 
-  const subtotalPence = Math.round(
-    lines.reduce((s, i) => s + i.price * i.quantity, 0) * 100
-  );
-  const total = subtotalPence;
+  const totals = await calculateCheckoutTotals(lines)
+  const total = Math.round(totals.total * 100)
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: total,
@@ -153,16 +148,16 @@ export async function createPaymentIntent(inputs: CartLineInput[]) {
     payment_method_types: ["card"],
     metadata: {
       items: JSON.stringify(lines),
+      discountAmount: totals.discount.toFixed(2),
+      discountLabel: totals.discountLabel ?? '',
     },
   });
-
-  const subtotal = subtotalPence / 100;
 
   return {
     paymentIntentId: paymentIntent.id,
     clientSecret: paymentIntent.client_secret ?? "",
     publishableKey,
-    totals: { subtotal, shipping: 0, total: subtotal },
+    totals,
   };
 }
 
@@ -241,6 +236,25 @@ function buildStripeCustomerUpdate(normalized: ReturnType<typeof normalizeCustom
   } satisfies Pick<Stripe.PaymentIntentUpdateParams, 'receipt_email' | 'shipping'>
 }
 
+function hasPersistedCustomerDetails(paymentIntent: Stripe.PaymentIntent) {
+  const shipping = paymentIntent.shipping
+  const metadata = paymentIntent.metadata
+
+  return Boolean(
+    shipping?.name?.trim() &&
+    shipping.address?.line1?.trim() &&
+    shipping.address?.city?.trim() &&
+    shipping.address?.postal_code?.trim() &&
+    shipping.address?.country?.trim() &&
+    metadata.customerName?.trim() &&
+    metadata.customerEmail?.trim() &&
+    metadata.customerAddressLine1?.trim() &&
+    metadata.customerCity?.trim() &&
+    metadata.customerPostalCode?.trim() &&
+    metadata.customerCountry?.trim()
+  )
+}
+
 export async function quoteFedExShippingForPaymentIntent(
   paymentIntentId: string,
   customer: CheckoutCustomerDetails
@@ -269,83 +283,35 @@ export async function quoteFedExShippingForPaymentIntent(
   }
 
   const { paymentIntent, items } = await getTrustedLineItemsFromPaymentIntent(paymentIntentId)
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const subtotalCents = Math.round(subtotal * 100)
-
-  if (subtotal >= FREE_SHIPPING_THRESHOLD) {
-    await stripe.paymentIntents.update(paymentIntentId, {
-      amount: subtotalCents,
-      ...buildStripeCustomerUpdate(normalized),
-      metadata: {
-        ...buildCustomerShippingMetadata(normalized),
-        fedexServiceType: '',
-        fedexServiceName: '',
-        fedexShippingAmount: '0.00',
-        fedexShippingCurrency: 'USD',
-        fedexDeliveryTimestamp: '',
-        fedexTransitTime: '',
-      },
-    })
-
-    return {
-      ok: true,
-      totals: {
-        subtotal,
-        shipping: 0,
-        total: subtotal,
-      },
-      quote: null,
-      paymentIntentId: paymentIntent.id,
-    }
-  }
-
-  let quote: CheckoutShippingQuote
-  try {
-    quote = await selectCheapestFedExRateForItems({
-      recipient: {
-        city: normalized.city,
-        stateOrProvinceCode: normalized.state || undefined,
-        postalCode: normalized.postalCode,
-        countryCode: normalized.country,
-        streetLines: [normalized.address],
-      },
-      items,
-    })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'FedEx shipping quote failed.'
-    return { error: message }
-  }
-
-  const shippingCents = Math.round(quote.amount * 100)
-  const totalCents = subtotalCents + shippingCents
+  const totals = await calculateCheckoutTotals(items)
 
   await stripe.paymentIntents.update(paymentIntentId, {
-    amount: totalCents,
+    amount: Math.round(totals.total * 100),
     ...buildStripeCustomerUpdate(normalized),
     metadata: {
+      items: JSON.stringify(items),
       ...buildCustomerShippingMetadata(normalized),
-      fedexServiceType: quote.serviceType,
-      fedexServiceName: quote.serviceName,
-      fedexShippingAmount: quote.amount.toFixed(2),
-      fedexShippingCurrency: quote.currency,
-      fedexDeliveryTimestamp: quote.deliveryTimestamp ?? '',
-      fedexTransitTime: quote.transitTime ?? '',
+      discountAmount: totals.discount.toFixed(2),
+      discountLabel: totals.discountLabel ?? '',
+      fedexServiceType: '',
+      fedexServiceName: '',
+      fedexShippingAmount: '0.00',
+      fedexShippingCurrency: 'USD',
+      fedexDeliveryTimestamp: '',
+      fedexTransitTime: '',
     },
   });
 
-  const updatedIntent = paymentIntent.id
-    ? await stripe.paymentIntents.retrieve(paymentIntentId)
-    : paymentIntent
+  const verifiedPaymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+  if (!hasPersistedCustomerDetails(verifiedPaymentIntent)) {
+    return { error: 'We could not save your shipping address. Please try confirming your address again.' }
+  }
 
   return {
     ok: true,
-    totals: {
-      subtotal,
-      shipping: quote.amount,
-      total: subtotal + quote.amount,
-    },
-    quote,
-    paymentIntentId: updatedIntent.id,
+    totals,
+    quote: null,
+    paymentIntentId: paymentIntent.id,
   };
 }
 
@@ -383,42 +349,27 @@ export async function updatePaymentIntentCustomerDetails(
     return { error: 'Checkout session was not found.' }
   }
 
-  if (!paymentIntent.metadata.fedexServiceType || !paymentIntent.metadata.fedexShippingAmount) {
-    const { items } = await getTrustedLineItemsFromPaymentIntent(paymentIntentId)
-    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    if (subtotal < FREE_SHIPPING_THRESHOLD) {
-      return { error: 'Please calculate shipping before paying.' }
-    }
-
-    await stripe.paymentIntents.update(paymentIntentId, {
-      amount: Math.round(subtotal * 100),
-      ...buildStripeCustomerUpdate(normalized),
-      metadata: {
-        ...buildCustomerShippingMetadata(normalized),
-        fedexServiceType: '',
-        fedexServiceName: '',
-        fedexShippingAmount: '0.00',
-        fedexShippingCurrency: 'USD',
-        fedexDeliveryTimestamp: '',
-        fedexTransitTime: '',
-      },
-    })
-
-    return { ok: true }
-  }
-
   await stripe.paymentIntents.update(paymentIntentId, {
+    amount: paymentIntent.amount,
     ...buildStripeCustomerUpdate(normalized),
     metadata: {
+      items: paymentIntent.metadata.items ?? '[]',
+      discountAmount: paymentIntent.metadata.discountAmount ?? '0.00',
+      discountLabel: paymentIntent.metadata.discountLabel ?? '',
       ...buildCustomerShippingMetadata(normalized),
-      fedexServiceType: paymentIntent.metadata.fedexServiceType ?? '',
-      fedexServiceName: paymentIntent.metadata.fedexServiceName ?? '',
-      fedexShippingAmount: paymentIntent.metadata.fedexShippingAmount ?? '',
-      fedexShippingCurrency: paymentIntent.metadata.fedexShippingCurrency ?? 'USD',
-      fedexDeliveryTimestamp: paymentIntent.metadata.fedexDeliveryTimestamp ?? '',
-      fedexTransitTime: paymentIntent.metadata.fedexTransitTime ?? '',
+      fedexServiceType: '',
+      fedexServiceName: '',
+      fedexShippingAmount: '0.00',
+      fedexShippingCurrency: 'USD',
+      fedexDeliveryTimestamp: '',
+      fedexTransitTime: '',
     },
   })
+
+  const verifiedPaymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+  if (!hasPersistedCustomerDetails(verifiedPaymentIntent)) {
+    return { error: 'We could not save your shipping address. Please confirm your address again before paying.' }
+  }
 
   return { ok: true };
 }

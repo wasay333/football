@@ -1,5 +1,6 @@
 import type { Order } from '@prisma/client'
 import type { TrustedLineItem } from '@/app/(user)/checkout/_actions/create-payment-intent'
+import { normalizeCountryCode } from '@/lib/country-code'
 import { fedexRequest, getFedExConfig } from '@/lib/fedex'
 
 type FedExContact = {
@@ -198,12 +199,17 @@ function getLineItemQuantity(lineItems: Array<{ quantity: number }>) {
 }
 
 function normalizeAddress(address: FedExAddress): FedExAddress {
+  const countryCode = normalizeCountryCode(address.countryCode)
+  if (!countryCode) {
+    throw new Error('Destination country code is invalid or missing. Please refer to documentation for valid format.')
+  }
+
   return {
     streetLines: address.streetLines?.filter(Boolean),
     city: address.city.trim(),
     stateOrProvinceCode: address.stateOrProvinceCode?.trim().toUpperCase() || undefined,
     postalCode: address.postalCode.trim(),
-    countryCode: address.countryCode.trim().toUpperCase(),
+    countryCode,
   }
 }
 
