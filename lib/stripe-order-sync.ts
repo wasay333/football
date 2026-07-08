@@ -58,7 +58,6 @@ export async function syncOrderFromPaymentIntent(pi: Stripe.PaymentIntent): Prom
   const isPreorder = items.some((item) => item.isPreorder);
   const initialStatus = getInitialOrderStatus(isPreorder);
   const orderNumber = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${pi.id.slice(-6).toUpperCase()}`;
-  const shipping = pi.shipping;
   const nonPreorderQuantities = items.reduce<Record<string, number>>((acc, item) => {
     if (!item.isPreorder) {
       acc[item.productId] = (acc[item.productId] ?? 0) + item.quantity;

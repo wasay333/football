@@ -102,7 +102,7 @@ export async function createFedExShipmentAction(
   let hasDownloadableLabel = false
 
   try {
-    let paymentIntent = order.paymentIntentId
+    const paymentIntent = order.paymentIntentId
       ? await stripe.paymentIntents.retrieve(order.paymentIntentId).catch(() => null)
       : null
     const latestChargeId =
