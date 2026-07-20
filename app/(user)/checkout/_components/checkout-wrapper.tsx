@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import type { Stripe } from "@stripe/stripe-js";
@@ -12,6 +12,7 @@ import CheckoutForm from "./checkout-form";
 export default function CheckoutWrapper() {
   const { items } = useCart();
   const router = useRouter();
+  const hasInitialized = useRef(false);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
@@ -19,25 +20,33 @@ export default function CheckoutWrapper() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (hasInitialized.current) {
+      return;
+    }
+
     if (!items.length) {
       router.replace("/cart");
       return;
     }
 
-    // Send only productId + quantity — backend fetches trusted prices from DB
+    hasInitialized.current = true;
+
     createPaymentIntent(
-      items.map((i) => ({ productId: i.productId, quantity: i.quantity }))
+      items.map((item) => ({ productId: item.productId, quantity: item.quantity }))
     ).then((res) => {
       if (res.error) {
         setError(res.error);
-      } else if (res.paymentIntentId && res.clientSecret && res.publishableKey && res.totals) {
+        return;
+      }
+
+      if (res.paymentIntentId && res.clientSecret && res.publishableKey && res.totals) {
         setPaymentIntentId(res.paymentIntentId);
         setClientSecret(res.clientSecret);
         setStripePromise(loadStripe(res.publishableKey));
         setTrustedTotals(res.totals);
       }
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [items, router]);
 
   if (error) {
     return (

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { stripe } from "@/lib/stripe";
 import { requireServerEnv } from "@/lib/env.server";
 import { calculateCheckoutTotals } from '@/lib/checkout-discounts';
+import { selectCheapestFedExRateForItems } from '@/lib/fedex-shipping';
 import { prisma } from "@/prisma";
 
 export type CartLineInput = {
@@ -283,7 +284,24 @@ export async function quoteFedExShippingForPaymentIntent(
   }
 
   const { paymentIntent, items } = await getTrustedLineItemsFromPaymentIntent(paymentIntentId)
-  const totals = await calculateCheckoutTotals(items)
+  let cheapestQuote
+  try {
+    cheapestQuote = await selectCheapestFedExRateForItems({
+      recipient: {
+        streetLines: [normalized.address],
+        city: normalized.city,
+        stateOrProvinceCode: normalized.state || undefined,
+        postalCode: normalized.postalCode,
+        countryCode: normalized.country,
+      },
+      items,
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to quote shipping right now.'
+    return { error: message }
+  }
+
+  const totals = await calculateCheckoutTotals(items, cheapestQuote.amount)
 
   await stripe.paymentIntents.update(paymentIntentId, {
     amount: Math.round(totals.total * 100),
@@ -293,12 +311,12 @@ export async function quoteFedExShippingForPaymentIntent(
       ...buildCustomerShippingMetadata(normalized),
       discountAmount: totals.discount.toFixed(2),
       discountLabel: totals.discountLabel ?? '',
-      fedexServiceType: '',
-      fedexServiceName: '',
-      fedexShippingAmount: '0.00',
-      fedexShippingCurrency: 'USD',
-      fedexDeliveryTimestamp: '',
-      fedexTransitTime: '',
+      fedexServiceType: cheapestQuote.serviceType,
+      fedexServiceName: cheapestQuote.serviceName,
+      fedexShippingAmount: cheapestQuote.amount.toFixed(2),
+      fedexShippingCurrency: cheapestQuote.currency,
+      fedexDeliveryTimestamp: cheapestQuote.deliveryTimestamp ?? '',
+      fedexTransitTime: cheapestQuote.transitTime ?? '',
     },
   });
 
@@ -310,7 +328,7 @@ export async function quoteFedExShippingForPaymentIntent(
   return {
     ok: true,
     totals,
-    quote: null,
+    quote: cheapestQuote,
     paymentIntentId: paymentIntent.id,
   };
 }
@@ -357,12 +375,12 @@ export async function updatePaymentIntentCustomerDetails(
       discountAmount: paymentIntent.metadata.discountAmount ?? '0.00',
       discountLabel: paymentIntent.metadata.discountLabel ?? '',
       ...buildCustomerShippingMetadata(normalized),
-      fedexServiceType: '',
-      fedexServiceName: '',
-      fedexShippingAmount: '0.00',
-      fedexShippingCurrency: 'USD',
-      fedexDeliveryTimestamp: '',
-      fedexTransitTime: '',
+      fedexServiceType: paymentIntent.metadata.fedexServiceType ?? '',
+      fedexServiceName: paymentIntent.metadata.fedexServiceName ?? '',
+      fedexShippingAmount: paymentIntent.metadata.fedexShippingAmount ?? '0.00',
+      fedexShippingCurrency: paymentIntent.metadata.fedexShippingCurrency ?? 'USD',
+      fedexDeliveryTimestamp: paymentIntent.metadata.fedexDeliveryTimestamp ?? '',
+      fedexTransitTime: paymentIntent.metadata.fedexTransitTime ?? '',
     },
   })
 

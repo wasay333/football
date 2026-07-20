@@ -43,9 +43,26 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
     country: "GB",
   });
   const requiresState = form.country === "US" || form.country === "CA"
+  const resetQuotedShipping = () => {
+    onTotalsChange({
+      subtotal: totalPrice,
+      discount,
+      discountLabel,
+      shipping: 0,
+      total: totalPrice - discount,
+    });
+  };
 
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    if (["address", "city", "state", "postalCode", "country"].includes(field)) {
+      if (shipping !== 0) {
+        resetQuotedShipping();
+      }
+      if (shippingStatus === "error") {
+        setShippingStatus("idle");
+      }
+    }
     if (shippingStatus === "ready") {
       setShippingStatus("idle");
     }
@@ -95,32 +112,6 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/success`,
-        receipt_email: form.email.trim(),
-        shipping: {
-          name: form.name.trim(),
-          phone: form.phone.trim() || undefined,
-          address: {
-            line1: form.address.trim(),
-            city: form.city.trim(),
-            state: form.state.trim() || undefined,
-            postal_code: form.postalCode.trim(),
-            country: form.country.trim().toUpperCase(),
-          },
-        },
-        payment_method_data: {
-          billing_details: {
-            name: form.name.trim(),
-            email: form.email.trim(),
-            phone: form.phone.trim() || undefined,
-            address: {
-              line1: form.address.trim(),
-              city: form.city.trim(),
-              state: form.state.trim() || undefined,
-              postal_code: form.postalCode.trim(),
-              country: form.country.trim().toUpperCase(),
-            },
-          },
-        },
       },
     });
 
@@ -235,8 +226,8 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
             </button>
             <p className="checkout-secure-note">
               {shippingStatus === "ready"
-                ? "Your address is confirmed and shipping is free for this order."
-                : "Shipping is free on every order. Confirm your address before paying."}
+                ? `Your address is confirmed and shipping is $${shipping.toFixed(2)} for this order.`
+                : "Confirm your address to calculate shipping before paying."}
             </p>
           </div>
           {shippingStatus === "error" && errorMsg && <p className="checkout-error">{errorMsg}</p>}
@@ -311,8 +302,8 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
           <div className="checkout-summary-row">
             <span>Shipping</span>
             <span>
-              {shippingStatus === "ready" || shipping === 0
-                ? <span className="checkout-free">Free</span>
+              {shippingStatus === "ready"
+                ? `$${shipping.toFixed(2)}`
                 : "Confirm address"}
             </span>
           </div>

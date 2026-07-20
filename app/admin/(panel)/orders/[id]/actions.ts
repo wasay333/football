@@ -12,6 +12,7 @@ import { getOptionalServerEnv } from '@/lib/env.server'
 import { buildShipmentCreatedEmail } from '@/lib/email/shipment-created'
 import { getShipmentAvailability } from '@/lib/order-workflow'
 import { allocatePreorderOrder, PreorderAllocationError } from '@/lib/preorder-allocation'
+import { syncOrderFromPaymentIntent } from '@/lib/stripe-order-sync'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/prisma'
 import { getAdminSession } from '@/lib/admin-session'
@@ -30,6 +31,30 @@ export type CreateFedExShipmentState =
       labelPath?: string
     }
   | null
+
+export async function resyncOrderFromStripeAction(orderId: string) {
+  if (!(await getAdminSession())) {
+    redirect('/admin/auth/login')
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { paymentIntentId: true },
+  })
+
+  if (!order?.paymentIntentId) {
+    throw new Error('This order is missing a Stripe payment intent.')
+  }
+
+  const paymentIntent = await stripe.paymentIntents.retrieve(order.paymentIntentId)
+  const result = await syncOrderFromPaymentIntent(paymentIntent)
+  if (!result.ok) {
+    throw new Error(result.reason)
+  }
+
+  revalidatePath(`/admin/orders/${orderId}`)
+  revalidatePath('/admin/orders')
+}
 
 export async function allocatePreorderInventoryAction(
   orderId: string,

@@ -24,6 +24,12 @@ class InsufficientStockError extends Error {
 
 export async function syncOrderFromPaymentIntent(pi: Stripe.PaymentIntent): Promise<SyncOrderResult> {
   const customerSnapshot = await extractCustomerSnapshot(pi);
+  const items: TrustedLineItem[] = JSON.parse(pi.metadata.items ?? "[]");
+  if (!items.length) {
+    return { ok: false, reason: "No line items found in PaymentIntent metadata." };
+  }
+
+  const financialSnapshot = buildFinancialSnapshot(pi, items)
   const existing = await prisma.order.findUnique({
     where: { paymentIntentId: pi.id },
     select: {
@@ -37,24 +43,24 @@ export async function syncOrderFromPaymentIntent(pi: Stripe.PaymentIntent): Prom
       stateOrProvinceCode: true,
       postalCode: true,
       country: true,
+      subtotal: true,
+      discountAmount: true,
+      discountLabel: true,
+      shippingCost: true,
+      total: true,
+      shippingServiceType: true,
+      shippingServiceName: true,
+      shippingCurrency: true,
+      shippingDeliveryTimestamp: true,
+      shippingTransitTime: true,
     },
   });
 
   if (existing) {
-    await backfillOrderCustomerSnapshot(existing.id, existing, customerSnapshot)
+    await backfillOrderSnapshot(existing.id, existing, customerSnapshot, financialSnapshot)
     return { ok: true, orderNumber: existing.orderNumber, created: false };
   }
-
-  const items: TrustedLineItem[] = JSON.parse(pi.metadata.items ?? "[]");
-  if (!items.length) {
-    return { ok: false, reason: "No line items found in PaymentIntent metadata." };
-  }
-
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discountAmount = Number(pi.metadata.discountAmount || 0);
-  const discountLabel = pi.metadata.discountLabel?.trim() || null;
-  const shippingCost = Number(pi.metadata.fedexShippingAmount || 0);
-  const total = subtotal - discountAmount + shippingCost;
+  const { subtotal, discountAmount, discountLabel, shippingCost, total, shippingServiceType, shippingServiceName, shippingCurrency, shippingDeliveryTimestamp, shippingTransitTime } = financialSnapshot
   const isPreorder = items.some((item) => item.isPreorder);
   const initialStatus = getInitialOrderStatus(isPreorder);
   const orderNumber = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${pi.id.slice(-6).toUpperCase()}`;
@@ -65,13 +71,6 @@ export async function syncOrderFromPaymentIntent(pi: Stripe.PaymentIntent): Prom
 
     return acc;
   }, {});
-
-  const shippingServiceType = firstNonEmpty(pi.metadata.fedexServiceType);
-  const shippingServiceName = firstNonEmpty(pi.metadata.fedexServiceName);
-  const shippingCurrency = firstNonEmpty(pi.metadata.fedexShippingCurrency, shippingCost > 0 ? 'USD' : '');
-  const shippingDeliveryTimestamp = parseOptionalDate(pi.metadata.fedexDeliveryTimestamp);
-  const shippingTransitTime = firstNonEmpty(pi.metadata.fedexTransitTime);
-
   try {
     await prisma.$transaction(async (tx) => {
       for (const [productId, quantity] of Object.entries(nonPreorderQuantities)) {
@@ -256,7 +255,42 @@ async function extractChargeBillingDetails(pi: Stripe.PaymentIntent) {
   }
 }
 
-async function backfillOrderCustomerSnapshot(
+function buildFinancialSnapshot(pi: Stripe.PaymentIntent, items: TrustedLineItem[]) {
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discountAmount = Number(pi.metadata.discountAmount || 0);
+  const discountLabel = pi.metadata.discountLabel?.trim() || null;
+  const metadataShippingCost = Number(pi.metadata.fedexShippingAmount || 0);
+  const chargedTotal = Number.isFinite(pi.amount)
+    ? Number((pi.amount / 100).toFixed(2))
+    : subtotal - discountAmount + metadataShippingCost
+  const derivedShippingCost = Number((chargedTotal - subtotal + discountAmount).toFixed(2))
+  const shippingCost = metadataShippingCost > 0
+    ? metadataShippingCost
+    : derivedShippingCost > 0
+      ? derivedShippingCost
+      : 0
+  const total = chargedTotal > 0 ? chargedTotal : subtotal - discountAmount + shippingCost;
+  const shippingServiceType = firstNonEmpty(pi.metadata.fedexServiceType);
+  const shippingServiceName = firstNonEmpty(pi.metadata.fedexServiceName);
+  const shippingCurrency = firstNonEmpty(pi.metadata.fedexShippingCurrency, shippingCost > 0 ? 'USD' : '');
+  const shippingDeliveryTimestamp = parseOptionalDate(pi.metadata.fedexDeliveryTimestamp);
+  const shippingTransitTime = firstNonEmpty(pi.metadata.fedexTransitTime);
+
+  return {
+    subtotal,
+    discountAmount,
+    discountLabel,
+    shippingCost,
+    total,
+    shippingServiceType,
+    shippingServiceName,
+    shippingCurrency,
+    shippingDeliveryTimestamp,
+    shippingTransitTime,
+  }
+}
+
+async function backfillOrderSnapshot(
   orderId: string,
   existing: {
     customerName: string
@@ -267,10 +301,21 @@ async function backfillOrderCustomerSnapshot(
     stateOrProvinceCode: string | null
     postalCode: string
     country: string
+    subtotal: Prisma.Decimal
+    discountAmount: Prisma.Decimal
+    discountLabel: string | null
+    shippingCost: Prisma.Decimal
+    total: Prisma.Decimal
+    shippingServiceType: string | null
+    shippingServiceName: string | null
+    shippingCurrency: string | null
+    shippingDeliveryTimestamp: Date | null
+    shippingTransitTime: string | null
   },
   snapshot: Awaited<ReturnType<typeof extractCustomerSnapshot>>,
+  financialSnapshot: ReturnType<typeof buildFinancialSnapshot>,
 ) {
-  const updates: Record<string, string> = {}
+  const updates: Record<string, string | number | Date | null> = {}
 
   if ((!existing.customerName || existing.customerName === 'Guest') && snapshot.customerName && snapshot.customerName !== 'Guest') {
     updates.customerName = snapshot.customerName
@@ -295,6 +340,39 @@ async function backfillOrderCustomerSnapshot(
   }
   if (!existing.country && snapshot.country) {
     updates.country = snapshot.country
+  }
+  if (Number(existing.subtotal) !== financialSnapshot.subtotal) {
+    updates.subtotal = financialSnapshot.subtotal
+  }
+  if (Number(existing.discountAmount) !== financialSnapshot.discountAmount) {
+    updates.discountAmount = financialSnapshot.discountAmount
+  }
+  if ((existing.discountLabel ?? '') !== (financialSnapshot.discountLabel ?? '')) {
+    updates.discountLabel = financialSnapshot.discountLabel
+  }
+  if (Number(existing.shippingCost) !== financialSnapshot.shippingCost) {
+    updates.shippingCost = financialSnapshot.shippingCost
+  }
+  if (Number(existing.total) !== financialSnapshot.total) {
+    updates.total = financialSnapshot.total
+  }
+  if ((existing.shippingServiceType ?? '') !== financialSnapshot.shippingServiceType) {
+    updates.shippingServiceType = financialSnapshot.shippingServiceType || null
+  }
+  if ((existing.shippingServiceName ?? '') !== financialSnapshot.shippingServiceName) {
+    updates.shippingServiceName = financialSnapshot.shippingServiceName || null
+  }
+  if ((existing.shippingCurrency ?? '') !== financialSnapshot.shippingCurrency) {
+    updates.shippingCurrency = financialSnapshot.shippingCurrency || null
+  }
+  if ((existing.shippingTransitTime ?? '') !== financialSnapshot.shippingTransitTime) {
+    updates.shippingTransitTime = financialSnapshot.shippingTransitTime || null
+  }
+
+  const existingDeliveryTimestamp = existing.shippingDeliveryTimestamp?.toISOString() ?? null
+  const snapshotDeliveryTimestamp = financialSnapshot.shippingDeliveryTimestamp?.toISOString() ?? null
+  if (existingDeliveryTimestamp !== snapshotDeliveryTimestamp) {
+    updates.shippingDeliveryTimestamp = financialSnapshot.shippingDeliveryTimestamp
   }
 
   if (Object.keys(updates).length === 0) {

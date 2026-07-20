@@ -111,7 +111,7 @@ export default function CartPage() {
             </div>
             <div className="cart-summary-row">
               <span>Shipping</span>
-              <span className="cart-free">Free</span>
+              <span>Calculated at checkout</span>
             </div>
           </div>
 
@@ -123,7 +123,7 @@ export default function CartPage() {
           </div>
 
           <p className="cart-summary-note">
-            Free shipping is included on every order.
+            Shipping is calculated after you confirm your delivery address.
           </p>
 
           <Link href="/checkout" className="cart-checkout-btn">

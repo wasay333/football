@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { extractFedExLabelUrlFromNotes } from '@/lib/fedex-label'
 import { trackFedExShipment } from '@/lib/fedex-tracking'
+import { stripe } from '@/lib/stripe'
 import { prisma } from '@/prisma'
 import { Badge } from '@/components/ui/badge'
 import { TrackingSummary } from '@/components/tracking-summary'
@@ -36,6 +37,10 @@ const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'outline' | '
   REFUNDED: 'destructive',
 }
 
+function roundCurrency(value: number) {
+  return Math.round(value * 100) / 100
+}
+
 export default async function OrderDetailPage({
   params,
   searchParams,
@@ -65,6 +70,43 @@ export default async function OrderDetailPage({
   const liveTracking = order.trackingNumber && shouldLoadLiveTracking
     ? await trackFedExShipment(order.trackingNumber).catch(() => null)
     : null
+  const latestPaymentIntent = order.paymentIntentId
+    ? await stripe.paymentIntents.retrieve(order.paymentIntentId).catch(() => null)
+    : null
+  const latestChargeId =
+    typeof latestPaymentIntent?.latest_charge === 'string'
+      ? latestPaymentIntent.latest_charge
+      : latestPaymentIntent?.latest_charge?.id
+  const latestCharge = latestChargeId
+    ? await stripe.charges.retrieve(latestChargeId).catch(() => null)
+    : null
+  const storedSubtotal = Number(order.subtotal)
+  const storedDiscount = Number(order.discountAmount)
+  const storedShipping = Number(order.shippingCost)
+  const storedTotal = Number(order.total)
+  const stripeMetadataShipping = Number(latestPaymentIntent?.metadata.fedexShippingAmount || 0)
+  const stripeDerivedTotal = latestCharge
+    ? roundCurrency(latestCharge.amount / 100)
+    : latestPaymentIntent
+      ? roundCurrency(latestPaymentIntent.amount / 100)
+      : null
+  const stripeDerivedShipping = latestPaymentIntent
+    ? roundCurrency(stripeDerivedTotal! - storedSubtotal + storedDiscount)
+    : null
+  const displayShipping =
+    storedShipping > 0
+      ? storedShipping
+      : stripeMetadataShipping > 0
+        ? stripeMetadataShipping
+        : stripeDerivedShipping && stripeDerivedShipping > 0
+          ? stripeDerivedShipping
+          : 0
+  const displayTotal =
+    storedTotal > storedSubtotal - storedDiscount
+      ? storedTotal
+      : stripeDerivedTotal && stripeDerivedTotal > storedTotal
+        ? stripeDerivedTotal
+        : storedTotal
 
   return (
     <>
@@ -155,10 +197,10 @@ export default async function OrderDetailPage({
               )}
               <div className="flex justify-between text-muted-foreground">
                 <span>Shipping</span>
-                <span>{Number(order.shippingCost) === 0 ? 'Free' : `$${Number(order.shippingCost).toFixed(2)}`}</span>
+                <span>{displayShipping === 0 ? 'Free' : `$${displayShipping.toFixed(2)}`}</span>
               </div>
               <div className="flex justify-between font-semibold pt-1 border-t">
-                <span>Total</span><span>${Number(order.total).toFixed(2)}</span>
+                <span>Total</span><span>${displayTotal.toFixed(2)}</span>
               </div>
             </div>
           </CardContent>
