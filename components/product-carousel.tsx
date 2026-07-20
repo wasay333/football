@@ -3,6 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  formatMoney,
+  getBestMultiPurchaseDiscount,
+  getSinglePurchaseDiscount,
+  type DiscountRuleSummary,
+} from "@/lib/discount-display";
 
 type Product = {
   id: string;
@@ -20,6 +26,7 @@ type Props = {
   title: string;
   highlight?: string;
   variant?: "default" | "preorder";
+  discountRules?: DiscountRuleSummary[];
 };
 
 const SWIPE_THRESHOLD = 50;
@@ -29,6 +36,7 @@ export default function ProductCarousel({
   title,
   highlight,
   variant = "default",
+  discountRules = [],
 }: Props) {
   const [page, setPage] = useState(0);
   const [step, setStep] = useState(3);
@@ -147,6 +155,8 @@ export default function ProductCarousel({
             {products.map((product) => {
               const inStock = product.stock > 0 || product.allowPreorder;
               const ctaLabel = variant === "preorder" ? "Pre-order" : "Shop Now";
+              const singleDiscount = getSinglePurchaseDiscount(product.price, discountRules);
+              const multiDiscount = getBestMultiPurchaseDiscount(product.price, discountRules);
               return (
                 <Link key={product.id} href={`/product/${product.id}`} className="psc-card">
                   <div className="psc-card-img">
@@ -170,10 +180,34 @@ export default function ProductCarousel({
                       <span className="psc-card-player">{product.footballer.name}</span>
                     )}
                     <h3 className="psc-card-name">{product.name}</h3>
+                    {singleDiscount && (
+                      <p className="price-save-line">
+                        Save {singleDiscount.savePercent}% on this cap
+                      </p>
+                    )}
+                    {!singleDiscount && multiDiscount && (
+                      <p className="price-save-line">
+                        Buy {multiDiscount.itemCount}, save {multiDiscount.savePercent}%
+                      </p>
+                    )}
                     <div className="psc-card-purchase">
-                      <span className="psc-card-price">${product.price.toFixed(2)}</span>
+                      <span className="price-stack">
+                        {singleDiscount ? (
+                          <>
+                            <span className="price-current">{formatMoney(singleDiscount.salePrice)}</span>
+                            <span className="price-was">{formatMoney(singleDiscount.originalPrice)}</span>
+                          </>
+                        ) : (
+                          <span className="price-current">{formatMoney(product.price)}</span>
+                        )}
+                      </span>
                       <span className="psc-card-cta">{ctaLabel}</span>
                     </div>
+                    {multiDiscount && (
+                      <p className="price-offer-line">
+                        {multiDiscount.name}: {formatMoney(multiDiscount.fixedTotal)} total
+                      </p>
+                    )}
                   </div>
                 </Link>
               );

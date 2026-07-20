@@ -189,7 +189,7 @@
 }
 
 .site-main > :not(.home-page) {
-  padding-top: calc(var(--header-height) + var(--announcement-height));
+  padding-top: var(--header-height);
 }
 
 .home-page > * {
@@ -1726,6 +1726,48 @@
   font-size: 1.8rem;
   font-weight: 900;
   color: var(--color-navy);
+}
+
+.pdp-price-block {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.pdp-discount-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdp-price-was {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: line-through;
+}
+
+.pdp-save-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--color-gold);
+  color: var(--color-navy);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.pdp-offer-line {
+  max-width: 420px;
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.55;
 }
 
 .pdp-stars {
@@ -3505,6 +3547,11 @@
   letter-spacing: 0.2px;
 }
 
+.cart-summary-row--discount {
+  color: var(--color-gold);
+  font-weight: 800;
+}
+
 .cart-free {
   color: #6fcf97;
   font-weight: 700;
@@ -4130,6 +4177,45 @@
   color: var(--color-navy);
 }
 
+.price-stack {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
+.price-current {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--color-navy);
+}
+
+.price-was {
+  color: rgba(0, 0, 0, 0.38);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: line-through;
+}
+
+.price-save-line,
+.price-offer-line {
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.price-save-line {
+  color: var(--color-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.price-offer-line {
+  margin-top: 8px;
+  color: rgba(0, 0, 0, 0.55);
+}
+
 .shop-card-cta {
   display: inline-flex;
   align-items: center;
@@ -4585,6 +4671,16 @@
 
 .psc-section--preorder .psc-card-price {
   color: var(--color-gold);
+}
+
+.psc-section--preorder .price-current,
+.psc-section--preorder .price-save-line {
+  color: var(--color-gold);
+}
+
+.psc-section--preorder .price-was,
+.psc-section--preorder .price-offer-line {
+  color: rgba(255, 255, 255, 0.58);
 }
 
 .psc-card-purchase {

@@ -1,5 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import {
+  formatMoney,
+  getBestMultiPurchaseDiscount,
+  getSinglePurchaseDiscount,
+  type DiscountRuleSummary,
+} from "@/lib/discount-display";
 
 type Product = {
   id: string;
@@ -16,6 +22,7 @@ type Props = {
   title?: string;
   eyebrow?: string;
   description?: string;
+  discountRules?: DiscountRuleSummary[];
 };
 
 export default function AllProductsGrid({
@@ -23,6 +30,7 @@ export default function AllProductsGrid({
   title = "Collections",
   eyebrow = "All Products",
   description = "Explore the full lineup, including ready-to-ship drops and preorder releases.",
+  discountRules = [],
 }: Props) {
   return (
     <section className="shop-listing-section">
@@ -44,6 +52,8 @@ export default function AllProductsGrid({
                 const isPreorder = product.stock === 0 && product.allowPreorder;
                 const isSoldOut = product.stock === 0 && !product.allowPreorder;
                 const ctaLabel = isPreorder ? "Pre-order" : isSoldOut ? "View details" : "Shop now";
+                const singleDiscount = getSinglePurchaseDiscount(product.price, discountRules);
+                const multiDiscount = getBestMultiPurchaseDiscount(product.price, discountRules);
 
                 return (
                   <Link key={product.id} href={`/product/${product.id}`} className="shop-card">
@@ -77,11 +87,35 @@ export default function AllProductsGrid({
                         <span className="shop-card-footballer">{product.footballer.name}</span>
                       )}
                       <h3 className="shop-card-name">{product.name}</h3>
+                      {singleDiscount && (
+                        <p className="price-save-line">
+                          Save {singleDiscount.savePercent}% on this cap
+                        </p>
+                      )}
+                      {!singleDiscount && multiDiscount && (
+                        <p className="price-save-line">
+                          Buy {multiDiscount.itemCount}, save {multiDiscount.savePercent}%
+                        </p>
+                      )}
 
                       <div className="shop-card-footer">
-                        <span className="shop-card-price">${product.price.toFixed(2)}</span>
+                        <span className="price-stack">
+                          {singleDiscount ? (
+                            <>
+                              <span className="price-current">{formatMoney(singleDiscount.salePrice)}</span>
+                              <span className="price-was">{formatMoney(singleDiscount.originalPrice)}</span>
+                            </>
+                          ) : (
+                            <span className="price-current">{formatMoney(product.price)}</span>
+                          )}
+                        </span>
                         <span className="shop-card-cta">{ctaLabel}</span>
                       </div>
+                      {multiDiscount && (
+                        <p className="price-offer-line">
+                          {multiDiscount.name}: {formatMoney(multiDiscount.fixedTotal)} total
+                        </p>
+                      )}
                     </div>
                   </Link>
                 );

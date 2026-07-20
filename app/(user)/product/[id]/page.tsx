@@ -2,6 +2,12 @@ import { prisma } from "@/prisma";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { isUploadedAssetPath } from "@/lib/image";
+import { getActiveDiscountRules } from "@/lib/discount-rules";
+import {
+  formatMoney,
+  getBestMultiPurchaseDiscount,
+  getSinglePurchaseDiscount,
+} from "@/lib/discount-display";
 
 export const revalidate = 120;
 import ProductActions from "./_components/product-actions";
@@ -14,7 +20,7 @@ type Props = { params: Promise<{ id: string }> };
 const SingleProductPage = async ({ params }: Props) => {
   const { id } = await params;
 
-  const [product, reviewStats] = await Promise.all([
+  const [product, reviewStats, discountRules] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
       include: { footballer: true, category: true },
@@ -24,6 +30,7 @@ const SingleProductPage = async ({ params }: Props) => {
       _avg: { rating: true },
       _count: { _all: true },
     }),
+    getActiveDiscountRules(),
   ]);
 
   if (!product) notFound();
@@ -33,6 +40,9 @@ const SingleProductPage = async ({ params }: Props) => {
 
   const { footballer } = product;
   const heroImage = footballer.profileImage || null;
+  const productPrice = Number(product.price);
+  const singleDiscount = getSinglePurchaseDiscount(productPrice, discountRules);
+  const multiDiscount = getBestMultiPurchaseDiscount(productPrice, discountRules);
 
   return (
     <div className="pdp">
@@ -78,7 +88,24 @@ const SingleProductPage = async ({ params }: Props) => {
         />
 
         <div className="pdp-details">
-          <p className="pdp-price">${Number(product.price).toFixed(2)}</p>
+          <div className="pdp-price-block">
+            <p className="pdp-price">
+              {singleDiscount ? formatMoney(singleDiscount.salePrice) : formatMoney(productPrice)}
+            </p>
+            {singleDiscount && (
+              <div className="pdp-discount-meta">
+                <span className="pdp-price-was">{formatMoney(singleDiscount.originalPrice)}</span>
+                <span className="pdp-save-badge">
+                  Save {singleDiscount.savePercent}%
+                </span>
+              </div>
+            )}
+            {multiDiscount && (
+              <p className="pdp-offer-line">
+                {multiDiscount.name}: buy {multiDiscount.itemCount} for {formatMoney(multiDiscount.fixedTotal)} and save {multiDiscount.savePercent}%
+              </p>
+            )}
+          </div>
 
           {reviewCount > 0 && (
             <div className="pdp-stars">
@@ -106,7 +133,7 @@ const SingleProductPage = async ({ params }: Props) => {
           <ProductActions
             productId={product.id}
             name={product.name}
-            price={Number(product.price)}
+            price={productPrice}
             image={product.capImage1 ?? ""}
             stock={product.stock}
             allowPreorder={product.allowPreorder}

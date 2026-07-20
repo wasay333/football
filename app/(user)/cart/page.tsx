@@ -1,12 +1,59 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/hooks/cart-context";
 import { isUploadedAssetPath } from "@/lib/image";
+import {
+  formatMoney,
+  roundCurrency,
+  type DiscountRuleSummary,
+} from "@/lib/discount-display";
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
+  const [discountRules, setDiscountRules] = useState<DiscountRuleSummary[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    fetch("/api/discount-rules")
+      .then((response) => response.ok ? response.json() : null)
+      .then((payload: { rules?: DiscountRuleSummary[] } | null) => {
+        if (active) setDiscountRules(payload?.rules ?? []);
+      })
+      .catch(() => {
+        if (active) setDiscountRules([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const activeDiscountRule = discountRules.find(
+    (rule) => rule.itemCount === totalItems && rule.fixedTotal < totalPrice
+  );
+  const discountAmount = activeDiscountRule
+    ? roundCurrency(totalPrice - activeDiscountRule.fixedTotal)
+    : 0;
+  const discountPercent = discountAmount > 0
+    ? Math.max(1, Math.round((discountAmount / totalPrice) * 100))
+    : 0;
+  const cartTotal = roundCurrency(totalPrice - discountAmount);
+  const nextDiscountRule = discountRules.find(
+    (rule) => rule.itemCount > totalItems && rule.fixedTotal < totalPrice + getAverageUnitPrice(items) * (rule.itemCount - totalItems)
+  );
+  const nextDiscountPercent = nextDiscountRule
+    ? Math.max(
+        1,
+        Math.round(
+          ((totalPrice + getAverageUnitPrice(items) * (nextDiscountRule.itemCount - totalItems) - nextDiscountRule.fixedTotal) /
+            (totalPrice + getAverageUnitPrice(items) * (nextDiscountRule.itemCount - totalItems))) * 100
+        )
+      )
+    : 0;
 
   if (items.length === 0) {
     return (
@@ -107,8 +154,14 @@ export default function CartPage() {
           <div className="cart-summary-rows">
             <div className="cart-summary-row">
               <span>Subtotal</span>
-              <span>${totalPrice.toFixed(2)}</span>
+              <span>{formatMoney(totalPrice)}</span>
             </div>
+            {activeDiscountRule && (
+              <div className="cart-summary-row cart-summary-row--discount">
+                <span>{activeDiscountRule.name}</span>
+                <span>-{formatMoney(discountAmount)} ({discountPercent}% off)</span>
+              </div>
+            )}
             <div className="cart-summary-row">
               <span>Shipping</span>
               <span>Calculated at checkout</span>
@@ -119,11 +172,13 @@ export default function CartPage() {
 
           <div className="cart-summary-total">
             <span>Total</span>
-            <span>${totalPrice.toFixed(2)}</span>
+            <span>{formatMoney(cartTotal)}</span>
           </div>
 
           <p className="cart-summary-note">
-            Shipping is calculated after you confirm your delivery address.
+            {nextDiscountRule
+              ? `Add ${nextDiscountRule.itemCount - totalItems} more item${nextDiscountRule.itemCount - totalItems === 1 ? "" : "s"} for ${nextDiscountRule.name} and save about ${nextDiscountPercent}%.`
+              : "Shipping is calculated after you confirm your delivery address."}
           </p>
 
           <Link href="/checkout" className="cart-checkout-btn">
@@ -136,4 +191,10 @@ export default function CartPage() {
       </div>
     </div>
   );
+}
+
+function getAverageUnitPrice(items: Array<{ price: number; quantity: number }>) {
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  if (!itemCount) return 0;
+  return items.reduce((sum, item) => sum + item.price * item.quantity, 0) / itemCount;
 }

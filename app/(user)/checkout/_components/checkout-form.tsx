@@ -31,6 +31,9 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
   const [errorMsg, setErrorMsg] = useState("");
 
   const { subtotal: totalPrice, discount, discountLabel, shipping, total } = totals;
+  const discountPercent = discount > 0 && totalPrice > 0
+    ? Math.max(1, Math.round((discount / totalPrice) * 100))
+    : 0;
 
   const [form, setForm] = useState({
     name: "",
@@ -296,7 +299,11 @@ export default function CheckoutForm({ paymentIntentId, totals, onTotalsChange }
           {discount !== 0 && (
             <div className="checkout-summary-row">
               <span>{discountLabel || "Price Rule"}</span>
-              <span>{discount > 0 ? `-$${discount.toFixed(2)}` : `+$${Math.abs(discount).toFixed(2)}`}</span>
+              <span>
+                {discount > 0
+                  ? `-$${discount.toFixed(2)} (${discountPercent}% off)`
+                  : `+$${Math.abs(discount).toFixed(2)}`}
+              </span>
             </div>
           )}
           <div className="checkout-summary-row">
